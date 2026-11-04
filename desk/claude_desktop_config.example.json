@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "legacy-desk": {
+      "command": "/Users/carlodemarchis/Documents/_cdm/_carlo/FACTORY63/Claude Code/legacy-league-demo/desk/.venv/bin/python",
+      "args": ["/Users/carlodemarchis/Documents/_cdm/_carlo/FACTORY63/Claude Code/legacy-league-demo/desk/server.py"],
+      "env": { "DESK_EDITOR": "Carlo" }
+    }
+  }
+}

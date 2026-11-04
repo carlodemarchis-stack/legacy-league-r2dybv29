@@ -1,3 +1,5 @@
 shots/
 .slug
 .DS_Store
+data/desk-log.jsonl
+data/alerts.json
