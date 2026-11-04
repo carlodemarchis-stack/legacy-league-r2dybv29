@@ -130,15 +130,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1003",
+     "id": "p1001",
      "team_id": "chi"
     },
     {
-     "id": "p1011",
+     "id": "p1014",
      "team_id": "bos"
     },
     {
-     "id": "p1024",
+     "id": "p1029",
      "team_id": "lax"
     }
    ]
@@ -150,15 +150,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1004",
+     "id": "p1006",
      "team_id": "chi"
     },
     {
-     "id": "p1013",
+     "id": "p1011",
      "team_id": "bos"
     },
     {
-     "id": "p1031",
+     "id": "p1035",
      "team_id": "dal"
     }
    ]
@@ -170,15 +170,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1040",
+     "id": "p1041",
      "team_id": "phi"
     },
     {
-     "id": "p1047",
+     "id": "p1050",
      "team_id": "det"
     },
     {
-     "id": "p1056",
+     "id": "p1051",
      "team_id": "sfo"
     }
    ]
@@ -190,7 +190,7 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1007",
+     "id": "p1008",
      "team_id": "chi"
     },
     {
@@ -210,15 +210,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1027",
+     "id": "p1028",
      "team_id": "lax"
     },
     {
-     "id": "p1030",
+     "id": "p1031",
      "team_id": "dal"
     },
     {
-     "id": "p1042",
+     "id": "p1040",
      "team_id": "phi"
     }
    ]
@@ -234,11 +234,11 @@
      "team_id": "det"
     },
     {
-     "id": "p1054",
+     "id": "p1055",
      "team_id": "sfo"
     },
     {
-     "id": "p1063",
+     "id": "p1062",
      "team_id": "mia"
     }
    ]
@@ -250,11 +250,11 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1002",
+     "id": "p1007",
      "team_id": "chi"
     },
     {
-     "id": "p1016",
+     "id": "p1012",
      "team_id": "bos"
     },
     {
@@ -270,11 +270,11 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1023",
+     "id": "p1025",
      "team_id": "lax"
     },
     {
-     "id": "p1036",
+     "id": "p1034",
      "team_id": "dal"
     },
     {
@@ -290,15 +290,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1050",
+     "id": "p1044",
      "team_id": "det"
     },
     {
-     "id": "p1051",
+     "id": "p1056",
      "team_id": "sfo"
     },
     {
-     "id": "p1058",
+     "id": "p1060",
      "team_id": "mia"
     }
    ]
@@ -310,15 +310,15 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1008",
+     "id": "p1005",
      "team_id": "chi"
     },
     {
-     "id": "p1015",
+     "id": "p1013",
      "team_id": "bos"
     },
     {
-     "id": "p1020",
+     "id": "p1019",
      "team_id": "nyc"
     }
    ]
@@ -330,311 +330,11 @@
    "starting_hole": 1,
    "players": [
     {
-     "id": "p1025",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1032",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1041",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g12",
-   "tee_time": "2027-01-28T10:01:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1045",
-     "team_id": "det"
-    },
-    {
-     "id": "p1053",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1062",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g13",
-   "tee_time": "2027-01-28T10:12:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1005",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1012",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1017",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g14",
-   "tee_time": "2027-01-28T10:23:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1028",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1035",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1043",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g15",
-   "tee_time": "2027-01-28T10:34:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1049",
-     "team_id": "det"
-    },
-    {
-     "id": "p1052",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1061",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g16",
-   "tee_time": "2027-01-28T10:45:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1006",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1014",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1021",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g17",
-   "tee_time": "2027-01-28T10:56:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1029",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1033",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1039",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g18",
-   "tee_time": "2027-01-28T11:07:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1046",
-     "team_id": "det"
-    },
-    {
-     "id": "p1055",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1060",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g19",
-   "tee_time": "2027-01-28T11:18:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1001",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1009",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1019",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g20",
-   "tee_time": "2027-01-28T11:29:00",
-   "starting_hole": 1,
-   "players": [
-    {
      "id": "p1026",
      "team_id": "lax"
     },
     {
-     "id": "p1034",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1038",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r1",
-   "pairing_group_id": "r1-g21",
-   "tee_time": "2027-01-28T11:40:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1044",
-     "team_id": "det"
-    },
-    {
-     "id": "p1057",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1059",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g01",
-   "tee_time": "2027-01-29T08:00:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1008",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1013",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1027",
-     "team_id": "lax"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g02",
-   "tee_time": "2027-01-29T08:11:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1003",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1010",
-     "team_id": "bos"
-    },
-    {
      "id": "p1030",
-     "team_id": "dal"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g03",
-   "tee_time": "2027-01-29T08:22:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1040",
-     "team_id": "phi"
-    },
-    {
-     "id": "p1046",
-     "team_id": "det"
-    },
-    {
-     "id": "p1053",
-     "team_id": "sfo"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g04",
-   "tee_time": "2027-01-29T08:33:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1007",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1015",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1020",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g05",
-   "tee_time": "2027-01-29T08:44:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1023",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1033",
      "team_id": "dal"
     },
     {
@@ -644,309 +344,9 @@
    ]
   },
   {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g06",
-   "tee_time": "2027-01-29T08:55:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1050",
-     "team_id": "det"
-    },
-    {
-     "id": "p1055",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1060",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g07",
-   "tee_time": "2027-01-29T09:06:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1002",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1011",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1018",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g08",
-   "tee_time": "2027-01-29T09:17:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1024",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1035",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1043",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g09",
-   "tee_time": "2027-01-29T09:28:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1048",
-     "team_id": "det"
-    },
-    {
-     "id": "p1054",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1059",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g10",
-   "tee_time": "2027-01-29T09:39:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1004",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1016",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1022",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g11",
-   "tee_time": "2027-01-29T09:50:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1028",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1032",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1037",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g12",
-   "tee_time": "2027-01-29T10:01:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1049",
-     "team_id": "det"
-    },
-    {
-     "id": "p1056",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1061",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g13",
-   "tee_time": "2027-01-29T10:12:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1005",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1014",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1019",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g14",
-   "tee_time": "2027-01-29T10:23:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1025",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1034",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1039",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g15",
-   "tee_time": "2027-01-29T10:34:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1044",
-     "team_id": "det"
-    },
-    {
-     "id": "p1057",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1062",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g16",
-   "tee_time": "2027-01-29T10:45:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1001",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1012",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1017",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g17",
-   "tee_time": "2027-01-29T10:56:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1029",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1036",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1041",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g18",
-   "tee_time": "2027-01-29T11:07:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1045",
-     "team_id": "det"
-    },
-    {
-     "id": "p1051",
-     "team_id": "sfo"
-    },
-    {
-     "id": "p1063",
-     "team_id": "mia"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g19",
-   "tee_time": "2027-01-29T11:18:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1006",
-     "team_id": "chi"
-    },
-    {
-     "id": "p1009",
-     "team_id": "bos"
-    },
-    {
-     "id": "p1021",
-     "team_id": "nyc"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g20",
-   "tee_time": "2027-01-29T11:29:00",
-   "starting_hole": 1,
-   "players": [
-    {
-     "id": "p1026",
-     "team_id": "lax"
-    },
-    {
-     "id": "p1031",
-     "team_id": "dal"
-    },
-    {
-     "id": "p1038",
-     "team_id": "phi"
-    }
-   ]
-  },
-  {
-   "round_id": "r2",
-   "pairing_group_id": "r2-g21",
-   "tee_time": "2027-01-29T11:40:00",
+   "round_id": "r1",
+   "pairing_group_id": "r1-g12",
+   "tee_time": "2027-01-28T10:01:00",
    "starting_hole": 1,
    "players": [
     {
@@ -962,6 +362,606 @@
      "team_id": "mia"
     }
    ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g13",
+   "tee_time": "2027-01-28T10:12:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1004",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1009",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1021",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g14",
+   "tee_time": "2027-01-28T10:23:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1023",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1033",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1038",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g15",
+   "tee_time": "2027-01-28T10:34:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1046",
+     "team_id": "det"
+    },
+    {
+     "id": "p1054",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1059",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g16",
+   "tee_time": "2027-01-28T10:45:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1002",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1016",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1020",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g17",
+   "tee_time": "2027-01-28T10:56:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1024",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1032",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1039",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g18",
+   "tee_time": "2027-01-28T11:07:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1045",
+     "team_id": "det"
+    },
+    {
+     "id": "p1053",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1063",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g19",
+   "tee_time": "2027-01-28T11:18:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1003",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1015",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1017",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g20",
+   "tee_time": "2027-01-28T11:29:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1027",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1036",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1043",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r1",
+   "pairing_group_id": "r1-g21",
+   "tee_time": "2027-01-28T11:40:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1049",
+     "team_id": "det"
+    },
+    {
+     "id": "p1057",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1061",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g01",
+   "tee_time": "2027-01-29T08:00:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1007",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1015",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1028",
+     "team_id": "lax"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g02",
+   "tee_time": "2027-01-29T08:11:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1005",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1012",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1031",
+     "team_id": "dal"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g03",
+   "tee_time": "2027-01-29T08:22:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1038",
+     "team_id": "phi"
+    },
+    {
+     "id": "p1044",
+     "team_id": "det"
+    },
+    {
+     "id": "p1057",
+     "team_id": "sfo"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g04",
+   "tee_time": "2027-01-29T08:33:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1006",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1011",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1020",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g05",
+   "tee_time": "2027-01-29T08:44:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1024",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1030",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1041",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g06",
+   "tee_time": "2027-01-29T08:55:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1048",
+     "team_id": "det"
+    },
+    {
+     "id": "p1052",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1062",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g07",
+   "tee_time": "2027-01-29T09:06:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1004",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1016",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1021",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g08",
+   "tee_time": "2027-01-29T09:17:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1023",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1034",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1037",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g09",
+   "tee_time": "2027-01-29T09:28:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1047",
+     "team_id": "det"
+    },
+    {
+     "id": "p1053",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1060",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g10",
+   "tee_time": "2027-01-29T09:39:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1001",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1009",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1022",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g11",
+   "tee_time": "2027-01-29T09:50:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1025",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1036",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1040",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g12",
+   "tee_time": "2027-01-29T10:01:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1050",
+     "team_id": "det"
+    },
+    {
+     "id": "p1055",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1058",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g13",
+   "tee_time": "2027-01-29T10:12:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1002",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1014",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1018",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g14",
+   "tee_time": "2027-01-29T10:23:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1027",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1033",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1039",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g15",
+   "tee_time": "2027-01-29T10:34:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1049",
+     "team_id": "det"
+    },
+    {
+     "id": "p1056",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1063",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g16",
+   "tee_time": "2027-01-29T10:45:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1008",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1013",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1019",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g17",
+   "tee_time": "2027-01-29T10:56:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1029",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1035",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1043",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g18",
+   "tee_time": "2027-01-29T11:07:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1046",
+     "team_id": "det"
+    },
+    {
+     "id": "p1051",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1059",
+     "team_id": "mia"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g19",
+   "tee_time": "2027-01-29T11:18:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1003",
+     "team_id": "chi"
+    },
+    {
+     "id": "p1010",
+     "team_id": "bos"
+    },
+    {
+     "id": "p1017",
+     "team_id": "nyc"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g20",
+   "tee_time": "2027-01-29T11:29:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1026",
+     "team_id": "lax"
+    },
+    {
+     "id": "p1032",
+     "team_id": "dal"
+    },
+    {
+     "id": "p1042",
+     "team_id": "phi"
+    }
+   ]
+  },
+  {
+   "round_id": "r2",
+   "pairing_group_id": "r2-g21",
+   "tee_time": "2027-01-29T11:40:00",
+   "starting_hole": 1,
+   "players": [
+    {
+     "id": "p1045",
+     "team_id": "det"
+    },
+    {
+     "id": "p1054",
+     "team_id": "sfo"
+    },
+    {
+     "id": "p1061",
+     "team_id": "mia"
+    }
+   ]
   }
  ],
  "scores": [
@@ -970,24 +970,24 @@
    "player_id": "p1001",
    "team_id": "chi",
    "hole_scores": [
+    5,
+    5,
+    3,
+    6,
+    6,
     4,
+    6,
     3,
     5,
     5,
-    7,
-    4,
-    5,
-    2,
     4,
     4,
-    5,
+    4,
+    4,
+    3,
     4,
     6,
-    5,
-    5,
-    2,
-    5,
-    4
+    5
    ],
    "status": "F"
   },
@@ -996,24 +996,24 @@
    "player_id": "p1002",
    "team_id": "chi",
    "hole_scores": [
+    3,
+    4,
+    3,
+    3,
     6,
-    5,
-    4,
-    4,
     7,
-    5,
-    8,
+    6,
+    4,
+    4,
+    4,
+    6,
+    4,
+    6,
     5,
     4,
     3,
-    6,
-    6,
-    6,
     7,
-    2,
-    4,
-    5,
-    4
+    5
    ],
    "status": "F"
   },
@@ -1023,23 +1023,23 @@
    "team_id": "chi",
    "hole_scores": [
     4,
-    4,
-    6,
-    5,
-    5,
     5,
     5,
     3,
     5,
     4,
     5,
+    2,
+    4,
     4,
     6,
-    5,
+    6,
+    6,
+    6,
+    4,
     3,
     6,
-    5,
-    7
+    6
    ],
    "status": "F"
   },
@@ -1048,24 +1048,24 @@
    "player_id": "p1004",
    "team_id": "chi",
    "hole_scores": [
-    5,
     4,
+    5,
     4,
     2,
     5,
+    3,
+    6,
+    4,
+    3,
+    2,
+    3,
     6,
     5,
-    3,
     5,
     3,
     4,
-    3,
-    5,
     4,
-    5,
-    3,
-    4,
-    5
+    4
    ],
    "status": "F"
   },
@@ -1074,24 +1074,24 @@
    "player_id": "p1005",
    "team_id": "chi",
    "hole_scores": [
-    5,
-    5,
-    4,
-    1,
-    5,
-    5,
-    5,
-    4,
     6,
-    2,
-    4,
-    5,
-    7,
+    3,
     4,
     4,
     5,
     4,
-    4
+    5,
+    4,
+    5,
+    3,
+    3,
+    6,
+    5,
+    4,
+    3,
+    4,
+    3,
+    7
    ],
    "status": "F"
   },
@@ -1105,19 +1105,19 @@
     5,
     4,
     5,
+    4,
+    6,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    4,
     3,
-    5,
     4,
     5,
-    4,
-    5,
-    4,
-    5,
-    5,
-    4,
-    5,
-    3,
-    6
+    5
    ],
    "status": "F"
   },
@@ -1126,24 +1126,24 @@
    "player_id": "p1007",
    "team_id": "chi",
    "hole_scores": [
-    5,
-    5,
-    4,
+    7,
     3,
+    4,
+    2,
+    6,
+    5,
     6,
     4,
-    7,
+    6,
+    4,
+    4,
+    4,
+    8,
+    5,
+    4,
     4,
     5,
-    5,
-    4,
-    5,
-    5,
-    7,
-    3,
-    3,
-    5,
-    5
+    4
    ],
    "status": "F"
   },
@@ -1152,24 +1152,24 @@
    "player_id": "p1008",
    "team_id": "chi",
    "hole_scores": [
+    4,
+    6,
+    5,
     3,
-    4,
-    6,
-    4,
-    6,
     5,
-    8,
-    2,
+    5,
+    5,
     3,
+    6,
+    3,
+    5,
+    4,
+    6,
+    5,
     4,
     5,
-    7,
-    6,
-    6,
-    4,
     5,
-    6,
-    5
+    7
    ],
    "status": "F"
   },
@@ -1179,22 +1179,22 @@
    "team_id": "bos",
    "hole_scores": [
     5,
-    4,
+    5,
     4,
     3,
     5,
-    3,
-    5,
-    3,
-    4,
-    3,
-    7,
     4,
     5,
-    5,
+    2,
     3,
-    7,
+    5,
+    6,
+    3,
+    5,
     4,
+    4,
+    4,
+    5,
     5
    ],
    "status": "F"
@@ -1204,24 +1204,24 @@
    "player_id": "p1010",
    "team_id": "bos",
    "hole_scores": [
-    5,
-    5,
-    7,
+    4,
+    4,
+    3,
     3,
     5,
+    3,
+    7,
+    2,
+    5,
+    4,
+    4,
+    5,
+    7,
     6,
-    7,
-    4,
-    4,
-    3,
-    4,
-    4,
-    5,
-    4,
     3,
     5,
-    7,
-    5
+    4,
+    4
    ],
    "status": "F"
   },
@@ -1230,23 +1230,23 @@
    "player_id": "p1011",
    "team_id": "bos",
    "hole_scores": [
-    4,
     6,
-    2,
-    3,
-    7,
-    4,
-    6,
-    3,
-    4,
-    6,
-    4,
-    4,
     5,
-    4,
     5,
     4,
     6,
+    5,
+    6,
+    4,
+    3,
+    6,
+    5,
+    5,
+    4,
+    5,
+    5,
+    5,
+    5,
     4
    ],
    "status": "F"
@@ -1257,23 +1257,23 @@
    "team_id": "bos",
    "hole_scores": [
     5,
-    5,
-    5,
     4,
-    5,
-    5,
-    5,
+    7,
     3,
+    5,
+    6,
+    6,
+    6,
+    4,
+    3,
+    4,
+    3,
+    6,
     5,
     3,
     6,
-    4,
     6,
-    3,
-    4,
-    5,
-    4,
-    4
+    5
    ],
    "status": "F"
   },
@@ -1282,24 +1282,24 @@
    "player_id": "p1013",
    "team_id": "bos",
    "hole_scores": [
-    4,
-    5,
-    4,
     3,
-    5,
-    4,
-    4,
-    3,
-    6,
-    5,
-    4,
     4,
     6,
     4,
+    6,
+    6,
+    6,
     3,
+    3,
+    2,
+    5,
     4,
+    6,
     4,
-    5
+    3,
+    6,
+    4,
+    4
    ],
    "status": "F"
   },
@@ -1308,24 +1308,24 @@
    "player_id": "p1014",
    "team_id": "bos",
    "hole_scores": [
-    3,
+    5,
+    6,
+    5,
     4,
     5,
     5,
+    8,
+    3,
+    4,
     5,
     3,
-    7,
     3,
     5,
-    3,
+    4,
     4,
     6,
-    6,
-    4,
-    4,
-    4,
-    4,
-    5
+    3,
+    4
    ],
    "status": "F"
   },
@@ -1334,24 +1334,24 @@
    "player_id": "p1015",
    "team_id": "bos",
    "hole_scores": [
-    3,
-    5,
     4,
-    4,
-    7,
     4,
     6,
     3,
     5,
+    4,
     5,
-    5,
-    4,
-    4,
-    4,
+    3,
     3,
     3,
     5,
-    4
+    3,
+    5,
+    5,
+    2,
+    5,
+    5,
+    7
    ],
    "status": "F"
   },
@@ -1360,23 +1360,23 @@
    "player_id": "p1016",
    "team_id": "bos",
    "hole_scores": [
-    3,
+    5,
     4,
+    5,
+    5,
+    5,
+    4,
+    5,
+    3,
+    5,
     6,
-    4,
     5,
-    7,
-    4,
+    5,
+    5,
     3,
     3,
-    4,
-    5,
-    5,
-    5,
-    4,
     3,
-    4,
-    4,
+    6,
     7
    ],
    "status": "F"
@@ -1386,20 +1386,20 @@
    "player_id": "p1017",
    "team_id": "nyc",
    "hole_scores": [
+    4,
     5,
     5,
     4,
-    4,
-    8,
+    6,
+    6,
+    7,
+    5,
     7,
     5,
     3,
-    5,
-    3,
-    5,
-    3,
-    5,
-    3,
+    6,
+    7,
+    6,
     3,
     5,
     5,
@@ -1412,24 +1412,24 @@
    "player_id": "p1018",
    "team_id": "nyc",
    "hole_scores": [
-    4,
-    4,
     5,
     5,
     4,
-    5,
+    3,
     5,
     4,
-    5,
+    7,
+    3,
+    4,
+    3,
     4,
     7,
     5,
     4,
+    3,
     4,
-    2,
-    5,
-    5,
-    5
+    4,
+    4
    ],
    "status": "F"
   },
@@ -1439,23 +1439,23 @@
    "team_id": "nyc",
    "hole_scores": [
     5,
+    6,
     4,
     3,
-    3,
+    7,
+    4,
+    4,
+    6,
+    4,
     6,
     5,
-    5,
-    2,
     4,
     3,
-    5,
-    5,
+    4,
+    3,
     6,
-    3,
     4,
-    5,
-    5,
-    4
+    5
    ],
    "status": "F"
   },
@@ -1464,24 +1464,24 @@
    "player_id": "p1020",
    "team_id": "nyc",
    "hole_scores": [
-    5,
-    4,
-    4,
-    4,
     4,
     7,
+    4,
+    3,
     7,
-    6,
+    5,
+    5,
+    2,
+    4,
+    3,
     5,
     4,
-    5,
-    6,
     6,
     3,
+    3,
     4,
-    7,
-    6,
-    6
+    5,
+    5
    ],
    "status": "F"
   },
@@ -1492,22 +1492,22 @@
    "hole_scores": [
     3,
     4,
-    7,
+    5,
+    4,
+    6,
+    5,
+    6,
+    6,
+    6,
     2,
     5,
-    4,
+    5,
+    6,
     5,
     3,
     5,
-    3,
-    4,
     5,
-    4,
-    5,
-    3,
-    5,
-    4,
-    4
+    5
    ],
    "status": "F"
   },
@@ -1517,23 +1517,23 @@
    "team_id": "nyc",
    "hole_scores": [
     5,
-    4,
-    5,
-    5,
-    4,
-    4,
-    4,
-    4,
-    6,
-    5,
-    5,
-    4,
-    6,
     5,
     6,
+    3,
+    6,
+    4,
     5,
+    4,
     5,
-    7
+    6,
+    6,
+    4,
+    5,
+    4,
+    4,
+    4,
+    4,
+    6
    ],
    "status": "F"
   },
@@ -1542,24 +1542,24 @@
    "player_id": "p1023",
    "team_id": "lax",
    "hole_scores": [
+    4,
+    7,
     5,
-    5,
-    5,
-    5,
-    5,
+    3,
     6,
     4,
-    3,
+    5,
+    5,
+    5,
     4,
-    5,
-    5,
     6,
-    5,
     4,
-    3,
     4,
-    5,
-    4
+    4,
+    6,
+    4,
+    4,
+    5
    ],
    "status": "F"
   },
@@ -1569,23 +1569,23 @@
    "team_id": "lax",
    "hole_scores": [
     5,
+    6,
     4,
-    5,
     4,
-    5,
-    5,
+    6,
+    4,
     6,
     3,
-    6,
+    5,
+    3,
     3,
     4,
     5,
-    6,
+    5,
+    4,
+    5,
     7,
-    3,
-    5,
-    3,
-    5
+    4
    ],
    "status": "F"
   },
@@ -1594,24 +1594,24 @@
    "player_id": "p1025",
    "team_id": "lax",
    "hole_scores": [
-    7,
+    4,
     4,
     4,
     4,
     6,
-    4,
-    5,
-    5,
-    4,
-    3,
-    4,
     5,
     5,
     3,
+    3,
+    3,
+    4,
+    4,
+    3,
     4,
     4,
     5,
-    4
+    5,
+    5
    ],
    "status": "F"
   },
@@ -1621,23 +1621,23 @@
    "team_id": "lax",
    "hole_scores": [
     5,
+    4,
     3,
+    2,
     5,
+    4,
+    6,
+    5,
+    5,
+    5,
+    5,
+    6,
+    6,
     3,
     4,
-    5,
-    5,
-    4,
-    5,
-    4,
-    4,
     6,
-    6,
-    4,
     5,
-    4,
-    6,
-    6
+    5
    ],
    "status": "F"
   },
@@ -1646,23 +1646,23 @@
    "player_id": "p1027",
    "team_id": "lax",
    "hole_scores": [
-    5,
+    6,
+    6,
+    6,
     3,
-    3,
     5,
+    5,
+    5,
+    5,
+    5,
+    4,
     6,
     5,
     7,
-    5,
-    3,
-    5,
-    5,
-    4,
-    5,
-    5,
+    6,
     4,
     4,
-    5,
+    4,
     5
    ],
    "status": "F"
@@ -1672,24 +1672,24 @@
    "player_id": "p1028",
    "team_id": "lax",
    "hole_scores": [
+    4,
+    5,
+    4,
+    3,
+    6,
+    5,
     7,
-    5,
+    2,
     5,
     4,
     4,
-    4,
-    5,
+    6,
+    6,
+    3,
+    3,
     6,
     4,
-    5,
-    4,
-    4,
-    4,
-    7,
-    3,
-    4,
-    5,
-    4
+    6
    ],
    "status": "F"
   },
@@ -1698,24 +1698,24 @@
    "player_id": "p1029",
    "team_id": "lax",
    "hole_scores": [
-    7,
-    7,
+    5,
+    5,
     3,
     3,
     6,
-    4,
-    5,
-    3,
-    5,
     6,
-    4,
-    4,
     6,
-    5,
     2,
-    3,
     4,
-    4
+    4,
+    5,
+    7,
+    8,
+    4,
+    5,
+    6,
+    4,
+    3
    ],
    "status": "F"
   },
@@ -1724,24 +1724,24 @@
    "player_id": "p1030",
    "team_id": "dal",
    "hole_scores": [
+    4,
+    4,
+    4,
+    4,
     5,
+    4,
+    6,
+    2,
+    6,
     3,
+    4,
     4,
     4,
     6,
-    4,
-    5,
-    4,
-    5,
-    4,
-    5,
-    3,
+    2,
     5,
     5,
-    3,
-    3,
-    4,
-    6
+    4
    ],
    "status": "F"
   },
@@ -1750,24 +1750,24 @@
    "player_id": "p1031",
    "team_id": "dal",
    "hole_scores": [
-    4,
-    5,
-    5,
-    3,
-    8,
-    4,
     6,
-    4,
     5,
-    3,
-    6,
-    6,
-    4,
-    5,
-    3,
     7,
+    4,
+    5,
+    5,
+    4,
+    4,
+    5,
+    4,
+    5,
+    5,
+    7,
+    5,
+    3,
     6,
-    3
+    5,
+    5
    ],
    "status": "F"
   },
@@ -1776,24 +1776,24 @@
    "player_id": "p1032",
    "team_id": "dal",
    "hole_scores": [
-    4,
-    4,
-    5,
-    2,
-    4,
-    5,
-    5,
-    2,
     3,
-    3,
-    3,
-    5,
-    4,
-    5,
-    3,
-    5,
     6,
-    4
+    3,
+    5,
+    5,
+    4,
+    6,
+    3,
+    4,
+    3,
+    5,
+    7,
+    6,
+    5,
+    4,
+    6,
+    7,
+    6
    ],
    "status": "F"
   },
@@ -1802,24 +1802,24 @@
    "player_id": "p1033",
    "team_id": "dal",
    "hole_scores": [
-    6,
-    6,
-    6,
-    3,
-    3,
-    5,
     7,
     4,
-    5,
-    3,
+    4,
     4,
     6,
     4,
     5,
     4,
-    5,
+    3,
     4,
-    7
+    4,
+    5,
+    6,
+    7,
+    5,
+    6,
+    5,
+    5
    ],
    "status": "F"
   },
@@ -1828,24 +1828,24 @@
    "player_id": "p1034",
    "team_id": "dal",
    "hole_scores": [
+    6,
+    6,
+    5,
     3,
     5,
     5,
     6,
     5,
-    4,
+    5,
     5,
     4,
-    4,
-    3,
-    4,
     5,
-    6,
-    3,
-    2,
+    5,
     4,
     3,
-    5
+    5,
+    5,
+    4
    ],
    "status": "F"
   },
@@ -1855,22 +1855,22 @@
    "team_id": "dal",
    "hole_scores": [
     4,
-    4,
-    5,
     3,
     6,
-    5,
+    4,
+    6,
+    4,
+    4,
+    4,
+    4,
+    2,
+    4,
+    4,
     7,
     5,
-    5,
-    4,
-    4,
-    4,
-    6,
-    5,
-    4,
     3,
-    5,
+    6,
+    3,
     5
    ],
    "status": "F"
@@ -1880,24 +1880,24 @@
    "player_id": "p1036",
    "team_id": "dal",
    "hole_scores": [
-    5,
-    4,
-    5,
-    4,
-    5,
-    6,
-    8,
-    4,
-    6,
-    4,
     4,
     4,
     5,
-    5,
-    4,
     3,
+    6,
     4,
-    3
+    5,
+    3,
+    5,
+    2,
+    6,
+    5,
+    5,
+    5,
+    4,
+    7,
+    3,
+    5
    ],
    "status": "F"
   },
@@ -1906,24 +1906,24 @@
    "player_id": "p1037",
    "team_id": "phi",
    "hole_scores": [
-    5,
-    5,
-    3,
-    3,
-    6,
-    6,
-    7,
     3,
     5,
+    6,
+    5,
+    5,
+    5,
+    6,
     3,
-    4,
+    5,
+    5,
+    5,
     6,
     6,
     4,
-    2,
-    3,
     4,
-    6
+    5,
+    4,
+    4
    ],
    "status": "F"
   },
@@ -1932,24 +1932,24 @@
    "player_id": "p1038",
    "team_id": "phi",
    "hole_scores": [
-    5,
-    4,
-    6,
-    4,
-    6,
-    4,
-    8,
-    3,
-    4,
-    4,
-    4,
     4,
     5,
     5,
     3,
+    5,
+    4,
+    5,
+    4,
+    5,
+    3,
+    5,
+    5,
+    6,
+    4,
+    3,
     4,
     4,
-    4
+    3
    ],
    "status": "F"
   },
@@ -1959,23 +1959,23 @@
    "team_id": "phi",
    "hole_scores": [
     5,
-    6,
+    5,
     4,
+    4,
+    5,
+    4,
+    7,
     3,
-    6,
     6,
     4,
     4,
     5,
-    3,
     5,
+    7,
+    3,
     4,
     6,
-    4,
-    4,
-    4,
-    3,
-    4
+    6
    ],
    "status": "F"
   },
@@ -1985,21 +1985,21 @@
    "team_id": "phi",
    "hole_scores": [
     4,
-    6,
-    4,
-    3,
-    6,
-    6,
-    6,
-    5,
-    5,
-    3,
     4,
     4,
-    5,
     6,
-    3,
     5,
+    5,
+    4,
+    5,
+    4,
+    6,
+    5,
+    4,
+    5,
+    5,
+    3,
+    3,
     5,
     4
    ],
@@ -2010,24 +2010,24 @@
    "player_id": "p1041",
    "team_id": "phi",
    "hole_scores": [
-    4,
-    4,
-    5,
     3,
-    7,
-    5,
-    7,
-    4,
-    7,
-    4,
-    4,
-    4,
-    5,
-    5,
+    6,
     4,
     4,
     3,
-    5
+    7,
+    6,
+    3,
+    4,
+    5,
+    5,
+    5,
+    6,
+    5,
+    3,
+    5,
+    5,
+    6
    ],
    "status": "F"
   },
@@ -2036,24 +2036,24 @@
    "player_id": "p1042",
    "team_id": "phi",
    "hole_scores": [
-    4,
     5,
     5,
     3,
     3,
-    7,
-    5,
+    6,
     4,
-    4,
-    3,
-    4,
-    5,
     5,
     3,
     4,
     6,
+    4,
     5,
-    4
+    5,
+    6,
+    2,
+    4,
+    5,
+    5
    ],
    "status": "F"
   },
@@ -2062,24 +2062,24 @@
    "player_id": "p1043",
    "team_id": "phi",
    "hole_scores": [
-    4,
+    5,
     4,
     5,
     3,
     6,
-    7,
-    5,
-    4,
-    4,
-    4,
-    5,
-    4,
     5,
     5,
     4,
+    5,
+    3,
+    6,
     4,
     4,
-    2
+    3,
+    5,
+    6,
+    4,
+    5
    ],
    "status": "F"
   },
@@ -2090,20 +2090,20 @@
    "hole_scores": [
     4,
     4,
-    4,
+    6,
+    2,
+    5,
     5,
     6,
+    2,
+    5,
+    4,
+    4,
+    6,
+    6,
+    4,
+    3,
     7,
-    5,
-    3,
-    4,
-    3,
-    4,
-    3,
-    6,
-    6,
-    6,
-    4,
     3,
     5
    ],
@@ -2114,24 +2114,24 @@
    "player_id": "p1045",
    "team_id": "det",
    "hole_scores": [
-    6,
     4,
-    6,
+    4,
     3,
-    5,
-    4,
-    5,
-    4,
-    5,
     3,
-    6,
-    5,
-    5,
-    3,
-    4,
+    8,
     4,
     6,
-    4
+    4,
+    5,
+    4,
+    4,
+    5,
+    4,
+    5,
+    4,
+    6,
+    4,
+    5
    ],
    "status": "F"
   },
@@ -2140,24 +2140,24 @@
    "player_id": "p1046",
    "team_id": "det",
    "hole_scores": [
+    5,
     4,
     4,
     5,
-    4,
     6,
     6,
     5,
-    5,
-    4,
     3,
     4,
-    5,
+    3,
     5,
     3,
-    4,
-    4,
+    6,
+    7,
+    3,
     5,
-    5
+    4,
+    4
    ],
    "status": "F"
   },
@@ -2166,24 +2166,24 @@
    "player_id": "p1047",
    "team_id": "det",
    "hole_scores": [
+    3,
+    3,
+    6,
+    3,
+    4,
     4,
     5,
     5,
-    3,
-    6,
     5,
-    5,
-    6,
-    5,
-    3,
     5,
     4,
-    6,
+    5,
     7,
+    5,
     4,
     5,
-    5,
-    6
+    7,
+    4
    ],
    "status": "F"
   },
@@ -2193,23 +2193,23 @@
    "team_id": "det",
    "hole_scores": [
     5,
-    4,
+    5,
     4,
     3,
-    4,
-    4,
+    7,
     5,
+    7,
     3,
-    4,
-    5,
     3,
     4,
     5,
+    5,
+    7,
     4,
-    4,
-    4,
-    4,
-    5
+    3,
+    3,
+    3,
+    6
    ],
    "status": "F"
   },
@@ -2219,23 +2219,23 @@
    "team_id": "det",
    "hole_scores": [
     4,
-    5,
+    4,
     3,
+    3,
+    7,
+    3,
+    6,
+    3,
+    6,
+    4,
     2,
-    6,
-    6,
-    5,
+    4,
+    7,
+    4,
     3,
-    4,
-    4,
-    4,
-    6,
     6,
     4,
-    4,
-    4,
-    5,
-    3
+    5
    ],
    "status": "F"
   },
@@ -2244,24 +2244,24 @@
    "player_id": "p1050",
    "team_id": "det",
    "hole_scores": [
+    4,
+    5,
+    4,
     5,
     7,
+    7,
     6,
-    3,
+    4,
+    6,
+    2,
+    5,
     6,
     5,
     6,
     3,
-    4,
     3,
-    5,
-    4,
-    8,
-    6,
-    4,
-    4,
-    4,
-    6
+    3,
+    3
    ],
    "status": "F"
   },
@@ -2270,23 +2270,23 @@
    "player_id": "p1051",
    "team_id": "sfo",
    "hole_scores": [
-    6,
-    7,
-    5,
+    4,
     4,
     5,
-    3,
-    6,
     4,
+    6,
     5,
-    3,
     6,
-    4,
-    6,
-    4,
-    5,
     3,
     4,
+    4,
+    5,
+    5,
+    5,
+    4,
+    2,
+    4,
+    5,
     4
    ],
    "status": "F"
@@ -2297,23 +2297,23 @@
    "team_id": "sfo",
    "hole_scores": [
     4,
-    4,
-    4,
+    5,
+    5,
     4,
     6,
-    4,
     6,
-    5,
     6,
-    4,
-    5,
-    5,
-    5,
+    3,
     6,
     3,
     5,
+    4,
     5,
-    4
+    5,
+    4,
+    7,
+    4,
+    5
    ],
    "status": "F"
   },
@@ -2322,24 +2322,24 @@
    "player_id": "p1053",
    "team_id": "sfo",
    "hole_scores": [
-    6,
     4,
-    7,
-    6,
-    7,
     4,
     5,
+    5,
+    5,
     4,
+    5,
+    5,
+    5,
+    4,
+    4,
+    5,
+    5,
     4,
     3,
-    3,
     5,
     5,
-    6,
-    2,
-    4,
-    4,
-    5
+    3
    ],
    "status": "F"
   },
@@ -2348,24 +2348,24 @@
    "player_id": "p1054",
    "team_id": "sfo",
    "hole_scores": [
-    4,
-    4,
-    3,
-    5,
-    4,
-    4,
-    7,
-    5,
-    7,
-    3,
-    4,
+    6,
     5,
     6,
+    6,
+    4,
     4,
     5,
+    3,
+    5,
+    4,
+    6,
     4,
     7,
-    4
+    5,
+    4,
+    4,
+    4,
+    3
    ],
    "status": "F"
   },
@@ -2374,23 +2374,23 @@
    "player_id": "p1055",
    "team_id": "sfo",
    "hole_scores": [
+    4,
+    4,
+    4,
     3,
-    4,
-    4,
-    4,
-    7,
-    4,
-    5,
-    4,
     6,
     5,
     5,
     5,
     4,
+    3,
     5,
     4,
+    6,
     5,
-    4,
+    3,
+    5,
+    5,
     6
    ],
    "status": "F"
@@ -2402,22 +2402,22 @@
    "hole_scores": [
     5,
     4,
+    6,
+    2,
+    5,
+    5,
+    5,
     5,
     3,
+    4,
     5,
+    4,
+    5,
+    4,
     5,
     6,
-    5,
-    5,
-    6,
     4,
-    5,
-    4,
-    3,
-    4,
-    4,
-    4,
-    4
+    5
    ],
    "status": "F"
   },
@@ -2426,24 +2426,24 @@
    "player_id": "p1057",
    "team_id": "sfo",
    "hole_scores": [
-    3,
+    4,
     5,
     4,
-    2,
+    3,
+    4,
     5,
+    7,
+    4,
+    5,
+    2,
     6,
     5,
-    3,
-    5,
-    5,
-    3,
-    5,
-    5,
+    8,
     4,
     4,
     4,
-    4,
-    3
+    5,
+    4
    ],
    "status": "F"
   },
@@ -2452,22 +2452,22 @@
    "player_id": "p1058",
    "team_id": "mia",
    "hole_scores": [
-    4,
-    7,
-    4,
-    4,
     5,
-    4,
+    6,
+    6,
+    3,
+    5,
+    5,
+    6,
     6,
     3,
     4,
     5,
     4,
-    4,
     6,
     4,
-    3,
-    4,
+    6,
+    5,
     4,
     5
    ],
@@ -2478,22 +2478,22 @@
    "player_id": "p1059",
    "team_id": "mia",
    "hole_scores": [
-    4,
-    5,
-    4,
-    4,
-    7,
-    4,
-    6,
-    4,
-    4,
-    5,
-    7,
-    4,
     6,
     5,
     3,
+    2,
+    6,
+    6,
+    6,
+    4,
+    4,
+    4,
+    2,
     5,
+    8,
+    5,
+    3,
+    4,
     4,
     4
    ],
@@ -2505,23 +2505,23 @@
    "team_id": "mia",
    "hole_scores": [
     4,
-    4,
+    6,
     4,
     3,
-    6,
     5,
     5,
-    4,
-    4,
-    6,
-    3,
-    3,
     6,
     4,
-    2,
+    5,
+    5,
+    5,
+    6,
+    6,
     4,
-    4,
-    4
+    3,
+    5,
+    3,
+    6
    ],
    "status": "F"
   },
@@ -2530,24 +2530,24 @@
    "player_id": "p1061",
    "team_id": "mia",
    "hole_scores": [
+    5,
+    4,
+    4,
+    5,
+    6,
+    4,
+    6,
     3,
-    4,
-    5,
-    4,
-    5,
-    5,
-    5,
-    2,
+    6,
     4,
     4,
+    4,
+    8,
+    6,
     5,
     4,
     5,
-    5,
-    3,
-    5,
-    5,
-    3
+    6
    ],
    "status": "F"
   },
@@ -2556,24 +2556,24 @@
    "player_id": "p1062",
    "team_id": "mia",
    "hole_scores": [
-    5,
-    5,
     4,
-    2,
-    5,
     7,
+    5,
+    3,
+    6,
+    5,
     6,
     4,
     6,
-    3,
-    3,
     5,
     5,
-    3,
-    3,
+    4,
     5,
+    4,
     5,
-    4
+    4,
+    4,
+    6
    ],
    "status": "F"
   },
@@ -2582,24 +2582,24 @@
    "player_id": "p1063",
    "team_id": "mia",
    "hole_scores": [
-    6,
-    5,
     4,
-    5,
-    5,
+    4,
+    4,
+    4,
+    7,
+    6,
+    8,
     3,
     6,
+    3,
     4,
     5,
+    7,
     4,
-    6,
+    3,
     5,
-    6,
-    5,
     4,
-    6,
-    4,
-    7
+    5
    ],
    "status": "F"
   },
@@ -2609,22 +2609,22 @@
    "team_id": "chi",
    "hole_scores": [
     4,
-    6,
-    6,
-    4,
-    6,
-    4,
-    3,
     4,
     4,
     5,
-    4,
-    4,
     6,
-    4,
-    5,
-    5,
+    6,
+    6,
+    6,
     7,
+    5,
+    5,
+    5,
+    5,
+    6,
+    4,
+    5,
+    6,
     4
    ],
    "status": "in_progress"
@@ -2634,23 +2634,23 @@
    "player_id": "p1002",
    "team_id": "chi",
    "hole_scores": [
-    7,
-    7,
-    6,
-    4,
-    5,
-    7,
-    5,
     4,
     6,
     5,
-    5,
-    5,
     6,
-    3,
-    3,
+    7,
     5,
     5,
+    4,
+    4,
+    4,
+    5,
+    2,
+    5,
+    5,
+    3,
+    4,
+    6,
     4
    ],
    "status": "in_progress"
@@ -2660,24 +2660,24 @@
    "player_id": "p1003",
    "team_id": "chi",
    "hole_scores": [
-    4,
-    5,
-    5,
-    4,
-    5,
-    5,
-    5,
-    5,
+    7,
+    7,
     7,
     3,
-    3,
     5,
+    5,
+    6,
+    1,
+    5,
+    3,
     6,
     5,
     4,
-    5,
     4,
-    3
+    5,
+    6,
+    5,
+    4
    ],
    "status": "in_progress"
   },
@@ -2686,23 +2686,23 @@
    "player_id": "p1004",
    "team_id": "chi",
    "hole_scores": [
-    4,
     5,
     4,
     4,
-    6,
-    5,
-    5,
     2,
     5,
-    4,
+    5,
     5,
     4,
-    5,
     4,
     3,
+    7,
     5,
     5,
+    3,
+    3,
+    5,
+    3,
     5
    ],
    "status": "in_progress"
@@ -2712,24 +2712,24 @@
    "player_id": "p1005",
    "team_id": "chi",
    "hole_scores": [
-    3,
-    3,
+    5,
+    6,
+    5,
+    4,
+    6,
+    6,
     7,
     4,
-    6,
-    6,
-    5,
-    4,
-    5,
     4,
     3,
-    2,
     4,
+    3,
+    7,
     5,
     4,
     5,
-    4,
-    6
+    5,
+    7
    ],
    "status": "in_progress"
   },
@@ -2739,22 +2739,22 @@
    "team_id": "chi",
    "hole_scores": [
     4,
-    5,
-    5,
     3,
+    4,
+    4,
+    8,
+    4,
+    7,
+    2,
+    6,
+    3,
+    4,
+    5,
+    4,
     6,
     4,
-    6,
     4,
     5,
-    3,
-    5,
-    4,
-    5,
-    4,
-    3,
-    5,
-    4,
     5
    ],
    "status": "in_progress"
@@ -2766,19 +2766,19 @@
    "hole_scores": [
     6,
     4,
-    6,
-    3,
+    4,
+    4,
     5,
     4,
     6,
+    3,
     4,
-    7,
-    2,
-    4,
-    4,
-    4,
-    4,
+    3,
+    5,
+    5,
     6,
+    7,
+    4,
     4,
     5,
     5
@@ -2791,22 +2791,22 @@
    "team_id": "chi",
    "hole_scores": [
     4,
+    5,
     4,
     4,
+    5,
+    5,
+    5,
     3,
-    6,
-    4,
     5,
-    6,
-    4,
-    2,
-    6,
-    4,
-    6,
     5,
     4,
     4,
+    6,
     5,
+    3,
+    5,
+    6,
     4
    ],
    "status": "in_progress"
@@ -2816,24 +2816,24 @@
    "player_id": "p1009",
    "team_id": "bos",
    "hole_scores": [
-    4,
-    4,
     5,
-    1,
+    5,
+    7,
+    5,
+    3,
+    5,
+    6,
+    3,
     5,
     4,
     5,
     3,
-    4,
-    2,
-    4,
-    4,
-    4,
     5,
     4,
-    5,
-    4,
-    5
+    3,
+    3,
+    6,
+    4
    ],
    "status": "in_progress"
   },
@@ -2843,23 +2843,23 @@
    "team_id": "bos",
    "hole_scores": [
     4,
+    3,
     4,
+    3,
+    6,
+    4,
+    6,
+    4,
+    6,
+    3,
     3,
     4,
     6,
     5,
-    6,
-    2,
-    4,
-    5,
-    3,
-    3,
-    3,
-    3,
     4,
     4,
-    3,
-    4
+    7,
+    5
    ],
    "status": "in_progress"
   },
@@ -2869,23 +2869,23 @@
    "team_id": "bos",
    "hole_scores": [
     4,
-    4,
-    6,
-    4,
-    6,
-    4,
-    7,
-    6,
-    7,
-    4,
     5,
-    4,
-    6,
-    6,
+    5,
     2,
-    3,
     5,
-    4
+    6,
+    3,
+    3,
+    6,
+    4,
+    4,
+    4,
+    6,
+    4,
+    4,
+    5,
+    4,
+    5
    ],
    "status": "in_progress"
   },
@@ -2895,23 +2895,23 @@
    "team_id": "bos",
    "hole_scores": [
     5,
+    5,
     4,
-    6,
     3,
     6,
     5,
+    5,
+    4,
     6,
+    3,
     5,
     4,
     5,
     4,
-    5,
-    5,
-    5,
+    2,
     4,
-    6,
-    6,
-    5
+    4,
+    6
    ],
    "status": "in_progress"
   },
@@ -2921,23 +2921,23 @@
    "team_id": "bos",
    "hole_scores": [
     4,
-    4,
+    5,
     5,
     3,
     5,
-    5,
-    8,
-    5,
-    5,
-    4,
     4,
     6,
     4,
     5,
+    5,
+    5,
+    5,
+    6,
     3,
+    3,
+    5,
     4,
-    3,
-    6
+    5
    ],
    "status": "in_progress"
   },
@@ -2947,20 +2947,20 @@
    "team_id": "bos",
    "hole_scores": [
     5,
-    3,
-    7,
-    3,
     5,
     5,
-    6,
-    6,
+    3,
     4,
+    7,
+    6,
     2,
     4,
     4,
-    5,
-    3,
     4,
+    5,
+    8,
+    6,
+    6,
     5,
     4,
     5
@@ -2972,24 +2972,24 @@
    "player_id": "p1015",
    "team_id": "bos",
    "hole_scores": [
-    5,
     4,
+    4,
+    3,
+    2,
+    4,
+    5,
     5,
     3,
     5,
     5,
+    5,
+    4,
     6,
-    3,
-    4,
-    3,
-    4,
     5,
-    6,
+    3,
     4,
     4,
-    4,
-    4,
-    3
+    4
    ],
    "status": "in_progress"
   },
@@ -2998,24 +2998,24 @@
    "player_id": "p1016",
    "team_id": "bos",
    "hole_scores": [
+    6,
     5,
+    4,
+    3,
     7,
-    4,
-    2,
     5,
+    6,
+    3,
     4,
     4,
-    2,
     6,
     4,
-    5,
+    6,
     4,
-    8,
-    5,
     3,
     5,
     5,
-    4
+    5
    ],
    "status": "in_progress"
   },
@@ -3025,23 +3025,23 @@
    "team_id": "nyc",
    "hole_scores": [
     5,
+    6,
+    5,
+    4,
+    5,
+    4,
+    6,
     2,
-    7,
-    3,
-    6,
-    3,
-    6,
-    3,
     4,
-    4,
-    4,
+    3,
     5,
-    6,
+    5,
+    5,
+    5,
     5,
     4,
-    5,
     4,
-    5
+    4
    ],
    "status": "in_progress"
   },
@@ -3051,23 +3051,23 @@
    "team_id": "nyc",
    "hole_scores": [
     5,
-    5,
-    5,
+    4,
+    4,
     3,
     5,
     5,
     5,
     3,
+    6,
+    3,
     4,
     4,
+    6,
     5,
     3,
-    5,
     4,
-    4,
-    4,
-    4,
-    4
+    3,
+    5
    ],
    "status": "in_progress"
   },
@@ -3076,24 +3076,24 @@
    "player_id": "p1019",
    "team_id": "nyc",
    "hole_scores": [
-    4,
-    7,
     5,
-    3,
-    4,
-    7,
-    5,
-    4,
-    4,
-    4,
-    4,
     4,
     6,
+    4,
     5,
     3,
+    6,
+    3,
     5,
+    3,
+    6,
+    3,
+    6,
+    6,
+    3,
+    7,
     4,
-    3
+    5
    ],
    "status": "in_progress"
   },
@@ -3102,24 +3102,24 @@
    "player_id": "p1020",
    "team_id": "nyc",
    "hole_scores": [
-    7,
-    5,
-    7,
-    4,
     5,
     5,
-    5,
-    5,
-    5,
-    3,
     5,
     4,
     6,
+    4,
+    6,
     5,
-    3,
+    6,
     5,
     5,
-    7
+    5,
+    5,
+    7,
+    4,
+    5,
+    5,
+    5
    ],
    "status": "in_progress"
   },
@@ -3128,24 +3128,24 @@
    "player_id": "p1021",
    "team_id": "nyc",
    "hole_scores": [
-    3,
-    3,
+    5,
     4,
+    4,
+    4,
+    5,
+    5,
+    5,
     5,
     5,
     4,
     6,
-    4,
+    3,
     6,
-    2,
-    5,
-    4,
-    5,
     4,
     3,
-    4,
     5,
-    3
+    5,
+    4
    ],
    "status": "in_progress"
   },
@@ -3154,23 +3154,23 @@
    "player_id": "p1022",
    "team_id": "nyc",
    "hole_scores": [
-    5,
-    5,
-    6,
-    6,
-    6,
-    5,
-    6,
-    5,
-    6,
-    2,
-    4,
-    4,
-    6,
-    5,
     4,
     5,
     6,
+    6,
+    6,
+    6,
+    6,
+    3,
+    3,
+    4,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    4,
     4
    ],
    "status": "in_progress"
@@ -3180,22 +3180,22 @@
    "player_id": "p1023",
    "team_id": "lax",
    "hole_scores": [
-    4,
     5,
     4,
-    3,
-    5,
-    3,
-    5,
-    3,
     4,
+    2,
+    5,
     3,
-    5,
-    5,
-    5,
+    6,
+    3,
     5,
     4,
     6,
+    5,
+    6,
+    4,
+    5,
+    5,
     4,
     4
    ],
@@ -3206,23 +3206,23 @@
    "player_id": "p1024",
    "team_id": "lax",
    "hole_scores": [
-    4,
-    4,
-    4,
-    6,
     5,
-    6,
     5,
     3,
-    4,
-    6,
-    4,
+    3,
     5,
-    5,
+    3,
     5,
     3,
     4,
     3,
+    4,
+    5,
+    5,
+    6,
+    4,
+    4,
+    4,
     4
    ],
    "status": "in_progress"
@@ -3233,23 +3233,23 @@
    "team_id": "lax",
    "hole_scores": [
     4,
+    7,
+    2,
+    6,
+    4,
+    4,
+    6,
+    3,
+    5,
     4,
     5,
-    3,
+    6,
     7,
     4,
-    5,
-    2,
+    3,
     4,
     4,
-    4,
-    4,
-    5,
-    5,
-    4,
-    5,
-    5,
-    7
+    6
    ],
    "status": "in_progress"
   },
@@ -3258,23 +3258,23 @@
    "player_id": "p1026",
    "team_id": "lax",
    "hole_scores": [
-    5,
-    5,
+    4,
     5,
     4,
+    4,
+    6,
     7,
-    4,
-    4,
+    8,
     3,
+    5,
+    4,
+    5,
+    6,
+    6,
+    5,
+    4,
+    5,
     7,
-    3,
-    5,
-    4,
-    4,
-    4,
-    3,
-    4,
-    5,
     4
    ],
    "status": "in_progress"
@@ -3285,23 +3285,23 @@
    "team_id": "lax",
    "hole_scores": [
     3,
+    3,
     7,
     4,
-    5,
-    4,
-    3,
-    4,
-    4,
+    8,
     6,
-    3,
-    4,
-    4,
-    4,
-    3,
-    3,
+    6,
     5,
+    4,
+    4,
     5,
-    4
+    4,
+    7,
+    5,
+    4,
+    7,
+    4,
+    5
    ],
    "status": "in_progress"
   },
@@ -3310,24 +3310,24 @@
    "player_id": "p1028",
    "team_id": "lax",
    "hole_scores": [
+    4,
+    4,
+    4,
+    3,
+    4,
+    6,
+    5,
+    5,
     6,
     3,
-    5,
-    5,
-    5,
+    4,
+    3,
     6,
     4,
-    3,
-    3,
-    5,
-    5,
-    5,
-    5,
-    5,
+    4,
     4,
     5,
-    4,
-    5
+    6
    ],
    "status": "in_progress"
   },
@@ -3336,20 +3336,20 @@
    "player_id": "p1029",
    "team_id": "lax",
    "hole_scores": [
+    4,
+    4,
     5,
-    4,
-    4,
     3,
     6,
     4,
-    7,
+    5,
     3,
-    5,
-    5,
+    4,
+    3,
+    4,
+    4,
     4,
     5,
-    6,
-    6,
     4,
     6,
     6,
@@ -3363,23 +3363,23 @@
    "team_id": "dal",
    "hole_scores": [
     4,
-    4,
-    4,
+    5,
     3,
-    6,
-    3,
-    5,
-    5,
-    7,
-    5,
-    5,
-    5,
-    4,
-    4,
     2,
     5,
+    3,
+    5,
+    3,
+    7,
+    2,
+    5,
+    6,
+    6,
     4,
-    4
+    3,
+    5,
+    4,
+    6
    ],
    "status": "in_progress"
   },
@@ -3389,23 +3389,23 @@
    "team_id": "dal",
    "hole_scores": [
     6,
-    5,
-    5,
-    5,
+    4,
     7,
-    4,
     5,
-    4,
-    5,
-    4,
     6,
-    4,
-    5,
+    6,
     6,
     3,
+    4,
+    3,
     5,
+    4,
+    4,
     6,
-    6
+    3,
+    7,
+    3,
+    5
    ],
    "status": "in_progress"
   },
@@ -3414,24 +3414,24 @@
    "player_id": "p1032",
    "team_id": "dal",
    "hole_scores": [
-    7,
+    6,
     5,
+    5,
+    3,
+    5,
+    5,
+    5,
+    6,
     4,
+    4,
+    5,
+    6,
+    6,
+    5,
     4,
     6,
-    3,
-    8,
-    3,
-    7,
-    4,
-    4,
     5,
-    5,
-    5,
-    3,
-    3,
-    5,
-    5
+    4
    ],
    "status": "in_progress"
   },
@@ -3440,24 +3440,24 @@
    "player_id": "p1033",
    "team_id": "dal",
    "hole_scores": [
+    5,
+    5,
+    5,
     4,
-    3,
-    5,
-    3,
-    4,
-    5,
-    5,
-    3,
     6,
-    3,
     4,
-    5,
-    5,
-    6,
+    8,
     2,
+    6,
+    3,
+    5,
+    4,
     5,
     3,
-    3
+    3,
+    4,
+    6,
+    5
    ],
    "status": "in_progress"
   },
@@ -3467,23 +3467,23 @@
    "team_id": "dal",
    "hole_scores": [
     4,
+    5,
+    5,
+    3,
+    4,
+    4,
+    5,
     4,
     5,
     3,
     5,
-    4,
-    6,
-    3,
     5,
     4,
     4,
-    4,
+    3,
     5,
     3,
-    4,
-    7,
-    6,
-    5
+    4
    ],
    "status": "in_progress"
   },
@@ -3492,24 +3492,24 @@
    "player_id": "p1035",
    "team_id": "dal",
    "hole_scores": [
-    6,
-    5,
-    6,
-    5,
-    4,
-    4,
-    6,
-    3,
-    5,
-    4,
-    5,
-    5,
     7,
     5,
+    4,
+    4,
+    4,
+    5,
+    6,
+    6,
+    4,
     3,
     6,
-    3,
-    6
+    4,
+    5,
+    6,
+    6,
+    4,
+    5,
+    5
    ],
    "status": "in_progress"
   },
@@ -3518,24 +3518,24 @@
    "player_id": "p1036",
    "team_id": "dal",
    "hole_scores": [
-    4,
-    4,
-    7,
+    6,
+    5,
     3,
+    2,
     5,
     4,
-    6,
-    4,
-    4,
-    4,
-    4,
+    8,
     5,
-    6,
-    4,
-    4,
-    4,
     3,
-    3
+    3,
+    5,
+    3,
+    5,
+    3,
+    3,
+    4,
+    6,
+    5
    ],
    "status": "in_progress"
   },
@@ -3544,24 +3544,24 @@
    "player_id": "p1037",
    "team_id": "phi",
    "hole_scores": [
-    6,
-    4,
-    5,
-    3,
-    6,
-    4,
-    4,
-    2,
-    4,
-    3,
-    4,
     4,
     5,
     5,
+    5,
+    7,
+    5,
+    6,
+    4,
+    4,
     3,
     4,
-    6,
-    5
+    3,
+    8,
+    5,
+    4,
+    5,
+    5,
+    4
    ],
    "status": "in_progress"
   },
@@ -3570,24 +3570,24 @@
    "player_id": "p1038",
    "team_id": "phi",
    "hole_scores": [
-    6,
-    5,
-    5,
     4,
-    4,
-    6,
-    5,
-    4,
-    5,
-    5,
-    5,
-    4,
-    5,
-    6,
     4,
     4,
     3,
-    4
+    7,
+    4,
+    5,
+    3,
+    5,
+    5,
+    5,
+    3,
+    6,
+    5,
+    2,
+    4,
+    3,
+    5
    ],
    "status": "in_progress"
   },
@@ -3596,24 +3596,24 @@
    "player_id": "p1039",
    "team_id": "phi",
    "hole_scores": [
+    5,
+    4,
+    4,
+    3,
+    6,
+    6,
+    5,
+    4,
+    4,
     3,
     4,
-    6,
-    4,
-    3,
     5,
     5,
-    4,
-    5,
-    4,
-    6,
-    5,
-    6,
     6,
     3,
-    4,
     6,
-    5
+    3,
+    4
    ],
    "status": "in_progress"
   },
@@ -3622,23 +3622,23 @@
    "player_id": "p1040",
    "team_id": "phi",
    "hole_scores": [
+    6,
+    5,
+    3,
+    4,
+    6,
+    4,
+    5,
     3,
     5,
-    4,
-    4,
-    6,
-    4,
-    7,
-    3,
-    6,
-    6,
-    3,
-    6,
-    6,
-    4,
     3,
     4,
     5,
+    6,
+    4,
+    4,
+    5,
+    4,
     5
    ],
    "status": "in_progress"
@@ -3648,24 +3648,24 @@
    "player_id": "p1041",
    "team_id": "phi",
    "hole_scores": [
+    4,
+    4,
     5,
-    7,
+    4,
     5,
+    5,
+    6,
+    3,
+    4,
     3,
     6,
     4,
-    7,
+    4,
     5,
     4,
-    4,
-    4,
-    6,
-    6,
-    5,
     3,
-    6,
     4,
-    5
+    3
    ],
    "status": "in_progress"
   },
@@ -3675,23 +3675,23 @@
    "team_id": "phi",
    "hole_scores": [
     4,
-    4,
+    5,
+    5,
     3,
-    2,
     5,
     4,
+    5,
+    3,
     4,
-    4,
-    5,
-    5,
-    5,
-    5,
-    5,
     4,
     3,
     4,
     5,
-    5
+    4,
+    4,
+    5,
+    4,
+    4
    ],
    "status": "in_progress"
   },
@@ -3700,24 +3700,24 @@
    "player_id": "p1043",
    "team_id": "phi",
    "hole_scores": [
-    5,
     4,
+    6,
     4,
-    3,
-    7,
-    4,
-    5,
-    4,
-    5,
-    3,
-    4,
-    3,
-    7,
-    3,
     3,
     6,
+    5,
+    5,
     3,
-    4
+    6,
+    2,
+    5,
+    5,
+    6,
+    3,
+    4,
+    4,
+    4,
+    3
    ],
    "status": "in_progress"
   },
@@ -3726,20 +3726,20 @@
    "player_id": "p1044",
    "team_id": "det",
    "hole_scores": [
-    5,
-    7,
     4,
-    3,
-    6,
-    3,
-    5,
     4,
-    3,
-    2,
     5,
     4,
     6,
+    6,
     5,
+    4,
+    5,
+    4,
+    5,
+    4,
+    5,
+    4,
     3,
     5,
     5,
@@ -3753,21 +3753,21 @@
    "team_id": "det",
    "hole_scores": [
     4,
-    6,
-    5,
-    4,
-    5,
-    3,
-    5,
     4,
     6,
+    4,
+    5,
+    6,
+    6,
+    4,
+    5,
     2,
     4,
-    6,
-    5,
-    5,
     4,
-    5,
+    4,
+    7,
+    4,
+    4,
     5,
     4
    ],
@@ -3778,24 +3778,24 @@
    "player_id": "p1046",
    "team_id": "det",
    "hole_scores": [
-    6,
-    5,
-    5,
-    5,
-    5,
-    5,
     5,
     4,
-    5,
-    4,
-    4,
-    6,
-    5,
     5,
     3,
+    4,
+    5,
+    5,
+    4,
     7,
-    6,
-    6
+    4,
+    4,
+    4,
+    5,
+    3,
+    5,
+    4,
+    5,
+    4
    ],
    "status": "in_progress"
   },
@@ -3804,24 +3804,24 @@
    "player_id": "p1047",
    "team_id": "det",
    "hole_scores": [
+    4,
     7,
-    5,
     4,
-    4,
-    4,
-    4,
-    5,
     3,
-    4,
-    5,
-    5,
-    5,
-    7,
-    5,
-    4,
     5,
     6,
-    5
+    6,
+    4,
+    5,
+    5,
+    4,
+    4,
+    6,
+    7,
+    3,
+    5,
+    6,
+    6
    ],
    "status": "in_progress"
   },
@@ -3831,23 +3831,23 @@
    "team_id": "det",
    "hole_scores": [
     4,
+    6,
     5,
     4,
-    4,
+    5,
     6,
-    6,
+    8,
     4,
+    5,
     3,
     5,
     4,
+    7,
     4,
+    2,
+    7,
     4,
-    5,
-    6,
-    3,
-    4,
-    4,
-    7
+    4
    ],
    "status": "in_progress"
   },
@@ -3856,24 +3856,24 @@
    "player_id": "p1049",
    "team_id": "det",
    "hole_scores": [
-    4,
-    4,
+    5,
     5,
     3,
-    5,
-    3,
-    5,
-    4,
-    5,
-    2,
-    4,
-    4,
-    5,
     6,
-    3,
     5,
     4,
-    4
+    5,
+    4,
+    4,
+    4,
+    5,
+    5,
+    5,
+    3,
+    5,
+    3,
+    4,
+    5
    ],
    "status": "in_progress"
   },
@@ -3882,24 +3882,24 @@
    "player_id": "p1050",
    "team_id": "det",
    "hole_scores": [
-    5,
-    4,
-    5,
+    6,
     5,
     6,
     4,
     6,
     4,
+    8,
     5,
+    4,
     3,
-    4,
-    3,
-    4,
-    4,
     5,
     4,
+    6,
     5,
-    6
+    6,
+    5,
+    6,
+    5
    ],
    "status": "in_progress"
   },
@@ -3909,23 +3909,23 @@
    "team_id": "sfo",
    "hole_scores": [
     4,
-    5,
-    3,
-    4,
-    5,
-    7,
-    5,
-    4,
-    5,
-    2,
-    5,
     6,
-    7,
+    6,
     4,
+    4,
+    6,
+    5,
+    3,
+    4,
+    3,
+    6,
+    4,
+    6,
     3,
     5,
     5,
-    4
+    5,
+    5
    ],
    "status": "in_progress"
   },
@@ -3934,22 +3934,22 @@
    "player_id": "p1052",
    "team_id": "sfo",
    "hole_scores": [
-    4,
-    7,
-    4,
-    4,
-    7,
-    4,
     6,
-    3,
-    5,
     4,
     5,
+    3,
+    7,
+    5,
+    6,
     5,
     5,
-    3,
-    3,
     4,
+    4,
+    4,
+    8,
+    4,
+    3,
+    5,
     4,
     4
    ],
@@ -3961,22 +3961,22 @@
    "team_id": "sfo",
    "hole_scores": [
     5,
+    4,
+    5,
+    3,
+    5,
+    5,
+    6,
     3,
     4,
     4,
     5,
+    4,
+    4,
+    5,
+    3,
     4,
     7,
-    3,
-    5,
-    3,
-    4,
-    4,
-    5,
-    4,
-    4,
-    4,
-    4,
     4
    ],
    "status": "in_progress"
@@ -3986,24 +3986,24 @@
    "player_id": "p1054",
    "team_id": "sfo",
    "hole_scores": [
-    6,
-    6,
+    7,
+    5,
     5,
     3,
-    6,
-    4,
+    7,
     5,
+    6,
     3,
     5,
     4,
-    6,
-    6,
-    6,
-    5,
     4,
     5,
-    5,
-    6
+    8,
+    4,
+    4,
+    4,
+    4,
+    4
    ],
    "status": "in_progress"
   },
@@ -4014,22 +4014,22 @@
    "hole_scores": [
     4,
     5,
-    5,
+    4,
+    3,
+    6,
     4,
     6,
-    5,
-    5,
-    4,
-    5,
-    4,
-    5,
-    5,
-    4,
-    5,
-    4,
-    4,
+    3,
     6,
-    7
+    4,
+    5,
+    4,
+    5,
+    5,
+    4,
+    4,
+    4,
+    6
    ],
    "status": "in_progress"
   },
@@ -4038,24 +4038,24 @@
    "player_id": "p1056",
    "team_id": "sfo",
    "hole_scores": [
-    7,
+    4,
+    5,
     6,
     4,
+    6,
+    5,
+    6,
+    5,
     4,
+    2,
     5,
     4,
     6,
-    3,
+    5,
     4,
-    3,
     4,
     5,
-    5,
-    5,
-    3,
-    6,
-    5,
-    4
+    3
    ],
    "status": "in_progress"
   },
@@ -4066,21 +4066,21 @@
    "hole_scores": [
     4,
     4,
-    4,
-    4,
     5,
+    3,
+    6,
     5,
     5,
     3,
+    3,
     5,
+    5,
+    4,
     5,
     5,
     4,
     6,
     4,
-    4,
-    4,
-    5,
     4
    ],
    "status": "in_progress"
@@ -4090,24 +4090,24 @@
    "player_id": "p1058",
    "team_id": "mia",
    "hole_scores": [
+    4,
+    4,
     5,
     3,
-    7,
-    5,
-    7,
     6,
-    8,
-    4,
     5,
     5,
     4,
     5,
+    4,
+    5,
+    5,
     6,
-    6,
+    5,
     3,
-    6,
     4,
-    4
+    4,
+    6
    ],
    "status": "in_progress"
   },
@@ -4117,23 +4117,23 @@
    "team_id": "mia",
    "hole_scores": [
     3,
-    6,
     5,
-    3,
+    4,
+    4,
+    4,
+    5,
     5,
     3,
     4,
     3,
-    5,
-    3,
-    3,
-    6,
-    6,
     4,
-    3,
-    3,
+    4,
+    8,
     5,
-    3
+    5,
+    4,
+    5,
+    4
    ],
    "status": "in_progress"
   },
@@ -4143,22 +4143,22 @@
    "team_id": "mia",
    "hole_scores": [
     6,
-    3,
-    4,
-    4,
-    8,
-    3,
     5,
+    4,
     3,
+    4,
+    4,
+    6,
+    4,
+    4,
     3,
+    4,
+    5,
+    5,
+    4,
     2,
-    4,
-    4,
-    5,
-    5,
-    4,
-    4,
-    5,
+    6,
+    3,
     4
    ],
    "status": "in_progress"
@@ -4168,24 +4168,24 @@
    "player_id": "p1061",
    "team_id": "mia",
    "hole_scores": [
-    7,
-    4,
-    5,
-    5,
     6,
-    5,
+    4,
+    4,
+    4,
+    6,
+    7,
     6,
     4,
     5,
     3,
-    6,
-    6,
-    7,
     4,
+    4,
+    7,
     5,
-    6,
     5,
-    4
+    4,
+    3,
+    5
    ],
    "status": "in_progress"
   },
@@ -4194,24 +4194,24 @@
    "player_id": "p1062",
    "team_id": "mia",
    "hole_scores": [
-    7,
-    5,
-    5,
-    3,
     4,
     4,
-    8,
-    4,
-    6,
-    2,
-    3,
-    4,
-    7,
     4,
     3,
     5,
     4,
-    6
+    5,
+    3,
+    5,
+    4,
+    4,
+    5,
+    5,
+    4,
+    3,
+    3,
+    4,
+    5
    ],
    "status": "in_progress"
   },
@@ -4224,20 +4224,20 @@
     5,
     5,
     6,
-    5,
-    5,
-    6,
-    4,
-    4,
-    5,
-    5,
-    4,
-    6,
+    3,
     6,
     5,
+    4,
+    4,
+    3,
+    6,
+    5,
+    6,
+    7,
     5,
     4,
-    4
+    5,
+    5
    ],
    "status": "in_progress"
   }

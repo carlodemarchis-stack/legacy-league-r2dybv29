@@ -144,17 +144,18 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .standing b{font-size:clamp(28px,3.4vw,50px);font-weight:700;letter-spacing:-.04em;line-height:1}
 .standing span{font-size:clamp(11px,1vw,14px);color:var(--dim)}
 .roster{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(6px,.8vw,10px)}
-.tile{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);
+.rtile{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);
   background:rgba(255,255,255,.025);min-width:0;cursor:pointer;transition:.18s;text-align:left}
-.tile:hover{border-color:var(--c);background:rgba(255,255,255,.05)}
-.ava{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;
+.rtile:hover{border-color:var(--c);background:rgba(255,255,255,.05)}
+.ava img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;border-radius:50%;display:block}
+.ava{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;overflow:hidden;
   background:linear-gradient(160deg,var(--c),color-mix(in srgb,var(--c) 45%,#000));color:#fff;letter-spacing:-.02em;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
-.tile .t{min-width:0;flex:1 1 auto}
-.tile .t b{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .t small{display:block;font-size:10.5px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.tile .sc{flex:0 0 auto;text-align:right;font-variant-numeric:tabular-nums;font-size:12px;font-weight:700}
-.tile .sc small{display:block;font-size:9px;color:var(--dim2);font-weight:300;letter-spacing:.1em}
+.rtile .t{min-width:0;flex:1 1 auto}
+.rtile .t b{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtile .t small{display:block;font-size:10.5px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.rtile .sc{flex:0 0 auto;text-align:right;font-variant-numeric:tabular-nums;font-size:12px;font-weight:700}
+.rtile .sc small{display:block;font-size:9px;color:var(--dim2);font-weight:300;letter-spacing:.1em}
 .cap{display:inline-block;font-size:8.5px;letter-spacing:.12em;padding:1px 5px;border-radius:4px;background:var(--acc);color:#1a1206;font-weight:700;vertical-align:1px;margin-left:5px}
 .vids{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .vid{aspect-ratio:16/9;border-radius:10px;border:1px solid var(--line);position:relative;overflow:hidden;
@@ -169,7 +170,8 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
   background:linear-gradient(160deg,color-mix(in srgb,var(--c) 55%,#000),#0a0d10);border:1px solid var(--line);display:grid;place-items:center}
 .pphoto .ini{font-size:clamp(44px,5.5vw,84px);font-weight:700;letter-spacing:-.05em;color:rgba(255,255,255,.9)}
 .pphoto .num{position:absolute;right:10px;top:6px;font-size:clamp(44px,5.5vw,84px);font-weight:700;color:rgba(255,255,255,.08);line-height:1;letter-spacing:-.05em}
-.pphoto small{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
+.pphoto .cut{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:96%;width:auto;max-width:none;object-fit:contain;object-position:bottom;z-index:1;filter:drop-shadow(0 12px 28px rgba(0,0,0,.55))}
+.pphoto small{position:absolute;left:0;right:0;bottom:8px;z-index:2;text-align:center;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
 .pinfo{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
 .pinfo .nm{font-size:clamp(24px,2.8vw,42px);font-weight:700;letter-spacing:-.035em;line-height:1}
 .pinfo .sub{font-size:clamp(11px,1vw,14px);color:var(--dim)}
@@ -678,7 +680,7 @@ function cityCard(c, i) {
     </div>
     <div class="col r">
       <div class="box grow"><div class="legend"><span>Roster · ${roster.length} players</span><span>Tap a player</span></div>
-        <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="tile" onclick="goPlayer('${p.id}')"><span class="ava">${ini(p.name)}</span>
+        <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="rtile" onclick="goPlayer('${p.id}')"><span class="ava"><img src="${p.face}" alt="" loading="lazy"></span>
           <span class="t"><b>${esc(p.name)}${p.captain ? '<span class="cap">C</span>' : ""}</b><small>${p.team ? `${p.sport} · ${esc(c.name)} ${esc(p.team)} · ${p.years}` : esc(p.role)}</small></span>
           <span class="sc" data-plive="${p.id}"></span></button>`).join("")}</div></div>
       <div class="box"><div class="legend"><span>Video</span><span>Supplied by Legacy · hosted, captioned, adaptive</span></div>
@@ -691,7 +693,7 @@ function playerCard(p, n) {
   const c = CITY[p.city];
   return `<div class="card" data-k="player" data-id="${p.id}" style="--c:${c.color}"><div class="inner">
     <div class="col l">
-      <div class="ptop"><div class="pphoto"><div class="num">${n}</div><div class="ini">${ini(p.name)}</div><small>Portrait · supplied by Legacy</small></div>
+      <div class="ptop"><div class="pphoto"><div class="num">${n}</div><img class="cut" src="${p.full}" alt="" loading="lazy"><small>Portrait · placeholder</small></div>
         <div class="pinfo"><div class="kicker" style="color:${c.color}">${esc(c.name)}${p.captain ? " · Captain" : ""}</div><div class="nm">${esc(p.name)}</div>
           <div class="sub">${p.team ? `<b>${esc(p.role)}</b> · ${esc(c.name)} ${esc(p.team)} · ${p.years}<br>${p.sport} · ${esc(p.honours)}` : `<b>${esc(p.role)}</b> · ${p.sport}`}<br>Handicap index <b>${p.handicap}</b></div>
           <div><button class="pill follow" data-follow="${p.id}" onclick="toggleFollow('${p.id}')">Follow</button> <button class="pill" onclick="goCity('${c.id}')">${c.short} hub</button></div></div></div>

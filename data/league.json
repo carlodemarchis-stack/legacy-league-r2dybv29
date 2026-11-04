@@ -254,7 +254,9 @@
    "honours": "Champion",
    "handicap": 11.3,
    "bio": "Quarterback for the Chicago Bears, 1994–2008. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/39971.webp",
+   "full": "img/full/39971.webp"
   },
   {
    "id": "p1002",
@@ -267,7 +269,9 @@
    "honours": "Champion",
    "handicap": 7.8,
    "bio": "First baseman for the Chicago White Sox, 2003–2010. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/47420.webp",
+   "full": "img/full/47420.webp"
   },
   {
    "id": "p1003",
@@ -280,7 +284,9 @@
    "honours": "Champion",
    "handicap": 10.9,
    "bio": "Center for the Chicago Bulls, 2011–2020. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/59095.webp",
+   "full": "img/full/59095.webp"
   },
   {
    "id": "p1004",
@@ -293,7 +299,9 @@
    "honours": "All-Star",
    "handicap": 1.7,
    "bio": "First baseman for the Chicago White Sox, 2003–2010. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/52955.webp",
+   "full": "img/full/52955.webp"
   },
   {
    "id": "p1005",
@@ -306,7 +314,9 @@
    "honours": "Champion",
    "handicap": 7.9,
    "bio": "Quarterback for the Chicago Bears, 1993–1999. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/49037.webp",
+   "full": "img/full/49037.webp"
   },
   {
    "id": "p1006",
@@ -319,7 +329,9 @@
    "honours": "Champion",
    "handicap": 5.4,
    "bio": "Defenceman for the Chicago Blackhawks, 2011–2018. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/51287.webp",
+   "full": "img/full/51287.webp"
   },
   {
    "id": "p1007",
@@ -332,7 +344,9 @@
    "honours": "Champion",
    "handicap": 8.4,
    "bio": "Shortstop for the Chicago Cubs, 1998–2006. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/34046.webp",
+   "full": "img/full/34046.webp"
   },
   {
    "id": "p1008",
@@ -345,7 +359,9 @@
    "honours": null,
    "handicap": 8.5,
    "bio": "Comedian, stand-up and late night. Grew up in Chicago and never left it behind; plays off a 14 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/60004.webp",
+   "full": "img/full/60004.webp"
   },
   {
    "id": "p1009",
@@ -358,7 +374,9 @@
    "honours": "All-Star",
    "handicap": 3.9,
    "bio": "Forward for the Boston Celtics, 1996–2006. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/31323.webp",
+   "full": "img/full/31323.webp"
   },
   {
    "id": "p1010",
@@ -371,7 +389,9 @@
    "honours": "All-Star",
    "handicap": 5.4,
    "bio": "Outfielder for the Boston Red Sox, 2009–2017. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/33204.webp",
+   "full": "img/full/33204.webp"
   },
   {
    "id": "p1011",
@@ -384,7 +404,9 @@
    "honours": "Champion",
    "handicap": 5.2,
    "bio": "Catcher for the Boston Red Sox, 2007–2014. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/27644.webp",
+   "full": "img/full/27644.webp"
   },
   {
    "id": "p1012",
@@ -397,7 +419,9 @@
    "honours": "Hall of Fame",
    "handicap": 8.3,
    "bio": "Shortstop for the Boston Red Sox, 1999–2006. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/48117.webp",
+   "full": "img/full/48117.webp"
   },
   {
    "id": "p1013",
@@ -410,7 +434,9 @@
    "honours": "All-Star",
    "handicap": 2.2,
    "bio": "Shooting guard for the Boston Celtics, 2003–2018. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/52215.webp",
+   "full": "img/full/52215.webp"
   },
   {
    "id": "p1014",
@@ -423,7 +449,9 @@
    "honours": "Hall of Fame",
    "handicap": 8.1,
    "bio": "Center for the Boston Celtics, 1997–2007. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/59018.webp",
+   "full": "img/full/59018.webp"
   },
   {
    "id": "p1015",
@@ -436,7 +464,9 @@
    "honours": "Hall of Fame",
    "handicap": 3.2,
    "bio": "Shooting guard for the Boston Celtics, 2003–2011. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/37455.webp",
+   "full": "img/full/37455.webp"
   },
   {
    "id": "p1016",
@@ -449,7 +479,9 @@
    "honours": null,
    "handicap": 9.0,
    "bio": "Comedian, stand-up and late night. Grew up in Boston and never left it behind; plays off a 8 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/59440.webp",
+   "full": "img/full/59440.webp"
   },
   {
    "id": "p1017",
@@ -462,7 +494,9 @@
    "honours": "Hall of Fame",
    "handicap": 9.2,
    "bio": "Wide receiver for the New York Jets, 1996–2010. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/40098.webp",
+   "full": "img/full/40098.webp"
   },
   {
    "id": "p1018",
@@ -475,7 +509,9 @@
    "honours": "All-Star",
    "handicap": 4.3,
    "bio": "Linebacker for the New York Giants, 2000–2015. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/32102.webp",
+   "full": "img/full/32102.webp"
   },
   {
    "id": "p1019",
@@ -488,7 +524,9 @@
    "honours": "Hall of Fame",
    "handicap": 5.7,
    "bio": "Running back for the New York Jets, 2001–2014. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/48081.webp",
+   "full": "img/full/48081.webp"
   },
   {
    "id": "p1020",
@@ -501,7 +539,9 @@
    "honours": "Hall of Fame",
    "handicap": 11.4,
    "bio": "Safety for the New York Giants, 1999–2005. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/61522.webp",
+   "full": "img/full/61522.webp"
   },
   {
    "id": "p1021",
@@ -514,7 +554,9 @@
    "honours": "Hall of Fame",
    "handicap": 3.7,
    "bio": "Forward for the New York Knicks, 2012–2027. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/35450.webp",
+   "full": "img/full/35450.webp"
   },
   {
    "id": "p1022",
@@ -527,7 +569,9 @@
    "honours": null,
    "handicap": 10.7,
    "bio": "Comedian, stand-up and late night. Grew up in New York and never left it behind; plays off a 14 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/57975.webp",
+   "full": "img/full/57975.webp"
   },
   {
    "id": "p1023",
@@ -540,7 +584,9 @@
    "honours": "Hall of Fame",
    "handicap": 2.8,
    "bio": "Catcher for the Los Angeles Dodgers, 1996–2011. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/49771.webp",
+   "full": "img/full/49771.webp"
   },
   {
    "id": "p1024",
@@ -553,7 +599,9 @@
    "honours": "All-Star",
    "handicap": 3.9,
    "bio": "Safety for the Los Angeles Rams, 1990–1999. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/59836.webp",
+   "full": "img/full/59836.webp"
   },
   {
    "id": "p1025",
@@ -566,7 +614,9 @@
    "honours": "All-Star",
    "handicap": 7.5,
    "bio": "Pitcher for the Los Angeles Dodgers, 2001–2007. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/27649.webp",
+   "full": "img/full/27649.webp"
   },
   {
    "id": "p1026",
@@ -579,7 +629,9 @@
    "honours": "All-Star",
    "handicap": 10.9,
    "bio": "Centre for the Los Angeles Kings, 2001–2014. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/57364.webp",
+   "full": "img/full/57364.webp"
   },
   {
    "id": "p1027",
@@ -592,7 +644,9 @@
    "honours": "Hall of Fame",
    "handicap": 10.9,
    "bio": "Outfielder for the Los Angeles Dodgers, 1998–2004. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/34099.webp",
+   "full": "img/full/34099.webp"
   },
   {
    "id": "p1028",
@@ -605,7 +659,9 @@
    "honours": "All-Star",
    "handicap": 5.5,
    "bio": "Point guard for the Los Angeles Lakers, 2000–2011. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/46340.webp",
+   "full": "img/full/46340.webp"
   },
   {
    "id": "p1029",
@@ -618,7 +674,9 @@
    "honours": "Hall of Fame",
    "handicap": 8.9,
    "bio": "Running back for the Los Angeles Rams, 2005–2015. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/28237.webp",
+   "full": "img/full/28237.webp"
   },
   {
    "id": "p1030",
@@ -631,7 +689,9 @@
    "honours": "Hall of Fame",
    "handicap": 3.6,
    "bio": "Tight end for the Dallas Cowboys, 1997–2010. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/39324.webp",
+   "full": "img/full/39324.webp"
   },
   {
    "id": "p1031",
@@ -644,7 +704,9 @@
    "honours": "Hall of Fame",
    "handicap": 12.2,
    "bio": "Winger for the Dallas Stars, 2002–2008. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/25493.webp",
+   "full": "img/full/25493.webp"
   },
   {
    "id": "p1032",
@@ -657,7 +719,9 @@
    "honours": "All-Star",
    "handicap": 6.6,
    "bio": "Winger for the Dallas Stars, 1997–2012. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/51634.webp",
+   "full": "img/full/51634.webp"
   },
   {
    "id": "p1033",
@@ -670,7 +734,9 @@
    "honours": "All-Star",
    "handicap": 9.0,
    "bio": "First baseman for the Dallas Rangers, 2007–2013. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/50525.webp",
+   "full": "img/full/50525.webp"
   },
   {
    "id": "p1034",
@@ -683,7 +749,9 @@
    "honours": "Champion",
    "handicap": 5.2,
    "bio": "Running back for the Dallas Cowboys, 2011–2020. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/57366.webp",
+   "full": "img/full/57366.webp"
   },
   {
    "id": "p1035",
@@ -696,7 +764,9 @@
    "honours": "All-Star",
    "handicap": 7.9,
    "bio": "Forward for the Dallas Mavericks, 1999–2008. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/39546.webp",
+   "full": "img/full/39546.webp"
   },
   {
    "id": "p1036",
@@ -709,7 +779,9 @@
    "honours": null,
    "handicap": 8.1,
    "bio": "Broadcaster, network anchor. Grew up in Dallas and never left it behind; plays off a 10 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/48867.webp",
+   "full": "img/full/48867.webp"
   },
   {
    "id": "p1037",
@@ -722,7 +794,9 @@
    "honours": "Champion",
    "handicap": 9.1,
    "bio": "Pitcher for the Philadelphia Phillies, 2009–2015. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/60386.webp",
+   "full": "img/full/60386.webp"
   },
   {
    "id": "p1038",
@@ -735,7 +809,9 @@
    "honours": "All-Star",
    "handicap": 2.2,
    "bio": "Point guard for the Philadelphia 76ers, 1996–2005. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/22405.webp",
+   "full": "img/full/22405.webp"
   },
   {
    "id": "p1039",
@@ -748,7 +824,9 @@
    "honours": "Hall of Fame",
    "handicap": 6.1,
    "bio": "Shooting guard for the Philadelphia 76ers, 1989–1998. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/46046.webp",
+   "full": "img/full/46046.webp"
   },
   {
    "id": "p1040",
@@ -761,7 +839,9 @@
    "honours": "All-Star",
    "handicap": 3.9,
    "bio": "Shooting guard for the Philadelphia 76ers, 1995–2003. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/66701.webp",
+   "full": "img/full/66701.webp"
   },
   {
    "id": "p1041",
@@ -774,7 +854,9 @@
    "honours": "All-Star",
    "handicap": 9.4,
    "bio": "Offensive tackle for the Philadelphia Eagles, 1992–2000. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/39997.webp",
+   "full": "img/full/39997.webp"
   },
   {
    "id": "p1042",
@@ -787,7 +869,9 @@
    "honours": "All-Star",
    "handicap": 2.7,
    "bio": "First baseman for the Philadelphia Phillies, 2000–2012. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/59141.webp",
+   "full": "img/full/59141.webp"
   },
   {
    "id": "p1043",
@@ -800,7 +884,9 @@
    "honours": "Champion",
    "handicap": 7.7,
    "bio": "Catcher for the Philadelphia Phillies, 2010–2021. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/24502.webp",
+   "full": "img/full/24502.webp"
   },
   {
    "id": "p1044",
@@ -813,7 +899,9 @@
    "honours": "All-Star",
    "handicap": 3.6,
    "bio": "Pitcher for the Detroit Tigers, 1999–2009. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/51349.webp",
+   "full": "img/full/51349.webp"
   },
   {
    "id": "p1045",
@@ -826,7 +914,9 @@
    "honours": "Champion",
    "handicap": 6.6,
    "bio": "Center for the Detroit Pistons, 2005–2017. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/55893.webp",
+   "full": "img/full/55893.webp"
   },
   {
    "id": "p1046",
@@ -839,7 +929,9 @@
    "honours": "Hall of Fame",
    "handicap": 7.4,
    "bio": "Outfielder for the Detroit Tigers, 2002–2014. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/55182.webp",
+   "full": "img/full/55182.webp"
   },
   {
    "id": "p1047",
@@ -852,7 +944,9 @@
    "honours": "All-Star",
    "handicap": 11.9,
    "bio": "Centre for the Detroit Red Wings, 1989–2003. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/49960.webp",
+   "full": "img/full/49960.webp"
   },
   {
    "id": "p1048",
@@ -865,7 +959,9 @@
    "honours": "Hall of Fame",
    "handicap": 4.8,
    "bio": "Offensive tackle for the Detroit Lions, 2002–2013. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/34098.webp",
+   "full": "img/full/34098.webp"
   },
   {
    "id": "p1049",
@@ -878,7 +974,9 @@
    "honours": "All-Star",
    "handicap": 5.5,
    "bio": "Linebacker for the Detroit Lions, 2001–2007. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/30911.webp",
+   "full": "img/full/30911.webp"
   },
   {
    "id": "p1050",
@@ -891,7 +989,9 @@
    "honours": null,
    "handicap": 8.9,
    "bio": "Comedian, stand-up and late night. Grew up in Detroit and never left it behind; plays off a 14 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/39977.webp",
+   "full": "img/full/39977.webp"
   },
   {
    "id": "p1051",
@@ -904,7 +1004,9 @@
    "honours": "Hall of Fame",
    "handicap": 5.2,
    "bio": "Quarterback for the San Francisco 49ers, 1993–2000. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/51766.webp",
+   "full": "img/full/51766.webp"
   },
   {
    "id": "p1052",
@@ -917,7 +1019,9 @@
    "honours": "Hall of Fame",
    "handicap": 5.1,
    "bio": "Linebacker for the San Francisco 49ers, 2007–2021. Hall of Fame. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/46414.webp",
+   "full": "img/full/46414.webp"
   },
   {
    "id": "p1053",
@@ -930,7 +1034,9 @@
    "honours": "All-Star",
    "handicap": 6.1,
    "bio": "Quarterback for the San Francisco Giants, 2006–2017. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/47504.webp",
+   "full": "img/full/47504.webp"
   },
   {
    "id": "p1054",
@@ -943,7 +1049,9 @@
    "honours": "Champion",
    "handicap": 10.8,
    "bio": "Center for the San Francisco Warriors, 1989–2002. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/46464.webp",
+   "full": "img/full/46464.webp"
   },
   {
    "id": "p1055",
@@ -956,7 +1064,9 @@
    "honours": "Champion",
    "handicap": 12.5,
    "bio": "Tight end for the San Francisco 49ers, 1997–2010. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/57123.webp",
+   "full": "img/full/57123.webp"
   },
   {
    "id": "p1056",
@@ -969,7 +1079,9 @@
    "honours": "Champion",
    "handicap": 8.1,
    "bio": "Safety for the San Francisco Giants, 1997–2005. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/56630.webp",
+   "full": "img/full/56630.webp"
   },
   {
    "id": "p1057",
@@ -982,7 +1094,9 @@
    "honours": null,
    "handicap": 5.2,
    "bio": "Broadcaster, network anchor. Grew up in San Francisco and never left it behind; plays off a 14 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/47591.webp",
+   "full": "img/full/47591.webp"
   },
   {
    "id": "p1058",
@@ -995,7 +1109,9 @@
    "honours": "All-Star",
    "handicap": 10.0,
    "bio": "First baseman for the Miami Marlins, 2012–2021. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/63343.webp",
+   "full": "img/full/63343.webp"
   },
   {
    "id": "p1059",
@@ -1008,7 +1124,9 @@
    "honours": "All-Star",
    "handicap": 9.8,
    "bio": "Running back for the Miami Dolphins, 2004–2013. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/29936.webp",
+   "full": "img/full/29936.webp"
   },
   {
    "id": "p1060",
@@ -1021,7 +1139,9 @@
    "honours": "Champion",
    "handicap": 4.0,
    "bio": "Safety for the Miami Dolphins, 2000–2011. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": true
+   "captain": true,
+   "face": "img/faces/40026.webp",
+   "full": "img/full/40026.webp"
   },
   {
    "id": "p1061",
@@ -1034,7 +1154,9 @@
    "honours": "All-Star",
    "handicap": 11.1,
    "bio": "Safety for the Miami Dolphins, 1988–1996. All-Star. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/27349.webp",
+   "full": "img/full/27349.webp"
   },
   {
    "id": "p1062",
@@ -1047,7 +1169,9 @@
    "honours": "Champion",
    "handicap": 4.9,
    "bio": "Quarterback for the Miami Dolphins, 2000–2014. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/54591.webp",
+   "full": "img/full/54591.webp"
   },
   {
    "id": "p1063",
@@ -1060,7 +1184,9 @@
    "honours": null,
    "handicap": 14.1,
    "bio": "Actor, film and television. Grew up in Miami and never left it behind; plays off a 14 handicap and talks about it.",
-   "captain": false
+   "captain": false,
+   "face": "img/faces/46442.webp",
+   "full": "img/full/46442.webp"
   }
  ],
  "schedule": [

@@ -153,6 +153,13 @@ for i, st in enumerate(STORIES):
 for c in CITIES:
     c["photos"] = [photo(), photo(), photo()]
 HERO = [photo(), photo(), photo(), photo()]
+# headshots: PGA TOUR faces/cutouts from the golf film, one per fictional player (local illustration only)
+FACES = sorted(pathlib.Path(x).stem for x in _glob.glob(str(ROOT / "img/faces/*.webp")))
+random.shuffle(FACES)
+for i, pl in enumerate(players):
+    pl["face"] = f"img/faces/{FACES[i % len(FACES)]}.webp"
+    pl["full"] = f"img/full/{FACES[i % len(FACES)]}.webp"
+
 
 # ----------------------------------------------------------------- schedule
 SCHEDULE = [
