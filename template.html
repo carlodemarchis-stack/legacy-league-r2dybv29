@@ -219,6 +219,9 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .tile{position:relative;border-radius:16px;overflow:hidden;background:#0b0f11;border:1px solid var(--line);cursor:pointer;min-height:0;
   grid-column:span 2;grid-row:span 2;text-align:left;color:var(--ink)}
 .tile.s{grid-row:span 1}.tile.l{grid-column:span 3}.tile.xl{grid-column:span 4;grid-row:span 3}.tile.r{grid-column:span 3;grid-row:span 3}
+.tile.p{grid-column:span 2;grid-row:span 3}  /* portrait photo: a tall tile, no forced wide crop */
+.tile.p h3{font-size:clamp(14px,1.25vw,19px)}.tile.p p{display:none}
+.tile.p .shade{background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 25%,rgba(0,0,0,0) 50%,rgba(5,8,10,.94) 100%)}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.7,.2,1);filter:saturate(.92)}
 .tile:hover img{transform:scale(1.04)}
 .tile .shade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 28%,rgba(0,0,0,0) 45%,rgba(5,8,10,.92) 100%)}
@@ -369,6 +372,7 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
   .feed{overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:112px;gap:6px;padding:0 0 10px}
   .tile,.tile.l,.tile.xl,.tile.r{grid-column:span 2;grid-row:span 2}
   .tile.xl,.tile.r{grid-row:span 3}
+  .tile.p{grid-column:span 1;grid-row:span 3}
   .tile.m{grid-column:span 1;grid-row:span 2}
   .tile.s{grid-column:span 1;grid-row:span 1}
   .tile.m h3{font-size:12.5px}
