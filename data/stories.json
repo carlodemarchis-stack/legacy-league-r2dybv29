@@ -1,1 +1,24 @@
-{"stories": []}
+{
+ "stories": [
+  {
+   "id": "d001",
+   "status": "published",
+   "kind": "article",
+   "topic": "league",
+   "at": "2027-01-29T14:20",
+   "author": "Carlo De Marchis",
+   "title": "October's best golfer had never won in 99 PGA Tour starts",
+   "dek": "Austin Smotherman, 32, won his 100th at Black Desert on 4 October, 26 under and two clear. Three weeks later in Bermuda the wind cancelled the final round and he beat Seamus Power with a par on the third playoff hole. Two wins in a month, and a place at Pebble Beach next June.",
+   "cities": [],
+   "players": [],
+   "likes": 0,
+   "comments": 0,
+   "size": "l",
+   "photo": "img/people/austin-smotherman-october.jpg",
+   "created_by": "Carlo",
+   "created_at": "2026-11-04T23:59:08",
+   "published_by": "Carlo",
+   "published_at": "2026-11-04T23:59:13"
+  }
+ ]
+}
