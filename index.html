@@ -294,6 +294,8 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
   background:linear-gradient(180deg,rgba(8,12,14,.9),rgba(8,12,14,0));pointer-events:none}
 #topbar > *{pointer-events:auto}
 #topbar b{color:var(--ink);font-weight:700}
+#topbar .home{color:inherit;transition:.18s}
+#topbar .home:hover b{color:var(--acc)}
 #topbar .tb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tb-tabs{display:flex;gap:4px;margin-left:auto}
 #tb-tabs button{padding:6px 14px;border-radius:999px;border:1px solid transparent;letter-spacing:.14em;color:var(--dim);transition:.18s}
@@ -383,7 +385,7 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 <body>
 
 <div id="topbar">
-  <div class="tb-l"><b>Legacy League Golf</b> <span id="tb-ctx">· 2027 season</span></div>
+  <div class="tb-l"><a class="home" href="#1" onclick="go(0);return false" title="Home"><b>Legacy League Golf</b></a> <span id="tb-ctx">· 2027 season</span></div>
   <div id="tb-tabs">
     <button data-sec="live">Live</button>
     <button data-sec="stories">Stories</button>
