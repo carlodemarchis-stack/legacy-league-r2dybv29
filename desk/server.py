@@ -16,6 +16,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -245,8 +246,10 @@ def list_stories(status: str = "all", limit: int = 30) -> list[dict]:
 @mcp.tool()
 def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = None, players: Optional[list[str]] = None,
                 topic: str = "league", author: Optional[str] = None, dur: Optional[str] = None, count: Optional[int] = None,
-                photo_url: Optional[str] = None, size: Optional[str] = None, at: Optional[str] = None) -> dict:
-    """Create a DRAFT story for the Stories collage. kind: video | gallery | article | quote. Cities and players may be names or ids.
+                photo_url: Optional[str] = None, size: Optional[str] = None, at: Optional[str] = None,
+                body: Optional[str] = None) -> dict:
+    """Create a DRAFT story for the Stories collage. body = the article text, paragraphs separated by blank lines
+    (2–4 short paragraphs; the collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and players may be names or ids.
     video needs dur ("2:14"); gallery needs count. Without photo_url a golf photo from the library is picked.
     at = ISO time in the demo's event timeline (default: the feed's current time, shows as "just now")."""
     kind = kind.strip().lower()
@@ -275,6 +278,8 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
         "photo": photo_url or _pick_photo(sid + title), "created_by": EDITOR,
         "created_at": dt.datetime.now().isoformat(timespec="seconds"),
     }
+    if body:
+        story["body"] = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
     if dur:
         story["dur"] = dur
     if count:
@@ -291,8 +296,8 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
 @mcp.tool()
 def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None, cities: Optional[list[str]] = None,
                  players: Optional[list[str]] = None, size: Optional[str] = None, photo_url: Optional[str] = None,
-                 author: Optional[str] = None, at: Optional[str] = None) -> dict:
-    """Change fields of a desk story (draft or published)."""
+                 author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None) -> dict:
+    """Change fields of a desk story (draft or published). body replaces the article text (paragraphs separated by blank lines)."""
     stories, s = _story(id)
     if title: s["title"] = title.strip()
     if dek: s["dek"] = dek.strip()
@@ -304,6 +309,7 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
     if photo_url: s["photo"] = photo_url
     if author: s["author"] = author
     if at: s["at"] = at
+    if body: s["body"] = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
     s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
     _save(STORE, "stories", stories)
     _log("update_story", {"id": id}, "updated")

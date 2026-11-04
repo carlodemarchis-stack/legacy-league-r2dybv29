@@ -341,6 +341,62 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .mhint kbd{font:inherit;padding:1px 6px;border:1px solid var(--line);border-radius:5px;color:var(--dim);margin:0 2px}
 @media(max-width:640px){#jlist{grid-template-columns:1fr}}
 
+/* ------------------------------------------------------------- reader */
+.rbox{position:relative;width:min(840px,96vw);max-height:92dvh;display:flex;flex-direction:column;background:linear-gradient(170deg,#121a1c,#0a0e10);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rscroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
+.rbox .mclose{top:10px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);display:grid;place-items:center;font-size:22px;color:#fff}
+.rnav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:38px;height:64px;display:grid;place-items:center;border-radius:12px;
+  background:rgba(0,0,0,.45);border:1px solid var(--line);color:var(--dim);backdrop-filter:blur(8px);transition:.18s}
+.rnav:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
+.rnav.l{left:-50px}.rnav.r{right:-50px}
+.rnav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rhero{position:relative;aspect-ratio:16/9;background:#0b0f11;overflow:hidden;border-bottom:1px solid var(--line)}
+.rhero img{width:100%;height:100%;object-fit:cover;display:block}
+.rhero.portrait img{object-fit:contain;background:#0b0f11}
+.rhero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 30%,rgba(0,0,0,0) 70%,rgba(10,14,16,.9))}
+.rhero .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(8px);display:grid;place-items:center}
+.rhero .play::after{content:"";margin-left:5px;border-left:22px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent}
+.rhero .dur{position:absolute;right:14px;bottom:12px;z-index:2;padding:4px 9px;border-radius:7px;background:rgba(0,0,0,.65);font-size:12px;font-variant-numeric:tabular-nums}
+.rhero .cap{position:absolute;left:16px;bottom:12px;z-index:2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.rhero.gallery{aspect-ratio:auto;display:grid;grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr;gap:2px;background:#000}
+.rhero.gallery img{min-height:0}
+.rhero.gallery img:first-child{grid-row:1/3;aspect-ratio:4/3}
+.rhero.gallery::after{display:none}
+.rhero.quote{aspect-ratio:auto;padding:clamp(28px,5vw,56px) clamp(20px,4vw,48px);display:block;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#000),#0b0f11)}
+.rhero.quote::after{display:none}
+.rhero.quote p{font-size:clamp(22px,3vw,38px);font-weight:700;letter-spacing:-.03em;line-height:1.15;position:relative;z-index:1}
+.rhero.quote small{display:block;margin-top:14px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.rart{padding:clamp(16px,2.6vw,30px) clamp(18px,3.4vw,44px) clamp(18px,3vw,34px);max-width:720px;margin:0 auto}
+.rmeta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim);flex-wrap:wrap}
+.rmeta .ava{width:30px;height:30px;font-size:10px}
+.rmeta b{color:var(--ink);font-weight:700}
+.rmeta .badge{padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.07);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.rmeta .badge.mission{color:var(--green)}
+.rtitle{font-size:clamp(24px,3vw,40px);font-weight:700;letter-spacing:-.035em;line-height:1.08;margin:14px 0 10px}
+.rlead{font-size:clamp(15px,1.3vw,18px);line-height:1.5;color:var(--dim);font-weight:300}
+.rtags{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px}
+.rtags .chip{cursor:pointer}
+.rtext{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.rtext p{font-size:clamp(14.5px,1.15vw,16.5px);line-height:1.7;color:var(--ink);margin:0 0 16px;font-weight:300}
+.rtext p:first-child::first-letter{font-size:2.6em;font-weight:700;float:left;line-height:.85;padding:4px 8px 0 0;color:var(--acc)}
+.rfoot{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.rfoot button{display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;color:var(--dim);transition:.18s}
+.rfoot button:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+.rfoot button.on{color:#ff8a82;border-color:rgba(255,138,130,.5)}
+.rfoot svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rfoot button.on svg{fill:currentColor}
+.rfoot .sp{margin-left:auto;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
+.rmore{margin-top:22px}
+.rmore .legend{margin-bottom:8px}
+.rmore .row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:.18s;text-align:left;width:100%}
+.rmore .row:hover{background:rgba(255,255,255,.04);border-color:var(--line)}
+.rmore .row img{flex:0 0 72px;width:72px;height:48px;object-fit:cover;border-radius:8px}
+.rmore .row b{display:block;font-size:13px;font-weight:700;line-height:1.25}
+.rmore .row small{display:block;font-size:10.5px;color:var(--dim2);margin-top:2px}
+.rcount{position:absolute;left:14px;top:14px;z-index:3;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);font-size:10.5px;letter-spacing:.1em;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+
 /* -------------------------------------------------------- portrait/mobile */
 @media(max-aspect-ratio:1/1){
   #topbar{flex-wrap:wrap;row-gap:5px;padding:9px clamp(14px,4vw,22px) 10px;background:rgba(8,12,14,.92)}
@@ -371,6 +427,12 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
   .filters button{flex:0 0 auto;height:32px;padding:0 11px;font-size:11px;text-transform:uppercase}
   .filters button small{display:none}
   .st-count{display:none}
+  /* the reader becomes a full-screen sheet */
+  #smodal{padding:0}
+  .rbox{width:100vw;max-height:100dvh;height:100dvh;border-radius:0;border:0}
+  .rnav{top:auto;bottom:max(14px,env(safe-area-inset-bottom));transform:none;width:48px;height:40px}
+  .rnav.l{left:14px}.rnav.r{right:14px}
+  .rart{padding-bottom:84px}
   .feed{overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:112px;gap:6px;padding:0 0 10px}
   .tile,.tile.l,.tile.xl,.tile.r{grid-column:span 2;grid-row:span 2}
   .tile.xl,.tile.r{grid-row:span 3}
@@ -412,6 +474,13 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
     <input id="jq" type="search" placeholder="City, player, section…" autocomplete="off" oninput="renderJump(this.value)"></label>
   <div id="jlist"></div>
   <div class="mhint"><kbd>g</kbd> opens this index · <kbd>←</kbd> <kbd>→</kbd> move through the film · <kbd>Esc</kbd> closes</div>
+</div></div>
+<div class="modal" id="smodal" onclick="if(event.target===this)closeModal('smodal')"><div class="rbox">
+  <button class="mclose" onclick="closeModal('smodal')">&times;</button>
+  <span class="rcount" id="rcount"></span>
+  <button class="rnav l" onclick="stepStory(-1)" title="Previous story"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="rnav r" onclick="stepStory(1)" title="Next story"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="rscroll" id="rbody"></div>
 </div></div>
 <div class="demo">Fictional rosters · Golf Genius-shaped feed · replayed clock</div>
 <div id="toast"><i>LL</i><div><b></b><span></span><small>Push alert preview · city follow</small></div></div>
@@ -653,10 +722,48 @@ function tile(s) {
     <div class="top"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b>${badge}</div>
     <div class="bot"><h3>${esc(s.title)}</h3><p>${esc(s.dek)}</p>${meta}</div></article>`;
 }
+/* the reader: a story opened from the collage, with previous/next inside the current filter */
+let rList = [], rIdx = -1;
+const fill = (txt, s) => txt.replace(/\{p0\}/g, s.players[0] ? PLAYER[s.players[0]].name : "the captain")
+  .replace(/\{c0\}/g, s.cities[0] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
 function openStory(id) {
   const s = LEAGUE.stories.find(x => x.id === id);
   if (s.kind === "result") return go(SEC.live);
-  toast(s.title, s.kind === "video" ? "Opens the player: hosted video, adaptive, captioned (demo)." : s.kind === "gallery" ? `Opens the gallery, ${s.count} pictures (demo).` : "Opens the story page with its own URL and social preview (demo).");
+  rList = LEAGUE.stories.filter(x => matchFilter(x, state.filter) && x.kind !== "result");
+  rIdx = rList.findIndex(x => x.id === id);
+  if (rIdx < 0) { rList = LEAGUE.stories.filter(x => x.kind !== "result"); rIdx = rList.findIndex(x => x.id === id); }
+  renderStory();
+  document.getElementById("smodal").classList.add("on");
+}
+function stepStory(d) { if (!rList.length) return; rIdx = (rIdx + d + rList.length) % rList.length; renderStory(); }
+function renderStory() {
+  const s = rList[rIdx]; if (!s) return;
+  const c = s.cities.length === 1 ? CITY[s.cities[0]] : null;
+  const col = c ? c.color : "var(--acc)";
+  const liked = state.likes.has(s.id);
+  let hero;
+  if (s.kind === "gallery") hero = `<div class="rhero gallery">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>`;
+  else if (s.kind === "quote") hero = `<div class="rhero quote" style="--c:${col}"><p>${esc(s.title)}</p><small>${s.players[0] ? esc(PLAYER[s.players[0]].name) + " · " : ""}${esc(s.author)}</small></div>`;
+  else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">Video · hosted, adaptive, captioned</span>` : `<span class="cap">${s.kind === "article" ? "Picture · supplied by Legacy" : ""}</span>`}</div>`;
+  const body = (s.body && s.body.length ? s.body : [s.dek]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
+  const tags = s.cities.map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
+               s.players.map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
+  const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && (x.cities.some(id => s.cities.includes(id)) || x.topic === s.topic)).slice(0, 3);
+  document.getElementById("rbody").innerHTML = `${hero}<div class="rart">
+    <div class="rmeta"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b><span>${ago(s.at)}</span>
+      <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? "Mission" : kindLabel[s.kind]}${s.kind === "gallery" ? ` · ${s.count} pictures` : ""}</span></div>
+    ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(s.title)}</h2>`}
+    <p class="rlead">${esc(s.dek)}</p>
+    <div class="rtags">${tags}</div>
+    <div class="rtext">${body}</div>
+    <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
+      <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} comments</button>
+      <button onclick="toast('Link copied (demo)','Every story has its own URL with a social preview card.')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>Share</button>
+      ${s.id === "s03" ? `<span class="sp">Presented by · sponsor slot</span>` : ""}</div>
+    ${more.length ? `<div class="rmore"><div class="legend">More like this</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(x.title)}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel[x.kind]}</small></span></button>`).join("")}</div>` : ""}
+  </div>`;
+  document.getElementById("rcount").textContent = `${rIdx + 1} / ${rList.length}`;
+  document.getElementById("rbody").scrollTop = 0;
 }
 function renderFeed() {
   renderFilters();
@@ -668,7 +775,8 @@ function renderFeed() {
 }
 function setQuery(q) { state.q = q.trim(); renderFeed(); }
 function setFilter(f) { state.filter = f; PREF.set("filter", f); renderFeed(); document.getElementById("feed").scrollTop = 0; }
-function toggleLike(id) { state.likes.has(id) ? state.likes.delete(id) : state.likes.add(id); PREF.set("likes", [...state.likes]); renderFeed(); }
+function toggleLike(id) { state.likes.has(id) ? state.likes.delete(id) : state.likes.add(id); PREF.set("likes", [...state.likes]); renderFeed();
+  if (document.getElementById("smodal").classList.contains("on")) renderStory(); }
 
 function cityCard(c, i) {
   const roster = LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap);
@@ -953,6 +1061,11 @@ addEventListener("keydown", e => {
   if (e.key === "Escape") { document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
   if (e.key === "Enter" && e.target.id === "jq") { document.querySelector("#jlist .jrow")?.click(); return; }
   if (e.target.matches("input,select")) return;
+  if (document.getElementById("smodal").classList.contains("on")) {
+    if (e.key === "ArrowRight") { e.preventDefault(); stepStory(1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); stepStory(-1); }
+    return;
+  }
   if (document.querySelector(".modal.on")) return;
   if (e.key === "g") { e.preventDefault(); openJump(); return; }
   if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
