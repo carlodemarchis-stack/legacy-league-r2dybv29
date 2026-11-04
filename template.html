@@ -312,6 +312,28 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .demo{position:fixed;left:clamp(18px,3.2vw,54px);bottom:max(18px,env(safe-area-inset-bottom));z-index:40;font-size:9.5px;letter-spacing:.14em;
   text-transform:uppercase;color:var(--dim2)}
 
+/* ------------------------------------------------------------- index modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(4,6,10,.82);backdrop-filter:blur(10px);display:none;place-items:center;padding:4vw}
+.modal.on{display:grid}
+.mbox{position:relative;width:min(760px,94vw);max-height:88dvh;display:flex;flex-direction:column;background:linear-gradient(160deg,#121a1c,#0a0e10);
+  border:1px solid var(--line);border-radius:var(--r);padding:clamp(14px,2vw,24px);overflow:hidden}
+.mclose{position:absolute;top:10px;right:14px;font-size:26px;line-height:1;color:var(--dim);z-index:2}
+.mbox h3{font-size:clamp(16px,2vw,24px);font-weight:700;letter-spacing:-.02em;margin-bottom:10px;padding-right:30px}
+.mbox .search{flex:0 0 auto;height:42px;margin-bottom:12px}
+#jlist{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;display:grid;grid-template-columns:repeat(3,1fr);gap:3px 14px;align-content:start;padding-right:4px}
+#jlist h5{grid-column:1/-1;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);font-weight:700;margin:12px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
+#jlist h5:first-child{margin-top:0;border:0;padding-top:0}
+.jrow{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:9px;text-align:left;min-width:0;transition:.15s;color:var(--dim)}
+.jrow:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.jrow.sel{background:rgba(217,173,78,.12);color:var(--ink)}
+.jrow .jn{flex:0 0 26px;font-size:10.5px;color:var(--dim2);font-variant-numeric:tabular-nums;text-align:right}
+.jrow i{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--c,var(--dim2))}
+.jrow b{font-weight:700;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jrow small{font-size:10.5px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;padding-left:6px}
+.mhint{margin-top:10px;font-size:10.5px;color:var(--dim2);letter-spacing:.06em}
+.mhint kbd{font:inherit;padding:1px 6px;border:1px solid var(--line);border-radius:5px;color:var(--dim);margin:0 2px}
+@media(max-width:640px){#jlist{grid-template-columns:1fr}}
+
 /* -------------------------------------------------------- portrait/mobile */
 @media(max-aspect-ratio:1/1){
   #topbar{flex-wrap:wrap;row-gap:5px;padding:9px clamp(14px,4vw,22px) 10px;background:rgba(8,12,14,.92)}
@@ -371,10 +393,18 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 <div id="bar">
   <button id="b-first" title="Restart"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></svg></button>
   <button id="b-prev" title="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button id="count"><b>1</b> / 1</button>
+  <button id="count" title="Index: jump to a card (g)"><b>1</b> / 1</button>
   <button id="b-next" title="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <button id="b-full" title="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></button>
 </div>
+<div class="modal" id="jmodal" onclick="if(event.target===this)closeModal('jmodal')"><div class="mbox">
+  <button class="mclose" onclick="closeModal('jmodal')">&times;</button>
+  <h3>Index</h3>
+  <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="jq" type="search" placeholder="City, player, section…" autocomplete="off" oninput="renderJump(this.value)"></label>
+  <div id="jlist"></div>
+  <div class="mhint"><kbd>g</kbd> opens this index · <kbd>←</kbd> <kbd>→</kbd> move through the film · <kbd>Esc</kbd> closes</div>
+</div></div>
 <div class="demo">Fictional rosters · Golf Genius-shaped feed · replayed clock</div>
 <div id="toast"><i>LL</i><div><b></b><span></span><small>Push alert preview · city follow</small></div></div>
 
@@ -602,7 +632,7 @@ function tile(s) {
               pl ? `<span class="tag" style="--c:${CITY[PLAYER[pl].city].color}" onclick="event.stopPropagation();goPlayer('${pl}')"><i></i>${esc(PLAYER[pl].name)}</span>` : "";
   const badge = s.kind === "result" ? `<span class="badge live">Live</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}</span>` :
                 s.kind === "gallery" ? `<span class="badge">${s.count} photos</span>` : `<span class="badge">${s.topic === "mission" ? "Mission" : kindLabel[s.kind]}</span>`;
-  let media = `<img src="${s.photo}" alt="" loading="lazy">`;
+  let media = `<img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
   if (s.kind === "gallery") media = `<div class="mosaic">${s.photos.map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;
   let extra = "";
   if (s.kind === "video") extra = `<span class="play"></span>`;
@@ -856,6 +886,37 @@ let toastT = null;
 function toast(b, s) { const t = document.getElementById("toast"); t.querySelector("b").textContent = b; t.querySelector("span").textContent = s;
   t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4200); }
 
+/* -------------------------------------------------------------- index */
+function jumpEntries() {
+  return CARDS.map((c, n) => {
+    if (c.k === "story") return { n, sec: "Start", label: "Cities. Legends. A cause.", sub: "League", color: "var(--acc)" };
+    if (c.k === "live") return { n, sec: "Start", label: "Live · Mayakoba", sub: "Round 2", color: "var(--live)" };
+    if (c.k === "stories") return { n, sec: "Start", label: "Stories", sub: `${LEAGUE.stories.length} posts`, color: "var(--acc)" };
+    if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: "City hubs", label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
+    if (c.k === "player") { const pl = PLAYER[c.id], ci = CITY[pl.city]; return { n, sec: "Players", label: pl.name, sub: `${ci.short}${pl.captain ? " · C" : ""} · ${pl.team ? pl.sport : pl.role}`, color: ci.color, q: `${ci.name} ${pl.team || ""} ${pl.role}` }; }
+    if (c.k === "season") return { n, sec: "Season", label: "Schedule and standings", sub: "6 events", color: "var(--acc)" };
+    return { n, sec: "Season", label: "The mission", sub: "988 · consents", color: "var(--green)" };
+  });
+}
+const JUMP = jumpEntries();
+function renderJump(q) {
+  q = norm((q || "").trim());
+  const words = q.split(/\s+/).filter(Boolean);
+  const hit = e => !words.length || words.every(w => norm(`${e.label} ${e.sub} ${e.sec} ${e.q || ""}`).includes(w));
+  let sec = null, out = "";
+  JUMP.filter(hit).forEach(e => {
+    if (e.sec !== sec) { sec = e.sec; out += `<h5>${sec}</h5>`; }
+    out += `<button class="jrow ${e.n === cur ? "sel" : ""}" style="--c:${e.color}" onclick="closeModal('jmodal');go(${e.n})"><span class="jn">${e.n + 1}</span><i></i><b>${esc(e.label)}</b><small>${esc(e.sub)}</small></button>`;
+  });
+  document.getElementById("jlist").innerHTML = out || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
+}
+function openJump() {
+  const q = document.getElementById("jq"); q.value = ""; renderJump("");
+  document.getElementById("jmodal").classList.add("on");
+  setTimeout(() => { q.focus(); document.querySelector("#jlist .jrow.sel")?.scrollIntoView({ block: "center" }); }, 30);
+}
+function closeModal(id) { document.getElementById(id).classList.remove("on"); }
+
 /* --------------------------------------------------------- navigation */
 function go(n) {
   const target = Math.max(0, Math.min(total - 1, n));
@@ -877,10 +938,15 @@ const next = () => go(cur + 1 >= total ? 0 : cur + 1), prev = () => go(cur - 1);
 document.getElementById("b-next").onclick = next;
 document.getElementById("b-prev").onclick = prev;
 document.getElementById("b-first").onclick = () => go(0);
+document.getElementById("count").onclick = openJump;
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
 document.querySelectorAll("#tb-tabs button").forEach(b => b.onclick = () => go(SEC[b.dataset.sec]));
 addEventListener("keydown", e => {
+  if (e.key === "Escape") { document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
+  if (e.key === "Enter" && e.target.id === "jq") { document.querySelector("#jlist .jrow")?.click(); return; }
   if (e.target.matches("input,select")) return;
+  if (document.querySelector(".modal.on")) return;
+  if (e.key === "g") { e.preventDefault(); openJump(); return; }
   if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
   if (e.key === "ArrowLeft") prev();
   if (e.key === "Home") go(0);

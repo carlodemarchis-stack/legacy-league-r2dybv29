@@ -28,9 +28,9 @@
    ],
    "story": "Chicago plays for the fans who stayed. Bears, Bulls, Cubs, White Sox and Blackhawks legends share one bag, one city and one cause: Mind Forward Foundation, which the team funds with every point it scores.",
    "photos": [
-    "img/action/file-golf-bunker-shot-1-jpg.jpg",
     "img/course/R2026007.webp",
-    "img/action/file-morgan-pressel-flickr-keith-allison.jpg"
+    "img/action/file-morgan-pressel-flickr-keith-allison.jpg",
+    "img/course/R2026009.webp"
    ]
   },
   {
@@ -54,9 +54,9 @@
    ],
    "story": "Boston plays for the fans who stayed. Celtics, Red Sox, Patriots and Bruins legends share one bag, one city and one cause: The Quiet Room Project, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026009.webp",
     "img/course/R2026003.webp",
-    "img/course/R2026475.webp"
+    "img/course/R2026475.webp",
+    "img/course/R2026005.webp"
    ]
   },
   {
@@ -82,9 +82,9 @@
    ],
    "story": "New York plays for the fans who stayed. Yankees, Knicks, Giants, Jets, Mets and Rangers legends share one bag, one city and one cause: Open Fairways Mental Health Fund, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026005.webp",
     "img/course/R2026525.webp",
-    "img/course/R2026026.webp"
+    "img/course/R2026026.webp",
+    "img/course/R2026006.webp"
    ]
   },
   {
@@ -108,9 +108,9 @@
    ],
    "story": "Los Angeles plays for the fans who stayed. Lakers, Dodgers, Rams and Kings legends share one bag, one city and one cause: Second Half Wellbeing, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026006.webp",
     "img/course/R2026018.webp",
-    "img/course/R2026480.webp"
+    "img/course/R2026480.webp",
+    "img/course/R2026041.webp"
    ]
   },
   {
@@ -134,9 +134,9 @@
    ],
    "story": "Dallas plays for the fans who stayed. Cowboys, Mavericks, Stars and Rangers legends share one bag, one city and one cause: Locker Room Talks, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026041.webp",
     "img/course/R2026013.webp",
-    "img/action/file-stars-stripes-golf-balls-drop-into.jpg"
+    "img/action/file-stars-stripes-golf-balls-drop-into.jpg",
+    "img/action/file-afa-charity-golf-tournament-7293217.jpg"
    ]
   },
   {
@@ -160,9 +160,9 @@
    ],
    "story": "Philadelphia plays for the fans who stayed. Eagles, 76ers, Phillies and Flyers legends share one bag, one city and one cause: Still Standing Initiative, which the team funds with every point it scores.",
    "photos": [
-    "img/action/file-afa-charity-golf-tournament-7293217.jpg",
     "img/course/R2026027.webp",
-    "img/action/file-afa-charity-golf-tournament-7293244.jpg"
+    "img/action/file-afa-charity-golf-tournament-7293244.jpg",
+    "img/course/R2026034.webp"
    ]
   },
   {
@@ -186,9 +186,9 @@
    ],
    "story": "Detroit plays for the fans who stayed. Lions, Pistons, Tigers and Red Wings legends share one bag, one city and one cause: Hometown Minds, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026034.webp",
     "img/course/R2026002.webp",
-    "img/action/file-bunker-shot-geograph-org-uk-4867695.jpg"
+    "img/action/file-bunker-shot-geograph-org-uk-4867695.jpg",
+    "img/course/R2026023.webp"
    ]
   },
   {
@@ -211,9 +211,9 @@
    ],
    "story": "San Francisco plays for the fans who stayed. 49ers, Giants and Warriors legends share one bag, one city and one cause: The Long Game Trust, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026023.webp",
     "img/course/R2026030.webp",
-    "img/action/file-golf-player-putting-green-2003-jpg.jpg"
+    "img/action/file-golf-player-putting-green-2003-jpg.jpg",
+    "img/course/R2026012.webp"
    ]
   },
   {
@@ -236,9 +236,9 @@
    ],
    "story": "Miami plays for the fans who stayed. Dolphins, Heat and Marlins legends share one bag, one city and one cause: Clear Skies Collective, which the team funds with every point it scores.",
    "photos": [
-    "img/course/R2026012.webp",
     "img/course/R2026522.webp",
-    "img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg"
+    "img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg",
+    "img/action/file-dz6-2456-a-golfer-lines-up-a-putt-w.jpg"
    ]
   }
  ],
@@ -1145,6 +1145,23 @@
  },
  "stories": [
   {
+   "id": "s00",
+   "kind": "article",
+   "topic": "league",
+   "at": "2027-01-29T11:00",
+   "author": "Legacy League",
+   "title": "Jonathan Schecter named Chief Product Officer",
+   "dek": "He led the build of the fan platform you are reading this on: website, apps and live scoring, from brief to Mayakoba in ten weeks. Now he owns the product roadmap for all eighteen markets.",
+   "cities": [],
+   "players": [],
+   "likes": 1480,
+   "comments": 67,
+   "photo": "img/people/jonathan-schecter.jpg",
+   "focus": "50% 28%",
+   "size": "l",
+   "photos": []
+  },
+  {
    "id": "s01",
    "kind": "result",
    "topic": "league",
@@ -1154,7 +1171,7 @@
    "dek": "Auto-published from the scoring feed: the board as it stands, updated with every hole.",
    "cities": [],
    "players": [],
-   "photo": "img/course/R2026041.webp",
+   "photo": "img/course/R2026013.webp",
    "photos": [],
    "size": "r"
   },
@@ -1175,7 +1192,7 @@
    "dur": "0:48",
    "likes": 2140,
    "comments": 96,
-   "photo": "img/course/R2026013.webp",
+   "photo": "img/action/file-stars-stripes-golf-balls-drop-into.jpg",
    "photos": [],
    "size": "xl"
   },
@@ -1195,7 +1212,7 @@
    "players": [],
    "likes": 980,
    "comments": 41,
-   "photo": "img/action/file-stars-stripes-golf-balls-drop-into.jpg",
+   "photo": "img/action/file-afa-charity-golf-tournament-7293217.jpg",
    "photos": [],
    "size": "l"
   },
@@ -1219,11 +1236,11 @@
    "count": 24,
    "likes": 3310,
    "comments": 128,
-   "photo": "img/action/file-afa-charity-golf-tournament-7293217.jpg",
+   "photo": "img/course/R2026027.webp",
    "photos": [
-    "img/action/file-afa-charity-golf-tournament-7293217.jpg",
     "img/course/R2026027.webp",
-    "img/action/file-afa-charity-golf-tournament-7293244.jpg"
+    "img/action/file-afa-charity-golf-tournament-7293244.jpg",
+    "img/course/R2026034.webp"
    ],
    "size": "m"
   },
@@ -1243,7 +1260,7 @@
    ],
    "likes": 5120,
    "comments": 402,
-   "photo": "img/course/R2026034.webp",
+   "photo": "img/course/R2026002.webp",
    "photos": [],
    "size": "m"
   },
@@ -1264,7 +1281,7 @@
    "dur": "22:14",
    "likes": 4410,
    "comments": 310,
-   "photo": "img/course/R2026002.webp",
+   "photo": "img/action/file-bunker-shot-geograph-org-uk-4867695.jpg",
    "photos": [],
    "size": "l"
   },
@@ -1286,7 +1303,7 @@
    "dur": "3:02",
    "likes": 1760,
    "comments": 73,
-   "photo": "img/action/file-bunker-shot-geograph-org-uk-4867695.jpg",
+   "photo": "img/course/R2026023.webp",
    "photos": [],
    "size": "l"
   },
@@ -1302,7 +1319,7 @@
    "players": [],
    "likes": 620,
    "comments": 18,
-   "photo": "img/course/R2026023.webp",
+   "photo": "img/course/R2026030.webp",
    "photos": [],
    "size": "s"
   },
@@ -1324,11 +1341,11 @@
    "count": 12,
    "likes": 1420,
    "comments": 55,
-   "photo": "img/course/R2026030.webp",
+   "photo": "img/action/file-golf-player-putting-green-2003-jpg.jpg",
    "photos": [
-    "img/course/R2026030.webp",
     "img/action/file-golf-player-putting-green-2003-jpg.jpg",
-    "img/course/R2026012.webp"
+    "img/course/R2026012.webp",
+    "img/course/R2026522.webp"
    ],
    "size": "m"
   },
@@ -1347,7 +1364,7 @@
    "dur": "1:30",
    "likes": 2980,
    "comments": 140,
-   "photo": "img/course/R2026522.webp",
+   "photo": "img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg",
    "photos": [],
    "size": "l"
   },
@@ -1363,7 +1380,7 @@
    "players": [],
    "likes": 870,
    "comments": 64,
-   "photo": "img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg",
+   "photo": "img/action/file-dz6-2456-a-golfer-lines-up-a-putt-w.jpg",
    "photos": [],
    "size": "s"
   },
@@ -1384,7 +1401,7 @@
    "dur": "11:40",
    "likes": 1230,
    "comments": 47,
-   "photo": "img/action/file-dz6-2456-a-golfer-lines-up-a-putt-w.jpg",
+   "photo": "img/action/file-golf-bunker-shot-2-jpg.jpg",
    "photos": [],
    "size": "l"
   },
@@ -1404,7 +1421,7 @@
    ],
    "likes": 2210,
    "comments": 88,
-   "photo": "img/action/file-golf-bunker-shot-2-jpg.jpg",
+   "photo": "img/action/file-masters-tournament-2015-rory-mcilro.jpg",
    "photos": [],
    "size": "m"
   },
@@ -1421,11 +1438,11 @@
    "count": 18,
    "likes": 1980,
    "comments": 36,
-   "photo": "img/action/file-masters-tournament-2015-rory-mcilro.jpg",
+   "photo": "img/course/R2026100.webp",
    "photos": [
-    "img/action/file-masters-tournament-2015-rory-mcilro.jpg",
     "img/course/R2026100.webp",
-    "img/course/R2026020.webp"
+    "img/course/R2026020.webp",
+    "img/course/R2026011.webp"
    ],
    "size": "m"
   },
@@ -1441,7 +1458,7 @@
    "players": [],
    "likes": 1540,
    "comments": 52,
-   "photo": "img/course/R2026011.webp",
+   "photo": "img/course/R2026060.webp",
    "photos": [],
    "size": "m"
   },
@@ -1458,7 +1475,7 @@
    "dur": "8:12",
    "likes": 6400,
    "comments": 510,
-   "photo": "img/course/R2026060.webp",
+   "photo": "img/course/R2026014.webp",
    "photos": [],
    "size": "l"
   },
@@ -1479,7 +1496,7 @@
    "dur": "2:40",
    "likes": 1870,
    "comments": 71,
-   "photo": "img/course/R2026014.webp",
+   "photo": "img/course/R2026021.webp",
    "photos": [],
    "size": "l"
   },
@@ -1502,20 +1519,20 @@
    "count": 9,
    "likes": 1120,
    "comments": 39,
-   "photo": "img/course/R2026021.webp",
+   "photo": "img/course/R2026004.webp",
    "photos": [
-    "img/course/R2026021.webp",
     "img/course/R2026004.webp",
-    "img/action/file-afa-charity-golf-tournament-7293245.jpg"
+    "img/action/file-afa-charity-golf-tournament-7293245.jpg",
+    "img/action/file-golf-bunker-shot-1-jpg.jpg"
    ],
    "size": "m"
   }
  ],
  "hero": [
-  "img/action/file-dz6-2456-a-golfer-lines-up-a-putt-w.jpg",
   "img/action/file-golf-bunker-shot-2-jpg.jpg",
   "img/action/file-masters-tournament-2015-rory-mcilro.jpg",
-  "img/course/R2026100.webp"
+  "img/course/R2026100.webp",
+  "img/course/R2026020.webp"
  ],
  "resources": [
   {
