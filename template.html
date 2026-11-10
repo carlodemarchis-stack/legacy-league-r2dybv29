@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Legacy League Golf — Season Film (demo)</title>
-<meta name="description" content="Demo concept: Legacy League Golf as a card film — live team best-ball scoring, nine city hubs and every player, one screen each. Sample data.">
+<meta name="description" content="Demo concept: Legacy League Golf as a card film — live team best-ball scoring, eleven city hubs and every player, one screen each. English and Spanish. Sample data.">
 <meta name="robots" content="noindex">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Legacy League Golf — concept demo">
-<meta property="og:description" content="Live team best-ball scoring, a Stories collage, nine city hubs and every player as a card film. Sample data, built for the Legacy League bid.">
+<meta property="og:description" content="Live team best-ball scoring, a Stories collage, eleven city hubs and every player as a card film. Sample data, built for the Legacy League bid.">
 <meta property="og:url" content="https://carlodemarchis-stack.github.io/legacy-league-r2dybv29/">
 <meta property="og:image" content="https://carlodemarchis-stack.github.io/legacy-league-r2dybv29/img/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -298,7 +298,7 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 #topbar .home:hover b{color:var(--acc)}
 #topbar .tb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tb-tabs{display:flex;gap:4px;margin-left:auto}
-#tb-tabs button{padding:6px 14px;border-radius:999px;border:1px solid transparent;letter-spacing:.14em;color:var(--dim);transition:.18s}
+#tb-tabs button{padding:6px 14px;border-radius:999px;border:1px solid transparent;letter-spacing:.14em;color:var(--dim);transition:.18s;white-space:nowrap}
 #tb-tabs button:hover{color:var(--ink)}
 #tb-tabs button.on{color:var(--ink);border-color:var(--line);background:rgba(255,255,255,.07)}
 #topbar .tb-r{white-space:nowrap}
@@ -397,6 +397,35 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .rmore .row small{display:block;font-size:10.5px;color:var(--dim2);margin-top:2px}
 .rcount{position:absolute;left:14px;top:14px;z-index:3;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);font-size:10.5px;letter-spacing:.1em;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
 
+/* ------------------------------------------------------------- additions: placements, language, captions, pages */
+.placement{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 12px;border-radius:12px;border:1px solid rgba(217,173,78,.35);
+  background:linear-gradient(90deg,rgba(217,173,78,.08),rgba(217,173,78,.02));font-size:clamp(9px,.82vw,11px);letter-spacing:.14em;text-transform:uppercase;color:var(--dim2);font-weight:700}
+.placement .pl-logo{flex:0 0 auto;display:inline-grid;place-items:center;height:28px;padding:0 14px;border-radius:7px;background:var(--acc);color:#1a1206;font-style:normal;letter-spacing:.06em;font-size:12px}
+.placement .pl-sched{margin-left:auto;font-weight:300;letter-spacing:.04em;text-transform:none;color:var(--dim)}
+.placement .pl-sched b{color:var(--green);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:9px;margin-right:4px}
+#tb-lang{margin-left:8px;border:1px solid var(--line)!important;color:var(--acc)!important;font-weight:700}
+#tb-lang:hover{border-color:var(--acc)!important}
+u.cc{text-decoration:none;display:inline-block;padding:0 4px;border:1px solid currentColor;border-radius:3px;font-size:8.5px;line-height:1.5;letter-spacing:.06em;vertical-align:1px;margin-left:2px}
+.rhero.video{background:#000}
+.rhero.video video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.rhero.video::after{display:none}
+.rhero.video .cap{pointer-events:none;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:6px}
+.mfoot{margin-top:8px;padding-top:10px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim2)}
+.mfoot button{color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.mfoot button:hover{color:var(--acc)}
+.ev.core{border-color:rgba(217,173,78,.4)}
+.ev .n{font-size:11px;white-space:nowrap}
+.card[data-k="event"] .ev{grid-template-columns:auto minmax(0,1fr) auto}
+.card[data-k="event"] .ev .n{font-size:10.5px;letter-spacing:.04em;min-width:44px}
+button.ev{font:inherit;color:inherit;cursor:pointer;transition:.18s}
+button.ev:hover{border-color:var(--acc)}
+.ev .sw{margin-right:4px}
+.ok .pill{color:var(--dim)}
+@media(max-aspect-ratio:1/1){
+  .placement .pl-sched{margin-left:0;flex:1 1 100%}
+  #tb-lang{margin-left:4px;padding:5px 9px}
+}
+
 /* -------------------------------------------------------- portrait/mobile */
 @media(max-aspect-ratio:1/1){
   #topbar{flex-wrap:wrap;row-gap:5px;padding:9px clamp(14px,4vw,22px) 10px;background:rgba(8,12,14,.92)}
@@ -454,35 +483,37 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
     <button data-sec="cities">Cities</button>
     <button data-sec="players">Players</button>
     <button data-sec="season">Season</button>
+    <button id="tb-lang" class="lang" title="English / Español">ES</button>
   </div>
-  <div class="tb-r">Concept demo · sample data · A guy with a scarf</div>
+  <div class="tb-r" data-t="Concept demo · sample data · A guy with a scarf">Concept demo · sample data · A guy with a scarf</div>
 </div>
 
 <div id="film"></div>
 
 <div id="bar">
-  <button id="b-first" title="Restart"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></svg></button>
-  <button id="b-prev" title="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button id="count" title="Index: jump to a card (g)"><b>1</b> / 1</button>
-  <button id="b-next" title="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
-  <button id="b-full" title="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></button>
+  <button id="b-first" title="Restart" data-t="Restart"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></svg></button>
+  <button id="b-prev" title="Previous" data-t="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button id="count" title="Index: jump to a card (g)" data-t="Index: jump to a card (g)"><b>1</b> / 1</button>
+  <button id="b-next" title="Next" data-t="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button id="b-full" title="Fullscreen" data-t="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></button>
 </div>
 <div class="modal" id="jmodal" onclick="if(event.target===this)closeModal('jmodal')"><div class="mbox">
   <button class="mclose" onclick="closeModal('jmodal')">&times;</button>
-  <h3>Index</h3>
+  <h3 data-t="Index">Index</h3>
   <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input id="jq" type="search" placeholder="City, player, section…" autocomplete="off" oninput="renderJump(this.value)"></label>
+    <input id="jq" type="search" placeholder="City, player, section…" data-t="City, player, section…" autocomplete="off" oninput="renderJump(this.value)"></label>
   <div id="jlist"></div>
-  <div class="mhint"><kbd>g</kbd> opens this index · <kbd>←</kbd> <kbd>→</kbd> move through the film · <kbd>Esc</kbd> closes</div>
+  <div class="mhint" id="mhint"></div>
+  <div class="mfoot" id="mfoot"></div>
 </div></div>
 <div class="modal" id="smodal" onclick="if(event.target===this)closeModal('smodal')"><div class="rbox">
   <button class="mclose" onclick="closeModal('smodal')">&times;</button>
   <span class="rcount" id="rcount"></span>
-  <button class="rnav l" onclick="stepStory(-1)" title="Previous story"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button class="rnav r" onclick="stepStory(1)" title="Next story"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="rnav l" onclick="stepStory(-1)" title="Previous story" data-t="Previous story"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="rnav r" onclick="stepStory(1)" title="Next story" data-t="Next story"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <div class="rscroll" id="rbody"></div>
 </div></div>
-<div class="demo">Fictional rosters · Golf Genius-shaped feed · replayed clock</div>
+<div class="demo" data-t="Fictional rosters · Golf Genius-shaped feed · replayed clock">Fictional rosters · Golf Genius-shaped feed · replayed clock</div>
 <div id="toast"><i>LL</i><div><b></b><span></span><small>Push alert preview · city follow</small></div></div>
 
 <script>
@@ -495,10 +526,114 @@ const PREF = {
   get(k, d) { try { const v = localStorage.getItem("ll." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("ll." + k, JSON.stringify(v)); } catch (e) {} },
 };
+/* ------------------------------------------------------------- i18n
+   Interface strings are a dictionary keyed by the English text; content
+   fields come localised from the CMS (title_es, bio_es…) with English as
+   the fallback, which is the field-level model the brief asks for. */
+const LANG = PREF.get("lang", null) || ((navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en");
+document.documentElement.lang = LANG;
+const T = {
+  "Live": "En directo", "Stories": "Historias", "Cities": "Ciudades", "Players": "Jugadores", "Season": "Temporada",
+  "· 2027 season": "· temporada 2027", "· Mayakoba · live": "· Mayakoba · en directo", "· Stories": "· Historias", "· Season": "· Temporada",
+  "City hubs": "Hubs de ciudad", "Concept demo · sample data · A guy with a scarf": "Demo conceptual · datos de muestra · A guy with a scarf",
+  "Fictional rosters · Golf Genius-shaped feed · replayed clock": "Plantillas ficticias · feed tipo Golf Genius · reloj en repetición",
+  "Restart": "Reiniciar", "Previous": "Anterior", "Next": "Siguiente", "Fullscreen": "Pantalla completa", "Index: jump to a card (g)": "Índice: ir a una ficha (g)",
+  "Index": "Índice", "City, player, section…": "Ciudad, jugador, sección…", "opens this index": "abre este índice", "move through the film": "recorren la película", "closes": "cierra",
+  "Push alert preview": "Vista previa de notificación", "city follow": "ciudad seguida", "scoring feed": "feed de resultados",
+  // story card
+  "2027 season · Concept demo": "Temporada 2027 · demo conceptual", "Cities.": "Ciudades.", "Legends.": "Leyendas.", "A cause.": "Una causa.",
+  "Live now": "En directo", "Mayakoba · Round 2": "Mayakoba · Ronda 2", "Format": "Formato", "Best": "Mejores", "6 events": "6 eventos", "How this screen works": "Cómo funciona esta pantalla",
+  // live
+  "Event 1 of 6": "Evento 1 de 6", "Round 2 · live": "Ronda 2 · en directo", "Round 2 · final": "Ronda 2 · final", "Course time": "Hora en el campo", "Feed updated": "Feed actualizado",
+  "▶ Replay scores": "▶ Repetir resultados", "❚❚ Pause replay": "❚❚ Pausar", "Simulate feed outage": "Simular caída del feed", "Feed back online": "Feed recuperado", "Reset to 14:20": "Volver a las 14:20",
+  "Preview push alerts": "Ver notificaciones", "Scores delayed.": "Resultados con retraso.", "The scoring feed last answered at": "El feed de resultados respondió por última vez a las",
+  "Showing the last good board; retrying every 30 s.": "Se muestra la última clasificación válida; reintentando cada 30 s.",
+  "Team leaderboard · best": "Clasificación por equipos · mejores", "balls per hole": "bolas por hoyo", "Provisional": "Provisional", "Final · points awarded": "Final · puntos asignados",
+  "Leaderboard presented by": "Clasificación presentada por", "Hub presented by": "Hub presentado por", "Scheduled": "Programado", "impressions and clicks reported": "impresiones y clics medidos",
+  "Pos": "Pos", "City": "Ciudad", "Today": "Hoy", "Thru": "Hoyos", "Total": "Total", "Pts": "Pts", "Hole by hole": "Hoyo a hoyo", "Player": "Jugador", "Hole": "Hoyo", "Par": "Par", "Out": "Ida", "In": "Vuelta", "Tot": "Tot", "Team": "Equipo", "best": "mejores",
+  "Eagle": "Eagle", "Birdie": "Birdie", "Bogey": "Bogey", "Double+": "Doble+", "Counted for the team": "Cuenta para el equipo", "Provisional, team-mates still on the hole": "Provisional: compañeros aún en el hoyo",
+  "Provisional: team-mates still on this hole": "Provisional: compañeros aún en este hoyo", "Round 1 · final": "Ronda 1 · final", "Round 2 · thru": "Ronda 2 · tras",
+  // stories
+  "All stories": "Todas", "Following": "Siguiendo", "Video": "Vídeo", "Galleries": "Galerías", "News": "Noticias", "Mission": "Misión",
+  "Search stories, cities, players…": "Buscar historias, ciudades, jugadores…", "Clear": "Borrar", "story": "historia", "stories": "historias", "for": "para",
+  "Gallery": "Galería", "Live result": "Resultado en directo", "photos": "fotos", "pictures": "fotos", "just now": "ahora mismo", "yesterday": "ayer",
+  "No story matches": "Ninguna historia coincide con", "Try a city, a player or a word from a headline.": "Prueba con una ciudad, un jugador o una palabra del titular.",
+  "Nothing here yet. Follow a city or a player and their stories, results and alerts fill this view.": "Aún no hay nada. Sigue a una ciudad o a un jugador y sus historias, resultados y alertas llenarán esta vista.",
+  "Pick a city": "Elige una ciudad", "comments": "comentarios", "Share": "Compartir", "Link copied (demo)": "Enlace copiado (demo)", "Every story has its own URL with a social preview card.": "Cada historia tiene su propia URL con tarjeta de previsualización social.",
+  "Presented by · sponsor slot": "Presentado por · espacio patrocinado", "More like this": "Más como esta", "Video · hosted, adaptive, captioned": "Vídeo · alojado, adaptativo, subtitulado",
+  "Picture · supplied by Legacy": "Imagen · aportada por Legacy", "Captions": "Subtítulos", "Previous story": "Historia anterior", "Next story": "Historia siguiente",
+  // city
+  "City hub": "Hub de ciudad", "in the league": "en la liga", "Follow": "Seguir", "Season standing": "Posición en la temporada", "Mayakoba · live": "Mayakoba · en directo",
+  "City story": "La historia de la ciudad", "Playing for": "Juegan por", "a share of every league point the team scores goes to the charity.": "una parte de cada punto de liga que suma el equipo va a la organización.",
+  "Donate (deferred)": "Donar (aplazado)", "City partners": "Socios de la ciudad", "Roster": "Plantilla", "players": "jugadores", "Tap a player": "Toca un jugador",
+  "Supplied by Legacy · hosted, captioned, adaptive": "Aportado por Legacy · alojado, subtitulado, adaptativo", "at Del Mar · highlights 2:14": "en Del Mar · resumen 2:14",
+  "City documentary · trailer": "Documental de ciudad · tráiler", "Captain's round · ep. 1": "La vuelta del capitán · ep. 1", "league points": "puntos de liga", "projected": "proyectados",
+  "after": "tras", "1 of 6 events": "1 de 6 eventos", "0 of 6 events": "0 de 6 eventos", "Position": "Posición", "Round 1": "Ronda 1", "Round 2": "Ronda 2", "thru": "tras", "tee": "salida",
+  // player
+  "Captain": "Capitán", "Handicap index": "Índice de hándicap", "hub": "hub", "Legacy statistics · computed from the feed": "Estadísticas Legacy · calculadas desde el feed",
+  "Biography · published by the content team": "Biografía · publicada por el equipo de contenidos", "Mayakoba · hole by hole": "Mayakoba · hoyo a hoyo", "Gold ring = counted for": "Anillo dorado = cuenta para",
+  "Event": "Evento", "Birdies+": "Birdies+", "Balls counted": "Bolas contadas", "Portrait · placeholder": "Retrato · provisional",
+  // season / event
+  "2027 season": "Temporada 2027", "Six stops,": "Seis paradas,", "one table.": "una tabla.", "Schedule": "Calendario", "Upcoming": "Próximo", "TBA": "Por confirmar",
+  "Season standings · league points": "Clasificación de la temporada · puntos de liga", "Provisional while play is on": "Provisional mientras se juega", "Final after Mayakoba": "Final tras Mayakoba",
+  "Points table": "Tabla de puntos", "ties share the average. Both are settings an administrator changes in the CMS, not code.": "los empates reparten la media. Ambas cosas las cambia un administrador en el CMS, no en el código.",
+  "Cities 2027": "Ciudades 2027", "Planned markets": "Mercados previstos", "Add a city": "Añadir una ciudad", "No rebuild": "Sin reconstruir",
+  "Event page": "Página del evento", "24–29 January 2027": "24–29 de enero de 2027", "Programme": "Programa", "The four-day experience": "La experiencia de cuatro días",
+  "Venue": "Sede", "Where to watch": "Dónde verlo", "Tee times · Round 2": "Horarios de salida · Ronda 2", "first groups off the 1st tee": "primeros grupos desde el tee del 1", "Results": "Resultados",
+  "Highlights": "Resúmenes", "Pairings and full tee sheet": "Emparejamientos y horarios completos", "Par 71 · 7,034 yards · tournament tees": "Par 71 · 7.034 yardas · tees de torneo",
+  "Open the live board": "Abrir la clasificación en directo", "Sun": "Dom", "Mon": "Lun", "Tue": "Mar", "Wed": "Mié", "Thu": "Jue", "Fri": "Vie", "Sat": "Sáb",
+  // capture
+  "Stay close": "Sigue de cerca", "to your city.": "a tu ciudad.", "No account. Your email or your number, your city, and three separate choices you can change any time.": "Sin cuenta. Tu correo o tu número, tu ciudad y tres opciones independientes que puedes cambiar cuando quieras.",
+  "Stay close to your city": "Sigue de cerca a tu ciudad", "No account needed": "Sin cuenta", "Email": "Correo", "Mobile (SMS, optional)": "Móvil (SMS, opcional)", "Your city": "Tu ciudad", "Alerts": "Alertas",
+  "Live scores and results": "Resultados en directo y finales", "Results only": "Solo resultados finales", "News and video only": "Solo noticias y vídeo",
+  "Email me league news and my city's results. I can unsubscribe any time.": "Quiero recibir por correo las noticias de la liga y los resultados de mi ciudad. Puedo darme de baja cuando quiera.",
+  "Text me on event days, up to 2 messages per event.": "Enviadme SMS los días de evento, máximo 2 mensajes por evento.",
+  "Keep me posted on the mental-health mission and ways to get involved.": "Mantenedme al día de la misión de salud mental y de cómo participar.",
+  "I am 16 or older.": "Tengo 16 años o más.", "Follow my city": "Seguir a mi ciudad", "Withdraw consent": "Retirar el consentimiento",
+  "Consent recorded (demo, this device only)": "Consentimiento registrado (demo, solo en este dispositivo)", "email": "correo", "SMS": "SMS", "mission": "misión", "yes": "sí", "no": "no",
+  "Consent withdrawn. Nothing kept on this device.": "Consentimiento retirado. No queda nada en este dispositivo.",
+  "Separate consents, timestamped, stored with the marketing provider as one exportable list. Full fan accounts and CRM journeys are deferred, as the brief asks.": "Consentimientos independientes, con fecha y hora, guardados en el proveedor de marketing como una única lista exportable. Las cuentas completas de aficionado y los recorridos de CRM quedan aplazados, como pide el brief.",
+  "What you get": "Qué recibes", "Tee times the evening before each round": "Horarios de salida la víspera de cada ronda", "Round leader changes and final results for your city": "Cambios de líder y resultados finales de tu ciudad",
+  "Stories and video from your city's desk": "Historias y vídeo de la redacción de tu ciudad", "One email a week in the off-season, never more": "Un correo a la semana fuera de temporada, nunca más",
+  // mission
+  "The mission": "La misión", "Golf is the": "El golf es la", "excuse.": "excusa.",
+  "Every event funds mental-health work in its city. The league keeps the rights to a documentary series on athletes' mental health and to the city films, and publishes them here for free.": "Cada evento financia trabajo en salud mental en su ciudad. La liga conserva los derechos de una serie documental sobre la salud mental de los deportistas y de las películas de ciudad, y las publica aquí gratis.",
+  "Suicide & Crisis Lifeline": "Línea de crisis y prevención del suicidio", "Call or text 988 in the US, any time. If you are outside the US, your local line is one tap away in the app.": "Llama o envía un mensaje al 988 en EE. UU., a cualquier hora. Fuera de EE. UU., tu línea local está a un toque en la app.",
+  "City charities": "Organizaciones de cada ciudad", "Get involved": "Participa", "Volunteer with your city's charity": "Voluntariado con la organización de tu ciudad", "Donate to the season fund": "Donar al fondo de la temporada",
+  "Share the 988 card": "Compartir la tarjeta del 988", "Opens later in the season": "Se abre más adelante en la temporada", "Alerts the scoring feed can trigger": "Alertas que puede disparar el feed de resultados",
+  "Round leader changes": "Cambio de líder de la ronda", "Your city moves into the top 3": "Tu ciudad entra en el top 3", "Your player makes eagle": "Tu jugador hace eagle", "Final results, your city": "Resultados finales de tu ciudad", "Tee times published": "Horarios de salida publicados",
+  "Start of play": "Inicio del juego", "Shared (demo)": "Compartido (demo)", "The 988 card is ready to share with its own link.": "La tarjeta del 988 está lista para compartir con su propio enlace.",
+  // alerts
+  "New round leader": "Nuevo líder de la ronda", "overall, {today} today thru {thru}. Round 2 is live.": "en total, {today} hoy tras {thru}. La Ronda 2 está en directo.", "now": "ahora",
+  "Final at Mayakoba": "Final en Mayakoba", "league points. Season standings updated.": "puntos de liga. Clasificación de la temporada actualizada.", "finishes": "termina",
+  "Play is under way at El Camaleón": "Empieza el juego en El Camaleón", "First group off the 1st tee at 08:00. Follow your city for round leaders and the final result.": "Primer grupo desde el tee del 1 a las 08:00. Sigue a tu ciudad para los líderes de la ronda y el resultado final.",
+  "You will get round leaders, final results and tee times. Stored on this device; no account.": "Recibirás los líderes de la ronda, los resultados finales y los horarios de salida. Guardado en este dispositivo; sin cuenta.",
+  // index
+  "Start": "Inicio", "League": "Liga", "Round 2": "Ronda 2", "posts": "publicaciones", "Schedule and standings": "Calendario y clasificación", "Mayakoba · event page": "Mayakoba · página del evento",
+  "Follow your city": "Sigue a tu ciudad", "988 · get involved": "988 · participa", "More": "Más", "Press resources": "Prensa", "Press kit, logos, accreditation requests. Published by the league.": "Dossier de prensa, logos, acreditaciones. Publicado por la liga.",
+  "Commercial partners": "Socios comerciales", "Partnership enquiries go to the league's commercial team.": "Las consultas de patrocinio van al equipo comercial de la liga.", "Legal": "Legal",
+  "Privacy, terms and consent policies, supplied by Legacy before launch.": "Privacidad, condiciones y políticas de consentimiento, aportadas por Legacy antes del lanzamiento.",
+  "Merchandise": "Tienda", "Coming soon. A link or a full store is an option in the bid.": "Próximamente. Un enlace o una tienda completa es una opción de la oferta.", "Nothing matches.": "Nada coincide.",
+  "Demo page · would open as a plain page in the build": "Página de demo · en la versión real se abre como página normal",
+  "Retired Hall of Famers, All-Stars and celebrities play": "Miembros del Salón de la Fama, All-Stars y celebridades retirados juegan", "team best ball": "team best ball",
+  "for the cities they once represented. Eleven cities, six events, league points, a purse, a Team Championship, and a mental-health mission that runs through every round.": "por las ciudades que un día representaron. Once ciudades, seis eventos, puntos de liga, una bolsa de premios, un Campeonato por Equipos y una misión de salud mental presente en cada ronda.",
+  "Tap": "Toca", "for the full board with hole-by-hole team scoring,": "para la clasificación completa con el resultado del equipo hoyo a hoyo,", "for the editorial flow, or swipe on: every city, then every player.": "para el flujo editorial, o sigue deslizando: cada ciudad y después cada jugador.",
+  "One idea per screen, like a deck of cards.": "Una idea por pantalla, como una baraja.", "Laptop:": "Portátil:", "arrow keys or the bar below.": "flechas del teclado o la barra inferior.", "Phone:": "Móvil:",
+  "swipe left and right, scroll inside a card.": "desliza a izquierda y derecha, haz scroll dentro de la ficha.", "The same build ships to the web and, as a shell, to the iOS and Android apps; the live board below is computed from a scoring feed the way the brief asks.": "La misma versión se publica en la web y, como contenedor, en las apps de iOS y Android; la clasificación se calcula a partir de un feed de resultados tal como pide el brief.",
+  "Tap a city for hole-by-hole.": "Toca una ciudad para ver el hoyo a hoyo.", "are league points at the current position (shared on ties) and turn gold when the round is final. Source of truth for official results stays the scoring provider; league points and standings are computed here under the rulebook.": "son los puntos de liga en la posición actual (repartidos en los empates) y se vuelven dorados cuando la ronda es final. La fuente oficial de los resultados sigue siendo el proveedor; los puntos de liga y la clasificación se calculan aquí según el reglamento.",
+  "Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.": "Selecciona una ciudad en la clasificación. Verás la tarjeta de cada jugador en la ronda, las dos bolas que cuentan en cada hoyo con anillo dorado y la línea del equipo debajo. Los hoyos con parte del equipo aún en el campo aparecen como provisionales.",
+  "C": "C",
+};
+const t = s => LANG === "es" ? (T[s] ?? s) : s;
+const L = (o, k) => (LANG === "es" && o && o[k + "_es"]) ? o[k + "_es"] : (o ? o[k] : "");
+function setLang(l) { PREF.set("lang", l); location.reload(); }
+
 const CITY = Object.fromEntries(LEAGUE.cities.map(c => [c.id, c]));
 const PLAYER = Object.fromEntries(LEAGUE.players.map(p => [p.id, p]));
 const PAR = FEED.event.course.holes.map(h => h.par);
 const RULES = LEAGUE.rules;
+const EVENT = LEAGUE.schedule[0];
+const LB_SPONSOR = "Kestrel Golf";
 const TEE = {};          // player id -> {r1: minutes, r2: minutes}
 FEED.tee_sheet.forEach(g => { const [h, m] = g.tee_time.slice(11, 16).split(":").map(Number);
   g.players.forEach(p => { (TEE[p.id] ||= {})[g.round_id] = h * 60 + m; }); });
@@ -516,8 +651,9 @@ const state = {
 const fmt = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const sgn = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
 const cls = n => n === 0 ? "e" : n > 0 ? "o" : "u";
-const ord = n => n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]);
+const ord = n => LANG === "es" ? `${n}º` : n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]);
 const ini = n => n.split(" ").map(w => w[0]).join("").slice(0, 2);
+const lastName = n => n.split(" ").slice(-1)[0];
 
 /* ----------------------------------------------------------- scoring */
 /* The feed gives raw hole scores per player; everything the brief lists
@@ -576,8 +712,8 @@ const sq = (s, par, extra = "") => {
 };
 function holeGrid(rows, team, label) {
   // rows: [{label, holes[], pid}] ; team: result of teamRound (optional)
-  const head = `<div class="lab">${label || "Hole"}</div>` + PAR.map((_, h) => h === 9 ? `<div class="hn sub">Out</div><div class="hn">10</div>` : `<div class="hn">${h + 1}</div>`).join("") + `<div class="hn sub">In</div><div class="hn sub">Tot</div>`;
-  const parRow = `<div class="lab"><small>Par</small></div>` + PAR.map((p, h) => (h === 9 ? `<div class="pr sub">${PAR.slice(0, 9).reduce((a, b) => a + b)}</div>` : "") + `<div class="pr">${p}</div>`).join("") + `<div class="pr sub">${PAR.slice(9).reduce((a, b) => a + b)}</div><div class="pr sub">${PAR.reduce((a, b) => a + b)}</div>`;
+  const head = `<div class="lab">${label || t("Hole")}</div>` + PAR.map((_, h) => h === 9 ? `<div class="hn sub">${t("Out")}</div><div class="hn">10</div>` : `<div class="hn">${h + 1}</div>`).join("") + `<div class="hn sub">${t("In")}</div><div class="hn sub">${t("Tot")}</div>`;
+  const parRow = `<div class="lab"><small>${t("Par")}</small></div>` + PAR.map((p, h) => (h === 9 ? `<div class="pr sub">${PAR.slice(0, 9).reduce((a, b) => a + b)}</div>` : "") + `<div class="pr">${p}</div>`).join("") + `<div class="pr sub">${PAR.slice(9).reduce((a, b) => a + b)}</div><div class="pr sub">${PAR.reduce((a, b) => a + b)}</div>`;
   const sum = (arr, a, b) => arr.slice(a, b).every(x => x != null) ? arr.slice(a, b).reduce((x, y) => x + y, 0) : null;
   const tp = (arr, a, b) => { const s = sum(arr, a, b); if (s == null) return `<div class="sub">·</div>`; return `<div class="sub">${s}</div>`; };
   const body = rows.map(r => {
@@ -592,40 +728,40 @@ function holeGrid(rows, team, label) {
   if (team) {
     const nine = (a, b) => team.holes.slice(a, b).every(y => y.status === "firm") ? sgn(team.holes.slice(a, b).reduce((s, y) => s + y.score - y.par, 0)) : "·";
     const cells = team.holes.map((x, h) => {
-      const t = x.score == null ? `<div><span class="sq none">·</span></div>` :
-        `<div><span class="sq team ${cls(x.score - x.par)} ${x.status === "prov" ? "prov" : ""}" title="${x.status === "prov" ? "Provisional: team-mates still on this hole" : ""}">${sgn(x.score - x.par)}</span></div>`;
-      return (h === 9 ? `<div class="sub">${nine(0, 9)}</div>` : "") + t;
+      const tt = x.score == null ? `<div><span class="sq none">·</span></div>` :
+        `<div><span class="sq team ${cls(x.score - x.par)} ${x.status === "prov" ? "prov" : ""}" title="${x.status === "prov" ? t("Provisional: team-mates still on this hole") : ""}">${sgn(x.score - x.par)}</span></div>`;
+      return (h === 9 ? `<div class="sub">${nine(0, 9)}</div>` : "") + tt;
     }).join("");
-    teamRow = `<div class="lab trow"><b>Team</b><small>best ${RULES.best_balls}</small></div>${cells}<div class="sub">${nine(9, 18)}</div><div class="tot ${cls(team.toPar)}">${team.thru ? sgn(team.toPar) : "·"}</div>`;
+    teamRow = `<div class="lab trow"><b>${t("Team")}</b><small>${t("best")} ${RULES.best_balls}</small></div>${cells}<div class="sub">${nine(9, 18)}</div><div class="tot ${cls(team.toPar)}">${team.thru ? sgn(team.toPar) : "·"}</div>`;
   }
   return `<div class="scwrap"><div class="scg">${head}${parRow}${body}${teamRow}</div></div>`;
 }
-const LEGEND_P = `<div class="sclegend"><span><i class="sq eagle" style="width:14px;height:14px"></i>Eagle</span><span><i class="sq birdie" style="width:14px;height:14px"></i>Birdie</span><span><i class="sq bogey" style="width:14px;height:14px"></i>Bogey</span><span><i class="sq dbl" style="width:14px;height:14px"></i>Double+</span><span><i class="sq cnt" style="width:14px;height:14px"></i>Counted for the team</span>`;
-const LEGEND = LEGEND_P + `<span><i class="sq prov team" style="width:14px;height:14px;font-size:9px;font-style:normal">E</i>Provisional, team-mates still on the hole</span></div>`;
-const LEGEND_PLAYER = LEGEND_P + `</div>`;
+const LEGEND_P = () => `<div class="sclegend"><span><i class="sq eagle" style="width:14px;height:14px"></i>${t("Eagle")}</span><span><i class="sq birdie" style="width:14px;height:14px"></i>${t("Birdie")}</span><span><i class="sq bogey" style="width:14px;height:14px"></i>${t("Bogey")}</span><span><i class="sq dbl" style="width:14px;height:14px"></i>${t("Double+")}</span><span><i class="sq cnt" style="width:14px;height:14px"></i>${t("Counted for the team")}</span>`;
+const LEGEND = () => LEGEND_P() + `<span><i class="sq prov team" style="width:14px;height:14px;font-size:9px;font-style:normal">E</i>${t("Provisional, team-mates still on the hole")}</span></div>`;
+const LEGEND_PLAYER = () => LEGEND_P() + `</div>`;
+const placement = (label, name, when) => `<div class="placement"><span class="pl-lab">${label}</span><i class="pl-logo">${esc(name)}</i><span class="pl-sched"><b>${t("Scheduled")}</b> · ${when} · ${t("impressions and clicks reported")}</span></div>`;
 
 function storyCard() {
-  const lb = leaderboard();
   return `<div class="card" data-k="story" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[0]}" alt=""><div class="inner">
     <div class="col l" style="justify-content:center">
-      <div class="kicker">2027 season · Concept demo</div>
-      <h1 class="big">Cities.<br>Legends.<br>A cause.</h1>
-      <p class="lead">Retired Hall of Famers, All-Stars and celebrities play <b>team best ball</b> for the cities they once represented. Nine cities, six events, league points, a purse, a Team Championship, and a mental-health mission that runs through every round.</p>
+      <div class="kicker">${t("2027 season · Concept demo")}</div>
+      <h1 class="big">${t("Cities.")}<br>${t("Legends.")}<br>${t("A cause.")}</h1>
+      <p class="lead">${t("Retired Hall of Famers, All-Stars and celebrities play")} <b>${t("team best ball")}</b> ${t("for the cities they once represented. Eleven cities, six events, league points, a purse, a Team Championship, and a mental-health mission that runs through every round.")}</p>
       <div class="chips">${LEAGUE.cities.map(c => `<button class="chip" style="--c:${c.color}" onclick="goCity('${c.id}')"><i></i>${c.name}</button>`).join("")}</div>
     </div>
     <div class="col r" style="justify-content:center">
       <div class="box">
-        <div class="legend"><span><span class="dot" style="display:inline-block;margin-right:8px"></span><span class="live">Live now</span></span><span>Mayakoba · Round 2</span></div>
+        <div class="legend"><span><span class="dot" style="display:inline-block;margin-right:8px"></span><span class="live">${t("Live now")}</span></span><span>${t("Mayakoba · Round 2")}</span></div>
         <div class="lb" id="story-lb"></div>
-        <div class="lbfoot">Tap <b>Live</b> for the full board with hole-by-hole team scoring, <b>Stories</b> for the editorial flow, or swipe on: every city, then every player.</div>
+        <div class="lbfoot">${t("Tap")} <b>${t("Live")}</b> ${t("for the full board with hole-by-hole team scoring,")} <b>${t("Stories")}</b> ${t("for the editorial flow, or swipe on: every city, then every player.")}</div>
       </div>
       <div class="grid c3">
-        <div class="box cell"><small>Format</small><b>Best ${RULES.best_balls} of ${LEAGUE.cities.length > 0 ? "6–8" : ""}</b></div>
-        <div class="box cell"><small>Season</small><b>6 events</b></div>
-        <div class="box cell"><small>Players</small><b>${LEAGUE.players.length}</b></div>
+        <div class="box cell"><small>${t("Format")}</small><b>${t("Best")} ${RULES.best_balls} / 6–8</b></div>
+        <div class="box cell"><small>${t("Season")}</small><b>${t("6 events")}</b></div>
+        <div class="box cell"><small>${t("Players")}</small><b>${LEAGUE.players.length}</b></div>
       </div>
-      <div class="box"><div class="legend">How this screen works</div>
-        <p class="lead" style="font-size:13px;max-width:none">One idea per screen, like a deck of cards. <b>Laptop:</b> arrow keys or the bar below. <b>Phone:</b> swipe left and right, scroll inside a card. The same build ships to the web and, as a shell, to the iOS and Android apps; the live board below is computed from a scoring feed the way the brief asks.</p></div>
+      <div class="box"><div class="legend">${t("How this screen works")}</div>
+        <p class="lead" style="font-size:13px;max-width:none">${t("One idea per screen, like a deck of cards.")} <b>${t("Laptop:")}</b> ${t("arrow keys or the bar below.")} <b>${t("Phone:")}</b> ${t("swipe left and right, scroll inside a card.")} ${t("The same build ships to the web and, as a shell, to the iOS and Android apps; the live board below is computed from a scoring feed the way the brief asks.")}</p></div>
     </div>
   </div></div>`;
 }
@@ -634,20 +770,21 @@ function liveCard() {
   return `<div class="card" data-k="live" style="--c:rgba(57,178,111,.45)"><div class="inner">
     <div class="col l" style="flex-basis:52%">
       <div class="lbhead">
-        <div><div class="kicker">Event 1 of 6 · ${esc(FEED.event.course.name)}</div><h2 class="big">Mayakoba</h2></div>
-        <div class="meta"><span><span class="dot" style="display:inline-block;margin-right:7px;vertical-align:0"></span><b id="lv-status">Round 2 · live</b></span><span>Course time <b id="lv-clock"></b></span><span>Feed updated <b id="lv-upd"></b></span></div>
+        <div><div class="kicker">${t("Event 1 of 6")} · ${esc(FEED.event.course.name)}</div><h2 class="big">Mayakoba</h2></div>
+        <div class="meta"><span><span class="dot" style="display:inline-block;margin-right:7px;vertical-align:0"></span><b id="lv-status">${t("Round 2 · live")}</b></span><span>${t("Course time")} <b id="lv-clock"></b></span><span>${t("Feed updated")} <b id="lv-upd"></b></span></div>
       </div>
       <div class="ctrls">
-        <button class="pill" id="lv-play" onclick="togglePlay()">▶ Replay scores</button>
-        <button class="pill" id="lv-stale" onclick="toggleStale()">Simulate feed outage</button>
-        <button class="pill" onclick="resetClock()">Reset to 14:20</button>
+        <button class="pill" id="lv-play" onclick="togglePlay()">${t("▶ Replay scores")}</button>
+        <button class="pill" id="lv-stale" onclick="toggleStale()">${t("Simulate feed outage")}</button>
+        <button class="pill" onclick="previewAlerts()">${t("Preview push alerts")}</button>
+        <button class="pill" onclick="resetClock()">${t("Reset to 14:20")}</button>
       </div>
-      <div class="stale" id="lv-banner"><b>Scores delayed.</b> <span>The scoring feed last answered at <b id="lv-stale-t"></b>. Showing the last good board; retrying every 30 s.</span></div>
-      <div class="box grow lbbox"><div class="legend"><span>Team leaderboard · best ${RULES.best_balls} balls per hole</span><span id="lv-prov">Provisional</span></div>
+      <div class="stale" id="lv-banner"><b>${t("Scores delayed.")}</b> <span>${t("The scoring feed last answered at")} <b id="lv-stale-t"></b>. ${t("Showing the last good board; retrying every 30 s.")}</span></div>
+      <div class="box grow lbbox"><div class="legend"><span>${t("Team leaderboard · best")} ${RULES.best_balls} ${t("balls per hole")}</span><span id="lv-prov">${t("Provisional")}</span></div>
         <div class="lb" id="lv-lb"></div>
-        <div class="lbfoot">Tap a city for hole-by-hole. <b>Pts</b> are league points at the current position (shared on ties) and turn gold when the round is final. Source of truth for official results stays the scoring provider; league points and standings are computed here under the rulebook.</div>
+        <div class="lbfoot">${t("Tap a city for hole-by-hole.")} <b>${t("Pts")}</b> ${t("are league points at the current position (shared on ties) and turn gold when the round is final. Source of truth for official results stays the scoring provider; league points and standings are computed here under the rulebook.")}</div>
       </div>
-      <div class="sponsor">Leaderboard presented by <i>Sponsor placement</i> <span style="font-weight:300;letter-spacing:0;text-transform:none">· impressions and clicks reported</span></div>
+      ${placement(t("Leaderboard presented by"), LB_SPONSOR, "24–29 Jan")}
     </div>
     <div class="col r">
       <div class="box grow" id="lv-detail"></div>
@@ -667,8 +804,8 @@ function storiesCard() {
     <div class="col st-col">
       <div class="st-head">
         <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="st-q" type="search" placeholder="Search stories, cities, players…" autocomplete="off" oninput="setQuery(this.value)">
-          <button type="button" id="st-clear" title="Clear" onclick="setQuery('');document.getElementById('st-q').value=''">×</button></label>
+          <input id="st-q" type="search" placeholder="${t("Search stories, cities, players…")}" autocomplete="off" oninput="setQuery(this.value)">
+          <button type="button" id="st-clear" title="${t("Clear")}" onclick="setQuery('');document.getElementById('st-q').value=''">×</button></label>
         <div class="filters" id="st-filters"></div>
       </div>
       <div class="feed" id="feed"></div>
@@ -676,56 +813,57 @@ function storiesCard() {
   </div></div>`;
 }
 const ago = iso => { const h = Math.round((Date.parse(FEED.generated_at.slice(0, 16)) - Date.parse(iso)) / 36e5);
-  return h < 1 ? "just now" : h < 24 ? `${h}h` : h < 48 ? "yesterday" : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
-const kindLabel = { video: "Video", gallery: "Gallery", article: "News", quote: "Mission", result: "Live result" };
+  return h < 1 ? t("just now") : h < 24 ? `${h}h` : h < 48 ? t("yesterday") : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric" }); };
+const kindLabel = k => ({ video: t("Video"), gallery: t("Gallery"), article: t("News"), quote: t("Mission"), result: t("Live result") }[k]);
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : n;
 function renderFilters() {
   const n = f => LEAGUE.stories.filter(s => matchFilter(s, f)).length;
   const shown = n(state.filter);
-  document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter('${k}')">${l}<small>${n(k)}</small></button>`).join("") +
-    `<span class="st-count">${shown} ${shown === 1 ? "story" : "stories"}${state.q ? ` for “${esc(state.q)}”` : ""}</span>`;
+  document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter('${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
+    `<span class="st-count">${shown} ${shown === 1 ? t("story") : t("stories")}${state.q ? ` ${t("for")} “${esc(state.q)}”` : ""}</span>`;
   document.querySelector(".search").classList.toggle("has", !!state.q);
 }
-const norm = x => String(x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const norm = x => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const sTitle = s => fill(L(s, "title"), s), sDek = s => fill(L(s, "dek"), s);
 function matchQuery(s) {
   if (!state.q) return true;
-  const hay = norm([s.title, s.dek, s.author, kindLabel[s.kind], ...s.cities.map(c => CITY[c].name + " " + CITY[c].short),
-    ...s.players.map(p => PLAYER[p].name)].join(" "));
+  const hay = norm([sTitle(s), sDek(s), s.author, kindLabel(s.kind), ...(s.cities || []).map(c => CITY[c].name + " " + CITY[c].short),
+    ...(s.players || []).map(p => PLAYER[p] ? PLAYER[p].name : "")].join(" "));
   return norm(state.q).split(/\s+/).filter(Boolean).every(w => hay.includes(w));
 }
 function matchFilter(s, f) {
   if (!matchQuery(s)) return false;
   if (f === "all") return true;
-  if (f === "following") return s.cities.some(c => state.follow.has(c)) || s.players.some(p => state.follow.has(p));
+  if (f === "following") return (s.cities || []).some(c => state.follow.has(c)) || (s.players || []).some(p => state.follow.has(p));
   if (f === "mission") return s.topic === "mission";
   return s.kind === f;
 }
 function tile(s) {
-  const c = s.cities.length === 1 ? CITY[s.cities[0]] : null;
+  const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
   const col = c ? c.color : "var(--acc)";
   const liked = state.likes.has(s.id);
-  const tagId = s.cities[0], pl = s.players[0];
+  const tagId = (s.cities || [])[0], pl = (s.players || [])[0];
   const tag = tagId ? `<span class="tag" style="--c:${CITY[tagId].color}" onclick="event.stopPropagation();goCity('${tagId}')"><i></i>${esc(CITY[tagId].name)}</span>` :
-              pl ? `<span class="tag" style="--c:${CITY[PLAYER[pl].city].color}" onclick="event.stopPropagation();goPlayer('${pl}')"><i></i>${esc(PLAYER[pl].name)}</span>` : "";
-  const badge = s.kind === "result" ? `<span class="badge live">Live</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}</span>` :
-                s.kind === "gallery" ? `<span class="badge">${s.count} photos</span>` : `<span class="badge">${s.topic === "mission" ? "Mission" : kindLabel[s.kind]}</span>`;
+              pl && PLAYER[pl] ? `<span class="tag" style="--c:${CITY[PLAYER[pl].city].color}" onclick="event.stopPropagation();goPlayer('${pl}')"><i></i>${esc(PLAYER[pl].name)}</span>` : "";
+  const badge = s.kind === "result" ? `<span class="badge live">${t("Live")}</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}${s.captions ? ` · <u class="cc">CC</u>` : ""}</span>` :
+                s.kind === "gallery" ? `<span class="badge">${s.count} ${t("photos")}</span>` : `<span class="badge">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}</span>`;
   let media = `<img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
-  if (s.kind === "gallery") media = `<div class="mosaic">${s.photos.map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;
+  if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${s.photos.map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;
   let extra = "";
   if (s.kind === "video") extra = `<span class="play"></span>`;
-  if (s.kind === "quote") extra = `<div class="q">${esc(s.title)}</div>`;
+  if (s.kind === "quote") extra = `<div class="q">${esc(sTitle(s))}</div>`;
   if (s.kind === "result") { const lb = leaderboard().slice(0, 4);
-    extra = `<div class="board"><div class="lbr h"><span class="pos">Pos</span><span class="nm">City</span><span>Today</span><span>Thru</span><span>Total</span></div>${lb.map(x => `<div class="lbr"><span class="pos">${x.tied ? "T" : ""}${x.pos}</span><span class="nm"><i class="sw" style="--c:${x.c.color}"></i>${esc(x.c.name)}</span><span class="${x.r2.thru ? cls(x.today) : "e"}">${x.r2.thru ? sgn(x.today) : "–"}</span><span class="thru">${x.thru === 18 ? "F" : x.thru || "·"}</span><span class="${cls(x.total)}">${sgn(x.total)}</span></div>`).join("")}</div>`; }
+    extra = `<div class="board"><div class="lbr h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Today")}</span><span>${t("Thru")}</span><span>${t("Total")}</span></div>${lb.map(x => `<div class="lbr"><span class="pos">${x.tied ? "T" : ""}${x.pos}</span><span class="nm"><i class="sw" style="--c:${x.c.color}"></i>${esc(x.c.name)}</span><span class="${x.r2.thru ? cls(x.today) : "e"}">${x.r2.thru ? sgn(x.today) : "–"}</span><span class="thru">${x.thru === 18 ? "F" : x.thru || "·"}</span><span class="${cls(x.total)}">${sgn(x.total)}</span></div>`).join("")}</div>`; }
   const meta = `<div class="meta"><button class="${liked ? "on" : ""}" onclick="event.stopPropagation();toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
     <button onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0}</button><span style="opacity:.7">${ago(s.at)}</span>${tag}</div>`;
-  return `<article class="tile ${s.size} ${s.kind}" style="--c:${col}" onclick="openStory('${s.id}')">${media}<div class="shade"></div>${extra}
+  return `<article class="tile ${s.size || "m"} ${s.kind}" style="--c:${col}" onclick="openStory('${s.id}')">${media}<div class="shade"></div>${extra}
     <div class="top"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b>${badge}</div>
-    <div class="bot"><h3>${esc(s.title)}</h3><p>${esc(s.dek)}</p>${meta}</div></article>`;
+    <div class="bot"><h3>${esc(sTitle(s))}</h3><p>${esc(sDek(s))}</p>${meta}</div></article>`;
 }
 /* the reader: a story opened from the collage, with previous/next inside the current filter */
 let rList = [], rIdx = -1;
-const fill = (txt, s) => txt.replace(/\{p0\}/g, s.players[0] ? PLAYER[s.players[0]].name : "the captain")
-  .replace(/\{c0\}/g, s.cities[0] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
+const fill = (txt, s) => String(txt || "").replace(/\{p0\}/g, s.players && s.players[0] && PLAYER[s.players[0]] ? PLAYER[s.players[0]].name : (LANG === "es" ? "el capitán" : "the captain"))
+  .replace(/\{c0\}/g, s.cities && s.cities[0] ? CITY[s.cities[0]].name : (LANG === "es" ? "la liga" : "the league")).replace(/\{author\}/g, "Legacy League Golf");
 function openStory(id) {
   const s = LEAGUE.stories.find(x => x.id === id);
   if (s.kind === "result") return go(SEC.live);
@@ -738,29 +876,35 @@ function openStory(id) {
 function stepStory(d) { if (!rList.length) return; rIdx = (rIdx + d + rList.length) % rList.length; renderStory(); }
 function renderStory() {
   const s = rList[rIdx]; if (!s) return;
-  const c = s.cities.length === 1 ? CITY[s.cities[0]] : null;
+  const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
   const col = c ? c.color : "var(--acc)";
   const liked = state.likes.has(s.id);
   let hero;
-  if (s.kind === "gallery") hero = `<div class="rhero gallery">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>`;
-  else if (s.kind === "quote") hero = `<div class="rhero quote" style="--c:${col}"><p>${esc(s.title)}</p><small>${s.players[0] ? esc(PLAYER[s.players[0]].name) + " · " : ""}${esc(s.author)}</small></div>`;
-  else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">Video · hosted, adaptive, captioned</span>` : `<span class="cap">${s.kind === "article" ? "Picture · supplied by Legacy" : ""}</span>`}</div>`;
-  const body = (s.body && s.body.length ? s.body : [s.dek]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
-  const tags = s.cities.map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
-               s.players.map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
-  const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && (x.cities.some(id => s.cities.includes(id)) || x.topic === s.topic)).slice(0, 3);
+  if (s.kind === "gallery" && s.photos) hero = `<div class="rhero gallery">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>`;
+  else if (s.kind === "quote") hero = `<div class="rhero quote" style="--c:${col}"><p>${esc(sTitle(s))}</p><small>${s.players && s.players[0] && PLAYER[s.players[0]] ? esc(PLAYER[s.players[0]].name) + " · " : ""}${esc(s.author)}</small></div>`;
+  else if (s.kind === "video" && s.video) hero = `<div class="rhero video"><video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
+      <source src="${s.video}" type="video/webm">
+      <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt"${LANG !== "es" ? " default" : ""}>
+      <track kind="captions" srclang="es" label="Español" src="img/video/swing.es.vtt"${LANG === "es" ? " default" : ""}></video>
+      <span class="cap">${t("Video · hosted, adaptive, captioned")} · <u class="cc">CC</u> EN · ES</span></div>`;
+  else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">${t("Video · hosted, adaptive, captioned")}</span>` : `<span class="cap">${s.kind === "article" ? t("Picture · supplied by Legacy") : ""}</span>`}</div>`;
+  const bodyArr = L(s, "body"); const body = (bodyArr && bodyArr.length ? bodyArr : [L(s, "dek")]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
+  const tags = (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
+               (s.players || []).filter(id => PLAYER[id]).map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
+  const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && ((x.cities || []).some(id => (s.cities || []).includes(id)) || x.topic === s.topic)).slice(0, 3);
   document.getElementById("rbody").innerHTML = `${hero}<div class="rart">
     <div class="rmeta"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b><span>${ago(s.at)}</span>
-      <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? "Mission" : kindLabel[s.kind]}${s.kind === "gallery" ? ` · ${s.count} pictures` : ""}</span></div>
-    ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(s.title)}</h2>`}
-    <p class="rlead">${esc(s.dek)}</p>
+      <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}${s.kind === "gallery" ? ` · ${s.count} ${t("pictures")}` : ""}</span></div>
+    ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(sTitle(s))}</h2>`}
+    <p class="rlead">${esc(sDek(s))}</p>
     <div class="rtags">${tags}</div>
     <div class="rtext">${body}</div>
+    ${s.credit ? `<div class="lbfoot">${esc(s.credit)}</div>` : ""}
     <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
-      <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} comments</button>
-      <button onclick="toast('Link copied (demo)','Every story has its own URL with a social preview card.')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>Share</button>
-      ${s.id === "s03" ? `<span class="sp">Presented by · sponsor slot</span>` : ""}</div>
-    ${more.length ? `<div class="rmore"><div class="legend">More like this</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(x.title)}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel[x.kind]}</small></span></button>`).join("")}</div>` : ""}
+      <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} ${t("comments")}</button>
+      <button onclick="toast(t('Link copied (demo)'),t('Every story has its own URL with a social preview card.'))"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
+      ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
+    ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kind)}</small></span></button>`).join("")}</div>` : ""}
   </div>`;
   document.getElementById("rcount").textContent = `${rIdx + 1} / ${rList.length}`;
   document.getElementById("rbody").scrollTop = 0;
@@ -769,8 +913,8 @@ function renderFeed() {
   renderFilters();
   const list = LEAGUE.stories.filter(s => matchFilter(s, state.filter));
   const el = document.getElementById("feed");
-  if (!list.length) { el.innerHTML = state.q ? `<div class="empty">No story matches “${esc(state.q)}”. Try a city, a player or a word from a headline.</div>` :
-    `<div class="empty">Nothing here yet. Follow a city or a player and their stories, results and alerts fill this view.<br><br><button class="pill" onclick="go(SEC.cities)">Pick a city</button></div>`; return; }
+  if (!list.length) { el.innerHTML = state.q ? `<div class="empty">${t("No story matches")} “${esc(state.q)}”. ${t("Try a city, a player or a word from a headline.")}</div>` :
+    `<div class="empty">${t("Nothing here yet. Follow a city or a player and their stories, results and alerts fill this view.")}<br><br><button class="pill" onclick="go(SEC.cities)">${t("Pick a city")}</button></div>`; return; }
   el.innerHTML = list.map(tile).join("");
 }
 function setQuery(q) { state.q = q.trim(); renderFeed(); }
@@ -783,22 +927,23 @@ function cityCard(c, i) {
   return `<div class="card" data-k="city" data-id="${c.id}" style="--c:${c.color}"><img class="bg" src="${c.photos[0]}" alt="" loading="lazy"><div class="inner">
     <div class="col l">
       <div class="cityhero"><div class="code">${c.short}</div>
-        <div class="meta"><div class="kicker">City hub · ${ord(i + 1)} in the league</div><div class="nm">${esc(c.name)}</div><div class="teams">${c.teams.join(" · ")}</div>
-          <div><button class="pill follow" data-follow="${c.id}" onclick="toggleFollow('${c.id}')">Follow ${c.short}</button></div></div></div>
-      <div class="box"><div class="legend">Season standing</div>
+        <div class="meta"><div class="kicker">${t("City hub")} · ${ord(i + 1)} ${t("in the league")}</div><div class="nm">${esc(c.name)}</div><div class="teams">${c.teams.join(" · ")}</div>
+          <div><button class="pill follow" data-follow="${c.id}" onclick="toggleFollow('${c.id}')">${t("Follow")} ${c.short}</button></div></div></div>
+      <div class="box"><div class="legend">${t("Season standing")}</div>
         <div class="standing" data-standing="${c.id}"></div></div>
-      <div class="box"><div class="legend">Mayakoba · live</div><div class="grid c4" data-citylive="${c.id}"></div></div>
-      <div class="box grow"><div class="legend">City story</div><p class="bio">${esc(c.story)}</p>
-        <div class="legend" style="margin-top:12px">Playing for</div><p class="bio"><b style="color:var(--ink)">${esc(c.charity)}</b> · a share of every league point the team scores goes to the charity. <a href="#" onclick="return false">Donate (deferred)</a></p></div>
-      <div class="sponsor">City partners ${c.sponsors.map(s => `<i>${esc(s)}</i>`).join("")}</div>
+      <div class="box"><div class="legend">${t("Mayakoba · live")}</div><div class="grid c4" data-citylive="${c.id}"></div></div>
+      <div class="box grow"><div class="legend">${t("City story")}</div><p class="bio">${esc(L(c, "story"))}</p>
+        <div class="legend" style="margin-top:12px">${t("Playing for")}</div><p class="bio"><b style="color:var(--ink)">${esc(c.charity)}</b> · ${t("a share of every league point the team scores goes to the charity.")} <a href="#" onclick="return false">${t("Donate (deferred)")}</a></p></div>
+      ${placement(t("Hub presented by"), c.hub_sponsor, "Jan–Oct 2027")}
+      <div class="sponsor">${t("City partners")} ${c.sponsors.map(s => `<i>${esc(s)}</i>`).join("")}</div>
     </div>
     <div class="col r">
-      <div class="box grow"><div class="legend"><span>Roster · ${roster.length} players</span><span>Tap a player</span></div>
+      <div class="box grow"><div class="legend"><span>${t("Roster")} · ${roster.length} ${t("players")}</span><span>${t("Tap a player")}</span></div>
         <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="rtile" onclick="goPlayer('${p.id}')"><span class="ava"><img src="${p.face}" alt="" loading="lazy"></span>
-          <span class="t"><b>${esc(p.name)}${p.captain ? '<span class="cap">C</span>' : ""}</b><small>${p.team ? `${p.sport} · ${esc(c.name)} ${esc(p.team)} · ${p.years}` : esc(p.role)}</small></span>
+          <span class="t"><b>${esc(p.name)}${p.captain ? '<span class="cap">C</span>' : ""}</b><small>${p.team ? `${p.sport} · ${esc(c.name)} ${esc(p.team)} · ${p.years}` : esc(L(p, "role"))}</small></span>
           <span class="sc" data-plive="${p.id}"></span></button>`).join("")}</div></div>
-      <div class="box"><div class="legend"><span>Video</span><span>Supplied by Legacy · hosted, captioned, adaptive</span></div>
-        <div class="vids"><div class="vid"><img src="${c.photos[0]}" alt="" loading="lazy"><span>${c.short} at Del Mar · highlights 2:14</span></div><div class="vid"><img src="${c.photos[1]}" alt="" loading="lazy"><span>City documentary · trailer</span></div><div class="vid"><img src="${c.photos[2]}" alt="" loading="lazy"><span>Captain's round · ep. 1</span></div></div></div>
+      <div class="box"><div class="legend"><span>${t("Video")}</span><span>${t("Supplied by Legacy · hosted, captioned, adaptive")}</span></div>
+        <div class="vids"><div class="vid"><img src="${c.photos[0]}" alt="" loading="lazy"><span>${c.short} ${t("at Del Mar · highlights 2:14")}</span></div><div class="vid"><img src="${c.photos[1]}" alt="" loading="lazy"><span>${t("City documentary · trailer")}</span></div><div class="vid"><img src="${c.photos[2]}" alt="" loading="lazy"><span>${t("Captain's round · ep. 1")}</span></div></div></div>
     </div>
   </div></div>`;
 }
@@ -807,35 +952,89 @@ function playerCard(p, n) {
   const c = CITY[p.city];
   return `<div class="card" data-k="player" data-id="${p.id}" style="--c:${c.color}"><div class="inner">
     <div class="col l">
-      <div class="ptop"><div class="pphoto"><div class="num">${n}</div><img class="cut" src="${p.full}" alt="" loading="lazy"><small>Portrait · placeholder</small></div>
-        <div class="pinfo"><div class="kicker" style="color:${c.color}">${esc(c.name)}${p.captain ? " · Captain" : ""}</div><div class="nm">${esc(p.name)}</div>
-          <div class="sub">${p.team ? `<b>${esc(p.role)}</b> · ${esc(c.name)} ${esc(p.team)} · ${p.years}<br>${p.sport} · ${esc(p.honours)}` : `<b>${esc(p.role)}</b> · ${p.sport}`}<br>Handicap index <b>${p.handicap}</b></div>
-          <div><button class="pill follow" data-follow="${p.id}" onclick="toggleFollow('${p.id}')">Follow</button> <button class="pill" onclick="goCity('${c.id}')">${c.short} hub</button></div></div></div>
-      <div class="box"><div class="legend">Legacy statistics · computed from the feed</div><div class="grid c4" data-pstats="${p.id}"></div></div>
-      <div class="box grow"><div class="legend">Biography · published by the content team</div><p class="bio">${esc(p.bio)}</p></div>
+      <div class="ptop"><div class="pphoto"><div class="num">${n}</div><img class="cut" src="${p.full}" alt="" loading="lazy"><small>${t("Portrait · placeholder")}</small></div>
+        <div class="pinfo"><div class="kicker" style="color:${c.color}">${esc(c.name)}${p.captain ? " · " + t("Captain") : ""}</div><div class="nm">${esc(p.name)}</div>
+          <div class="sub">${p.team ? `<b>${esc(L(p, "role"))}</b> · ${esc(c.name)} ${esc(p.team)} · ${p.years}<br>${p.sport} · ${esc(L(p, "honours"))}` : `<b>${esc(L(p, "role"))}</b> · ${p.sport}`}<br>${t("Handicap index")} <b>${p.handicap}</b></div>
+          <div><button class="pill follow" data-follow="${p.id}" onclick="toggleFollow('${p.id}')">${t("Follow")}</button> <button class="pill" onclick="goCity('${c.id}')">${c.short} ${t("hub")}</button></div></div></div>
+      <div class="box"><div class="legend">${t("Legacy statistics · computed from the feed")}</div><div class="grid c4" data-pstats="${p.id}"></div></div>
+      <div class="box grow"><div class="legend">${t("Biography · published by the content team")}</div><p class="bio">${esc(L(p, "bio"))}</p></div>
     </div>
     <div class="col r">
-      <div class="box grow"><div class="legend"><span>Mayakoba · hole by hole</span><span>Gold ring = counted for ${c.short}</span></div>
-        <div data-pholes="${p.id}"></div>${LEGEND_PLAYER}</div>
+      <div class="box grow"><div class="legend"><span>${t("Mayakoba · hole by hole")}</span><span>${t("Gold ring = counted for")} ${c.short}</span></div>
+        <div data-pholes="${p.id}"></div>${LEGEND_PLAYER()}</div>
     </div>
   </div></div>`;
 }
 
+const dateShort = iso => new Date(iso + "T12:00:00").toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { weekday: "short", day: "numeric", month: "short" });
 function seasonCard() {
   return `<div class="card" data-k="season" style="--c:rgba(217,173,78,.5)"><div class="inner">
     <div class="col l">
-      <div class="kicker">2027 season</div><h2 class="big">Six stops,<br>one table.</h2>
-      <div class="box grow"><div class="legend">Schedule</div><div class="sched">${LEAGUE.schedule.map(e => `<div class="ev ${e.status}"><span class="n">${String(e.n).padStart(2, "0")}</span>
-        <span><b>${esc(e.name)}</b><small>${esc(e.venue)} · ${esc(e.city)} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
-        <span class="st">${e.status === "live" ? '<span class="dot"></span>Live' : "Upcoming"}</span></div>`).join("")}</div></div>
+      <div class="kicker">${t("2027 season")}</div><h2 class="big">${t("Six stops,")}<br>${t("one table.")}</h2>
+      <div class="box grow"><div class="legend">${t("Schedule")}</div><div class="sched">${LEAGUE.schedule.map(e => `<div class="ev ${e.status}" ${e.n === 1 ? `onclick="go(SEC.event)" style="cursor:pointer"` : ""}><span class="n">${String(e.n).padStart(2, "0")}</span>
+        <span><b>${esc(L(e, "name"))}</b><small>${esc(e.venue === "TBA" ? t("TBA") : e.venue)} · ${esc(e.city === "TBA" ? t("TBA") : L(e, "city"))} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
+        <span class="st">${e.status === "live" ? `<span class="dot"></span>${t("Live")}` : t("Upcoming")}</span></div>`).join("")}</div></div>
     </div>
     <div class="col r">
-      <div class="box grow"><div class="legend"><span>Season standings · league points</span><span id="ss-note">Provisional while play is on</span></div><div class="bars" id="ss-bars"></div>
-        <div class="lbfoot" style="margin-top:12px">Points table <b>${RULES.points.join(" · ")}</b>, ties share the average. Both are settings an administrator changes in the CMS, not code.</div></div>
+      <div class="box grow"><div class="legend"><span>${t("Season standings · league points")}</span><span id="ss-note">${t("Provisional while play is on")}</span></div><div class="bars" id="ss-bars"></div>
+        <div class="lbfoot" style="margin-top:12px">${t("Points table")} <b>${RULES.points.join(" · ")}</b>, ${t("ties share the average. Both are settings an administrator changes in the CMS, not code.")}</div></div>
       <div class="grid c3">
-        <div class="box cell"><small>Cities 2027</small><b>9</b></div>
-        <div class="box cell"><small>Planned markets</small><b>18</b></div>
-        <div class="box cell"><small>Add a city</small><b>No rebuild</b></div>
+        <div class="box cell"><small>${t("Cities 2027")}</small><b>${LEAGUE.cities.length}</b></div>
+        <div class="box cell"><small>${t("Planned markets")}</small><b>18</b></div>
+        <div class="box cell"><small>${t("Add a city")}</small><b>${t("No rebuild")}</b></div>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function eventCard() {
+  const e = EVENT;
+  const groups = FEED.tee_sheet.filter(g => g.round_id === "r2").slice(0, 8);
+  const clips = LEAGUE.stories.filter(s => s.kind === "video" && ["s02", "s07", "s16"].includes(s.id));
+  return `<div class="card" data-k="event" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[1]}" alt="" loading="lazy"><div class="inner">
+    <div class="col l">
+      <div class="kicker">${t("Event page")} · ${t("Event 1 of 6")} · ${t("24–29 January 2027")}</div><h2 class="big">Mayakoba</h2>
+      <div class="box grow"><div class="legend"><span>${t("Programme")}</span><span>${t("The four-day experience")}</span></div>
+        <div class="sched">${e.programme.map(d => `<div class="ev ${d.core ? "core" : ""} ${d.date === "2027-01-29" ? "live" : ""}"><span class="n">${dateShort(d.date).replace(",", "")}</span><span><b>${esc(LANG === "es" ? d.es : d.en)}</b></span><span class="st">${d.date === "2027-01-29" ? `<span class="dot"></span>${t("Live")}` : d.core ? "●" : ""}</span></div>`).join("")}</div></div>
+      <div class="grid c2">
+        <div class="box"><div class="legend">${t("Venue")}</div><p class="bio"><b style="color:var(--ink)">${esc(FEED.event.course.name)}</b><br>${esc(L(e, "city"))}<br>${t("Par 71 · 7,034 yards · tournament tees")}</p></div>
+        <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc(LANG === "es" ? e.watch.es : e.watch.en)}</p></div>
+      </div>
+    </div>
+    <div class="col r">
+      <div class="box"><div class="legend"><span>${t("Results")}</span><button class="pill" onclick="go(SEC.live)">${t("Open the live board")}</button></div><div class="lb" id="ev-lb"></div></div>
+      <div class="box grow"><div class="legend"><span>${t("Tee times · Round 2")}</span><span>${t("first groups off the 1st tee")}</span></div>
+        <div class="sched">${groups.map(g => `<div class="ev"><span class="n">${g.tee_time.slice(11, 16)}</span><span><b>${g.players.map(p => `<i class="sw" style="--c:${CITY[p.team_id].color}"></i>${esc(lastName(PLAYER[p.id].name))}`).join(" &nbsp; ")}</b><small>${g.players.map(p => CITY[p.team_id].short).join(" · ")}</small></span><span class="st">${t("Hole")} ${g.starting_hole}</span></div>`).join("")}</div>
+        <div class="lbfoot"><a href="#" onclick="openStory('s08');return false">${t("Pairings and full tee sheet")}</a></div></div>
+      <div class="box"><div class="legend">${t("Highlights")}</div>
+        <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${s.photo}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>
+    </div>
+  </div></div>`;
+}
+
+function captureCard() {
+  return `<div class="card" data-k="capture" style="--c:rgba(57,178,111,.45)"><img class="bg" src="${LEAGUE.hero[2]}" alt="" loading="lazy"><div class="inner">
+    <div class="col l" style="justify-content:center">
+      <div class="kicker">${t("Follow your city")}</div><h2 class="big">${t("Stay close")}<br>${t("to your city.")}</h2>
+      <p class="lead">${t("No account. Your email or your number, your city, and three separate choices you can change any time.")}</p>
+      <div class="box"><div class="legend">${t("What you get")}</div>
+        <div class="chips"><span class="chip"><i style="background:var(--acc)"></i>${t("Tee times the evening before each round")}</span><span class="chip"><i style="background:var(--live)"></i>${t("Round leader changes and final results for your city")}</span><span class="chip"><i style="background:var(--green)"></i>${t("Stories and video from your city's desk")}</span><span class="chip"><i style="background:var(--dim)"></i>${t("One email a week in the off-season, never more")}</span></div></div>
+    </div>
+    <div class="col r" style="justify-content:center">
+      <div class="box"><div class="legend"><span>${t("Stay close to your city")}</span><span>${t("No account needed")}</span></div>
+        <form class="form" onsubmit="return saveConsent(this)">
+          <label>${t("Email")}<input type="email" name="email" placeholder="you@example.com" required></label>
+          <label>${t("Mobile (SMS, optional)")}<input type="tel" name="sms" placeholder="+1 555 010 0100"></label>
+          <label>${t("Your city")}<select name="city">${LEAGUE.cities.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></label>
+          <label>${t("Alerts")}<select name="alerts"><option>${t("Live scores and results")}</option><option>${t("Results only")}</option><option>${t("News and video only")}</option></select></label>
+          <label class="ck"><input type="checkbox" name="c_email" required> ${t("Email me league news and my city's results. I can unsubscribe any time.")}</label>
+          <label class="ck"><input type="checkbox" name="c_sms"> ${t("Text me on event days, up to 2 messages per event.")}</label>
+          <label class="ck"><input type="checkbox" name="c_mission"> ${t("Keep me posted on the mental-health mission and ways to get involved.")}</label>
+          <label class="ck"><input type="checkbox" name="c_age" required> ${t("I am 16 or older.")}</label>
+          <button type="submit">${t("Follow my city")}</button>
+        </form>
+        <div class="ok" id="consent-ok" hidden></div>
+        <div class="lbfoot">${t("Separate consents, timestamped, stored with the marketing provider as one exportable list. Full fan accounts and CRM journeys are deferred, as the brief asks.")}</div>
       </div>
     </div>
   </div></div>`;
@@ -844,28 +1043,21 @@ function seasonCard() {
 function missionCard() {
   return `<div class="card" data-k="mission" style="--c:rgba(57,178,111,.5)"><div class="inner">
     <div class="col l">
-      <div class="kicker">The mission</div><h2 class="big">Golf is the<br>excuse.</h2>
-      <p class="lead">Every event funds mental-health work in its city. The league keeps the rights to a documentary series on athletes' mental health and to the city films, and publishes them here for free.</p>
-      <div class="res"><b>988</b><span><b style="font-size:13px;color:var(--ink);display:block">Suicide &amp; Crisis Lifeline</b>Call or text 988 in the US, any time. If you are outside the US, your local line is one tap away in the app.</span></div>
-      <div class="box"><div class="legend">City charities</div><div class="chips">${LEAGUE.cities.map(c => `<span class="chip" style="--c:${c.color}"><i></i>${esc(c.charity)}</span>`).join("")}</div></div>
+      <div class="kicker">${t("The mission")}</div><h2 class="big">${t("Golf is the")}<br>${t("excuse.")}</h2>
+      <p class="lead">${t("Every event funds mental-health work in its city. The league keeps the rights to a documentary series on athletes' mental health and to the city films, and publishes them here for free.")}</p>
+      <div class="res"><b>988</b><span><b style="font-size:13px;color:var(--ink);display:block">${t("Suicide & Crisis Lifeline")}</b>${t("Call or text 988 in the US, any time. If you are outside the US, your local line is one tap away in the app.")}</span></div>
+      <div class="box"><div class="legend">${t("City charities")}</div><div class="chips">${LEAGUE.cities.map(c => `<span class="chip" style="--c:${c.color}"><i></i>${esc(c.charity)}</span>`).join("")}</div></div>
     </div>
     <div class="col r">
-      <div class="box"><div class="legend"><span>Stay close to your city</span><span>No account needed</span></div>
-        <form class="form" onsubmit="return saveConsent(this)">
-          <label>Email<input type="email" name="email" placeholder="you@example.com" required></label>
-          <label>Mobile (SMS, optional)<input type="tel" name="sms" placeholder="+1 555 010 0100"></label>
-          <label>Your city<select name="city">${LEAGUE.cities.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></label>
-          <label>Alerts<select name="alerts"><option>Live scores and results</option><option>Results only</option><option>News and video only</option></select></label>
-          <label class="ck"><input type="checkbox" name="c_email" required> Email me league news and my city's results. I can unsubscribe any time.</label>
-          <label class="ck"><input type="checkbox" name="c_sms"> Text me on event days, up to 2 messages per event.</label>
-          <label class="ck"><input type="checkbox" name="c_age" required> I am 16 or older.</label>
-          <button type="submit">Follow my city</button>
-        </form>
-        <div class="ok" id="consent-ok" hidden></div>
-        <div class="lbfoot">Separate consents, timestamped, stored with the marketing provider as one exportable list. Full fan accounts and CRM journeys are deferred, as the brief asks.</div>
-      </div>
-      <div class="box"><div class="legend">Alerts the scoring feed can trigger</div>
-        <div class="chips"><span class="chip"><i style="background:var(--live)"></i>Round leader changes</span><span class="chip"><i style="background:var(--green)"></i>Your city moves into the top 3</span><span class="chip"><i style="background:var(--acc)"></i>Your player makes eagle</span><span class="chip"><i style="background:var(--dim)"></i>Final results, your city</span><span class="chip"><i style="background:var(--dim2)"></i>Tee times published</span></div></div>
+      <div class="box"><div class="legend"><span>${t("Get involved")}</span><span>${t("Opens later in the season")}</span></div>
+        <div class="sched">
+          <button class="ev" style="width:100%;text-align:left" onclick="toast(t('Opens later in the season'),t('Volunteer with your city\\'s charity'))"><span class="n">01</span><span><b>${t("Volunteer with your city's charity")}</b></span><span class="st">→</span></button>
+          <button class="ev" style="width:100%;text-align:left" onclick="toast(t('Opens later in the season'),t('Donate to the season fund'))"><span class="n">02</span><span><b>${t("Donate to the season fund")}</b></span><span class="st">→</span></button>
+          <button class="ev" style="width:100%;text-align:left" onclick="toast(t('Shared (demo)'),t('The 988 card is ready to share with its own link.'))"><span class="n">03</span><span><b>${t("Share the 988 card")}</b></span><span class="st">→</span></button>
+        </div></div>
+      <div class="box"><div class="legend">${t("Alerts the scoring feed can trigger")}</div>
+        <div class="chips"><span class="chip"><i style="background:var(--acc)"></i>${t("Start of play")}</span><span class="chip"><i style="background:var(--live)"></i>${t("Round leader changes")}</span><span class="chip"><i style="background:var(--green)"></i>${t("Your city moves into the top 3")}</span><span class="chip"><i style="background:var(--acc)"></i>${t("Your player makes eagle")}</span><span class="chip"><i style="background:var(--dim)"></i>${t("Final results, your city")}</span><span class="chip"><i style="background:var(--dim2)"></i>${t("Tee times published")}</span></div>
+        <div class="lbfoot"><button class="pill" onclick="previewAlerts()">${t("Preview push alerts")}</button></div></div>
     </div>
   </div></div>`;
 }
@@ -876,16 +1068,16 @@ const lb0 = leaderboard();
 const cityOrder = lb0.map(x => x.c);
 const playerOrder = cityOrder.flatMap(c => LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap));
 const CARDS = [{ k: "story" }, { k: "live" }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
-               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, { k: "mission" }];
-const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: CARDS.length - 2 };
+               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, { k: "event" }, { k: "capture" }, { k: "mission" }];
+const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: CARDS.length - 4, event: CARDS.length - 3, capture: CARDS.length - 2, mission: CARDS.length - 1 };
 film.innerHTML = storyCard() + liveCard() + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
-  playerOrder.map((p, i) => playerCard(p, i + 1)).join("") + seasonCard() + missionCard();
+  playerOrder.map((p, i) => playerCard(p, i + 1)).join("") + seasonCard() + eventCard() + captureCard() + missionCard();
 const total = CARDS.length;
-let cur = 0, lastPos = {};
+let cur = 0, lastPos = {}, lastLeader = null, finalSeen = false;
 
 function lbRows(lb, compact) {
   const final = allFinal(lb);
-  return `<div class="lbr h"><span class="pos">Pos</span><span class="nm">City</span><span>Today</span><span>Thru</span><span>Total</span><span>Pts</span></div>` +
+  return `<div class="lbr h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Today")}</span><span>${t("Thru")}</span><span>${t("Total")}</span><span>${t("Pts")}</span></div>` +
     lb.map(x => `<div class="lbr ${x.c.id === state.sel ? "sel" : ""} ${state.follow.has(x.c.id) ? "fol" : ""}" onclick="selectCity('${x.c.id}')">
       <span class="pos">${x.tied ? "T" : ""}${x.pos}</span>
       <span class="nm"><i class="sw" style="--c:${x.c.color}"></i>${compact ? x.c.short : esc(x.c.name)}${compact ? "" : ` <em>${x.c.short}</em>`}</span>
@@ -900,28 +1092,29 @@ function fmtTee(cid) {
 }
 function detail() {
   const el = document.getElementById("lv-detail");
-  if (!state.sel) { el.innerHTML = `<div class="legend">Hole by hole</div><p class="lead" style="font-size:13px">Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.</p>`; return; }
-  const c = CITY[state.sel], t = teamRound(c.id, state.round);
-  const rows = t.rows.map(r => ({ pid: r.pid, label: PLAYER[r.pid].name.split(" ").slice(-1)[0], sub: PLAYER[r.pid].captain ? "C" : "", holes: r.holes }));
-  el.innerHTML = `<div class="legend"><span><i class="sw" style="--c:${c.color}"></i>${esc(c.name)} · ${state.round === "r1" ? "Round 1 · final" : t.firm ? "Round 2 · final" : `Round 2 · thru ${t.thru}`}</span>
+  if (!state.sel) { el.innerHTML = `<div class="legend">${t("Hole by hole")}</div><p class="lead" style="font-size:13px">${t("Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.")}</p>`; return; }
+  const c = CITY[state.sel], tr = teamRound(c.id, state.round);
+  const rows = tr.rows.map(r => ({ pid: r.pid, label: lastName(PLAYER[r.pid].name), sub: PLAYER[r.pid].captain ? "C" : "", holes: r.holes }));
+  el.innerHTML = `<div class="legend"><span><i class="sw" style="--c:${c.color}"></i>${esc(c.name)} · ${state.round === "r1" ? t("Round 1 · final") : tr.firm ? t("Round 2 · final") : `${t("Round 2 · thru")} ${tr.thru}`}</span>
     <span class="rt"><button class="${state.round === "r1" ? "on" : ""}" onclick="setRound('r1')">R1</button><button class="${state.round === "r2" ? "on" : ""}" onclick="setRound('r2')">R2</button></span></div>
-    ${holeGrid(rows, t, "Player")}${LEGEND}`;
+    ${holeGrid(rows, tr, t("Player"))}${LEGEND()}`;
 }
 function refresh() {
   const lb = leaderboard();
   const final = allFinal(lb);
   document.getElementById("lv-lb").innerHTML = lbRows(lb, false);
   document.getElementById("story-lb").innerHTML = lbRows(lb.slice(0, 5), false);
+  document.getElementById("ev-lb").innerHTML = lbRows(lb.slice(0, 6), true);
   document.getElementById("lv-clock").textContent = fmt(state.clock);
   document.getElementById("lv-upd").textContent = fmt(state.feedClock) + (state.stale ? " ⚠" : "");
-  document.getElementById("lv-status").textContent = final ? "Round 2 · final" : "Round 2 · live";
-  document.getElementById("lv-prov").textContent = final ? "Final · points awarded" : "Provisional";
-  document.getElementById("ss-note").textContent = final ? "Final after Mayakoba" : "Provisional while play is on";
+  document.getElementById("lv-status").textContent = final ? t("Round 2 · final") : t("Round 2 · live");
+  document.getElementById("lv-prov").textContent = final ? t("Final · points awarded") : t("Provisional");
+  document.getElementById("ss-note").textContent = final ? t("Final after Mayakoba") : t("Provisional while play is on");
   document.getElementById("lv-banner").classList.toggle("on", state.stale);
   document.getElementById("lv-stale-t").textContent = fmt(state.feedClock);
   document.getElementById("lv-stale").classList.toggle("on", state.stale);
-  document.getElementById("lv-stale").textContent = state.stale ? "Feed back online" : "Simulate feed outage";
-  document.getElementById("lv-play").textContent = state.playing ? "❚❚ Pause replay" : "▶ Replay scores";
+  document.getElementById("lv-stale").textContent = state.stale ? t("Feed back online") : t("Simulate feed outage");
+  document.getElementById("lv-play").textContent = state.playing ? t("❚❚ Pause replay") : t("▶ Replay scores");
   document.getElementById("lv-play").classList.toggle("on", state.playing);
   detail();
   // season bars
@@ -930,47 +1123,52 @@ function refresh() {
   // city cards
   lb.forEach((x, i) => {
     const st = document.querySelector(`[data-standing="${x.c.id}"]`);
-    st.innerHTML = `<b>${x.tied ? "T" : ""}${x.pos}<span style="font-size:.5em;letter-spacing:0">${x.tied ? "" : ord(x.pos).slice(-2)}</span></b><span><b style="color:var(--acc)">${x.pts}</b> league points${final ? "" : " projected"} · after ${final ? "1 of 6 events" : "0 of 6 events"}</span>`;
+    st.innerHTML = `<b>${x.tied ? "T" : ""}${x.pos}<span style="font-size:.5em;letter-spacing:0">${x.tied || LANG === "es" ? (LANG === "es" ? "º" : "") : ord(x.pos).slice(-2)}</span></b><span><b style="color:var(--acc)">${x.pts}</b> ${t("league points")}${final ? "" : " " + t("projected")} · ${t("after")} ${final ? t("1 of 6 events") : t("0 of 6 events")}</span>`;
     const cl = document.querySelector(`[data-citylive="${x.c.id}"]`);
-    cl.innerHTML = `<div class="cell"><small>Position</small><b>${x.tied ? "T" : ""}${x.pos}</b></div><div class="cell"><small>Total</small><b class="${cls(x.total)}">${sgn(x.total)}</b></div><div class="cell"><small>Round 1</small><b class="${cls(x.r1.toPar)}">${sgn(x.r1.toPar)}</b></div><div class="cell"><small>Round 2</small><b class="${cls(x.today)}">${x.thru ? sgn(x.today) + (x.thru < 18 ? `<span style="font-size:.55em;color:var(--dim2);margin-left:4px">thru ${x.thru}</span>` : "") : "–"}</b></div>`;
+    cl.innerHTML = `<div class="cell"><small>${t("Position")}</small><b>${x.tied ? "T" : ""}${x.pos}</b></div><div class="cell"><small>${t("Total")}</small><b class="${cls(x.total)}">${sgn(x.total)}</b></div><div class="cell"><small>${t("Round 1")}</small><b class="${cls(x.r1.toPar)}">${sgn(x.r1.toPar)}</b></div><div class="cell"><small>${t("Round 2")}</small><b class="${cls(x.today)}">${x.thru ? sgn(x.today) + (x.thru < 18 ? `<span style="font-size:.55em;color:var(--dim2);margin-left:4px">${t("thru")} ${x.thru}</span>` : "") : "–"}</b></div>`;
   });
   // player live figures on tiles + player cards
   LEAGUE.players.forEach(p => {
     const h1 = playerHoles("r1", p.id), h2 = playerHoles("r2", p.id);
     const tp = arr => arr.reduce((a, s, h) => s == null ? a : a + s - PAR[h], 0);
     const done2 = h2.filter(x => x != null).length;
-    const tile = document.querySelector(`[data-plive="${p.id}"]`);
-    if (tile) tile.innerHTML = `<span class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</span><small>${done2 === 18 ? "F" : done2 ? "thru " + done2 : "tee " + fmt(TEE[p.id].r2)}</small>`;
+    const tl = document.querySelector(`[data-plive="${p.id}"]`);
+    if (tl) tl.innerHTML = `<span class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</span><small>${done2 === 18 ? "F" : done2 ? t("thru") + " " + done2 : t("tee") + " " + fmt(TEE[p.id].r2)}</small>`;
     const t1 = teamRound(p.city, "r1"), t2 = teamRound(p.city, "r2");
     const counted = [...t1.holes, ...t2.holes].filter(x => x.counted.includes(p.id)).length;
     const played = h1.length + done2;
     const birdies = [...h1, ...h2].filter((s, i) => s != null && s - PAR[i % 18] < 0).length;
     const r1tot = h1.reduce((a, b) => a + b, 0);
     const stats = document.querySelector(`[data-pstats="${p.id}"]`);
-    stats.innerHTML = `<div class="cell"><small>Event</small><b class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</b></div><div class="cell"><small>Round 1</small><b>${r1tot}</b></div><div class="cell"><small>Birdies+</small><b>${birdies}</b></div><div class="cell"><small>Balls counted</small><b>${played ? Math.round(counted / played * 100) : 0}%</b></div>`;
+    stats.innerHTML = `<div class="cell"><small>${t("Event")}</small><b class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</b></div><div class="cell"><small>${t("Round 1")}</small><b>${r1tot}</b></div><div class="cell"><small>${t("Birdies+")}</small><b>${birdies}</b></div><div class="cell"><small>${t("Balls counted")}</small><b>${played ? Math.round(counted / played * 100) : 0}%</b></div>`;
     const holes = document.querySelector(`[data-pholes="${p.id}"]`);
-    holes.innerHTML = holeGrid([{ pid: p.id, label: "Round 1", holes: h1 }], null, "Hole") +
-      `<div style="height:10px"></div>` + holeGrid([{ pid: p.id, label: "Round 2", sub: done2 < 18 ? (done2 ? `thru ${done2}` : `tee ${fmt(TEE[p.id].r2)}`) : "F", holes: h2 }], null, "Hole");
+    holes.innerHTML = holeGrid([{ pid: p.id, label: t("Round 1"), holes: h1 }], null, t("Hole")) +
+      `<div style="height:10px"></div>` + holeGrid([{ pid: p.id, label: t("Round 2"), sub: done2 < 18 ? (done2 ? `${t("thru")} ${done2}` : `${t("tee")} ${fmt(TEE[p.id].r2)}`) : "F", holes: h2 }], null, t("Hole"));
     // ring the counted ones for this player across both grids
-    [["r1", t1, 0], ["r2", t2, 1]].forEach(([rid, t, gi]) => {
+    [["r1", t1, 0], ["r2", t2, 1]].forEach(([rid, tr, gi]) => {
       const grid = holes.querySelectorAll(".scg")[gi];
       const cells = grid.querySelectorAll(".sq:not(.none)");
-      // cells are in hole order for the single player row (header/par rows have no .sq)
-      let k = 0; t.holes.forEach((x, h) => { if (SCORE[rid][p.id][h] != null && (rid === "r1" || posted(rid, p.id, h))) { if (x.counted.includes(p.id)) cells[k]?.classList.add("cnt"); k++; } });
+      let k = 0; tr.holes.forEach((x, h) => { if (SCORE[rid][p.id][h] != null && (rid === "r1" || posted(rid, p.id, h))) { if (x.counted.includes(p.id)) cells[k]?.classList.add("cnt"); k++; } });
     });
   });
   document.querySelectorAll("[data-follow]:not(#feed [data-follow])").forEach(b => {
     const on = state.follow.has(b.dataset.follow); b.classList.toggle("on", on);
-    b.textContent = (on ? "Following" : "Follow") + (CITY[b.dataset.follow] ? " " + CITY[b.dataset.follow].short : "");
+    b.textContent = (on ? t("Following") : t("Follow")) + (CITY[b.dataset.follow] ? " " + CITY[b.dataset.follow].short : "");
   });
   renderFeed();
-  // push preview when a followed city changes position
+  // automated alerts from the scoring feed: position change for a followed city,
+  // a new round leader, and the final result once the last group signs
+  if (lastLeader && lb[0].c.id !== lastLeader && !lb[0].tied) toast(`${t("New round leader")}: ${lb[0].c.name}`, `${sgn(lb[0].total)} ${t("overall, {today} today thru {thru}. Round 2 is live.").replace("{today}", sgn(lb[0].today)).replace("{thru}", lb[0].thru)}`, t("scoring feed"));
+  lastLeader = lb[0].tied ? lastLeader : lb[0].c.id;
   lb.forEach(x => {
     const key = `${x.tied ? "T" : ""}${x.pos}`;
     if (state.follow.has(x.c.id) && lastPos[x.c.id] && lastPos[x.c.id] !== key)
-      toast(`${x.c.name} now ${key} at Mayakoba`, `${sgn(x.total)} overall, ${sgn(x.today)} today thru ${x.thru}. Round 2 is live.`);
+      toast(`${x.c.name} ${t("now")} ${key} · Mayakoba`, `${sgn(x.total)} ${t("overall, {today} today thru {thru}. Round 2 is live.").replace("{today}", sgn(x.today)).replace("{thru}", x.thru)}`, t("city follow"));
     lastPos[x.c.id] = key;
   });
+  if (final && !finalSeen) { finalSeen = true; lb.filter(x => state.follow.has(x.c.id)).slice(0, 1).forEach(x =>
+    toast(`${t("Final at Mayakoba")}: ${x.c.name} ${t("finishes")} ${x.tied ? "T" : ""}${x.pos}`, `${sgn(x.total)} · ${x.pts} ${t("league points. Season standings updated.")}`, t("scoring feed"))); }
+  if (!final) finalSeen = false;
 }
 
 /* ------------------------------------------------------------ actions */
@@ -987,31 +1185,57 @@ function resetClock() { state.clock = state.feedClock = h0 * 60 + m0; state.stal
 function selectCity(id) { state.sel = state.sel === id ? null : id; PREF.set("sel", state.sel); refresh(); }
 function setRound(r) { state.round = r; PREF.set("round", r); refresh(); }
 function toggleFollow(id) { state.follow.has(id) ? state.follow.delete(id) : state.follow.add(id); PREF.set("follow", [...state.follow]); refresh();
-  if (state.follow.has(id)) toast(`Following ${CITY[id] ? CITY[id].name : PLAYER[id].name}`, "You will get round leaders, final results and tee times. Stored on this device; no account."); }
+  if (state.follow.has(id)) toast(`${t("Following")} ${CITY[id] ? CITY[id].name : PLAYER[id].name}`, t("You will get round leaders, final results and tee times. Stored on this device; no account."), t("city follow")); }
 function goCity(id) { go(CARDS.findIndex(c => c.k === "city" && c.id === id)); }
 function goPlayer(id) { go(CARDS.findIndex(c => c.k === "player" && c.id === id)); }
+function previewAlerts() {
+  const lb = leaderboard(), top = lb[0], mine = lb.find(x => state.follow.has(x.c.id)) || lb[2];
+  const seq = [
+    [t("Play is under way at El Camaleón"), t("First group off the 1st tee at 08:00. Follow your city for round leaders and the final result."), t("scoring feed")],
+    [`${t("New round leader")}: ${top.c.name}`, `${sgn(top.total)} ${t("overall, {today} today thru {thru}. Round 2 is live.").replace("{today}", sgn(top.today)).replace("{thru}", top.thru || 18)}`, t("scoring feed")],
+    [`${t("Final at Mayakoba")}: ${mine.c.name} ${t("finishes")} ${mine.tied ? "T" : ""}${mine.pos}`, `${sgn(mine.total)} · ${mine.pts} ${t("league points. Season standings updated.")}`, t("city follow")],
+  ];
+  seq.forEach((a, i) => setTimeout(() => toast(...a), i * 2600));
+}
+function consentStatus() {
+  const d = PREF.get("consent", null), ok = document.getElementById("consent-ok"); if (!ok) return;
+  if (!d) { ok.hidden = true; return; }
+  ok.hidden = false;
+  ok.innerHTML = `${t("Consent recorded (demo, this device only)")}: ${esc(d.email)} · ${CITY[d.city] ? esc(CITY[d.city].name) : ""} · ${t("email")} ${d.c_email ? t("yes") : t("no")} · ${t("SMS")} ${d.c_sms ? t("yes") : t("no")} · ${t("mission")} ${d.c_mission ? t("yes") : t("no")} · ${new Date(d.at).toLocaleString(LANG === "es" ? "es-MX" : "en-US")}
+    <br><button class="pill" style="margin-top:8px" onclick="withdrawConsent()">${t("Withdraw consent")}</button>`;
+}
 function saveConsent(f) {
   const d = Object.fromEntries(new FormData(f).entries());
   PREF.set("consent", { ...d, at: new Date().toISOString() });
-  const ok = document.getElementById("consent-ok"); ok.hidden = false;
-  ok.textContent = `Consent recorded (demo, this device only): ${d.email} · ${CITY[d.city].name} · email ${d.c_email ? "yes" : "no"} · SMS ${d.c_sms ? "yes" : "no"}.`;
+  consentStatus();
   if (!state.follow.has(d.city)) toggleFollow(d.city);
   return false;
 }
+function withdrawConsent() { try { localStorage.removeItem("ll.consent"); } catch (e) {} consentStatus(); toast(t("Withdraw consent"), t("Consent withdrawn. Nothing kept on this device.")); }
 let toastT = null;
-function toast(b, s) { const t = document.getElementById("toast"); t.querySelector("b").textContent = b; t.querySelector("span").textContent = s;
-  t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4200); }
+function toast(b, s, kind) { const el = document.getElementById("toast"); el.querySelector("b").textContent = b; el.querySelector("span").textContent = s;
+  el.querySelector("small").textContent = `${t("Push alert preview")} · ${kind || t("city follow")}`;
+  el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 4200); }
 
 /* -------------------------------------------------------------- index */
+const PAGES = [
+  ["press", "Press resources", "Press kit, logos, accreditation requests. Published by the league."],
+  ["partners", "Commercial partners", "Partnership enquiries go to the league's commercial team."],
+  ["legal", "Legal", "Privacy, terms and consent policies, supplied by Legacy before launch."],
+  ["merch", "Merchandise", "Coming soon. A link or a full store is an option in the bid."],
+];
+function pageInfo(key) { const p = PAGES.find(x => x[0] === key); closeModal("jmodal"); toast(t(p[1]), `${t(p[2])} ${t("Demo page · would open as a plain page in the build")}`, t("League")); }
 function jumpEntries() {
   return CARDS.map((c, n) => {
-    if (c.k === "story") return { n, sec: "Start", label: "Cities. Legends. A cause.", sub: "League", color: "var(--acc)" };
-    if (c.k === "live") return { n, sec: "Start", label: "Live · Mayakoba", sub: "Round 2", color: "var(--live)" };
-    if (c.k === "stories") return { n, sec: "Start", label: "Stories", sub: `${LEAGUE.stories.length} posts`, color: "var(--acc)" };
-    if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: "City hubs", label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
-    if (c.k === "player") { const pl = PLAYER[c.id], ci = CITY[pl.city]; return { n, sec: "Players", label: pl.name, sub: `${ci.short}${pl.captain ? " · C" : ""} · ${pl.team ? pl.sport : pl.role}`, color: ci.color, q: `${ci.name} ${pl.team || ""} ${pl.role}` }; }
-    if (c.k === "season") return { n, sec: "Season", label: "Schedule and standings", sub: "6 events", color: "var(--acc)" };
-    return { n, sec: "Season", label: "The mission", sub: "988 · consents", color: "var(--green)" };
+    if (c.k === "story") return { n, sec: t("Start"), label: `${t("Cities.")} ${t("Legends.")} ${t("A cause.")}`, sub: t("League"), color: "var(--acc)" };
+    if (c.k === "live") return { n, sec: t("Start"), label: `${t("Live")} · Mayakoba`, sub: t("Round 2"), color: "var(--live)" };
+    if (c.k === "stories") return { n, sec: t("Start"), label: t("Stories"), sub: `${LEAGUE.stories.length} ${t("posts")}`, color: "var(--acc)" };
+    if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: t("City hubs"), label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
+    if (c.k === "player") { const pl = PLAYER[c.id], ci = CITY[pl.city]; return { n, sec: t("Players"), label: pl.name, sub: `${ci.short}${pl.captain ? " · C" : ""} · ${pl.team ? pl.sport : L(pl, "role")}`, color: ci.color, q: `${ci.name} ${pl.team || ""} ${pl.role}` }; }
+    if (c.k === "season") return { n, sec: t("Season"), label: t("Schedule and standings"), sub: t("6 events"), color: "var(--acc)" };
+    if (c.k === "event") return { n, sec: t("Season"), label: t("Mayakoba · event page"), sub: t("24–29 January 2027"), color: "var(--acc)" };
+    if (c.k === "capture") return { n, sec: t("Season"), label: t("Follow your city"), sub: t("No account needed"), color: "var(--green)" };
+    return { n, sec: t("Season"), label: t("The mission"), sub: t("988 · get involved"), color: "var(--green)" };
   });
 }
 const JUMP = jumpEntries();
@@ -1024,7 +1248,9 @@ function renderJump(q) {
     if (e.sec !== sec) { sec = e.sec; out += `<h5>${sec}</h5>`; }
     out += `<button class="jrow ${e.n === cur ? "sel" : ""}" style="--c:${e.color}" onclick="closeModal('jmodal');go(${e.n})"><span class="jn">${e.n + 1}</span><i></i><b>${esc(e.label)}</b><small>${esc(e.sub)}</small></button>`;
   });
-  document.getElementById("jlist").innerHTML = out || `<div class="empty" style="grid-column:1/-1">Nothing matches.</div>`;
+  const pages = PAGES.filter(p => !words.length || words.every(w => norm(`${t(p[1])} ${t("More")}`).includes(w)));
+  if (pages.length) out += `<h5>${t("More")}</h5>` + pages.map(p => `<button class="jrow" style="--c:var(--dim2)" onclick="pageInfo('${p[0]}')"><span class="jn">·</span><i></i><b>${t(p[1])}</b></button>`).join("");
+  document.getElementById("jlist").innerHTML = out || `<div class="empty" style="grid-column:1/-1">${t("Nothing matches.")}</div>`;
 }
 function openJump() {
   const q = document.getElementById("jq"); q.value = ""; renderJump("");
@@ -1036,17 +1262,17 @@ function closeModal(id) { document.getElementById(id).classList.remove("on"); }
 /* --------------------------------------------------------- navigation */
 function go(n) {
   const target = Math.max(0, Math.min(total - 1, n));
-  // a long jump (tab, chip, hash) cuts straight there: sliding across sixty
+  // a long jump (tab, chip, hash) cuts straight there: sliding across seventy
   // cards would lay every one of them out on the way
   film.style.transition = Math.abs(target - cur) > 3 ? "none" : "";
   cur = target;
   film.style.transform = `translateX(${-cur * 100}vw)`;
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
   const k = CARDS[cur].k;
-  const sec = k === "live" ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : (k === "season" || k === "mission") ? "season" : null;
-  document.querySelectorAll("#tb-tabs button").forEach(b => b.classList.toggle("on", b.dataset.sec === sec));
-  document.getElementById("tb-ctx").textContent = k === "story" ? "· 2027 season" : k === "live" ? "· Mayakoba · live" : k === "stories" ? "· Stories" :
-    k === "city" ? `· City hubs · ${cur - SEC.cities + 1} of ${cityOrder.length}` : k === "player" ? `· Players · ${cur - SEC.players + 1} of ${playerOrder.length}` : "· Season";
+  const sec = k === "live" ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event", "capture", "mission"].includes(k) ? "season" : null;
+  document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => b.classList.toggle("on", b.dataset.sec === sec));
+  document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : k === "live" ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
+    k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` : t("· Season");
   location.hash = cur ? "#" + (cur + 1) : "";
   film.children[cur].querySelector(".inner").scrollTop = 0;
 }
@@ -1056,11 +1282,17 @@ document.getElementById("b-prev").onclick = prev;
 document.getElementById("b-first").onclick = () => go(0);
 document.getElementById("count").onclick = openJump;
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
-document.querySelectorAll("#tb-tabs button").forEach(b => b.onclick = () => go(SEC[b.dataset.sec]));
+document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.textContent = t(b.textContent.trim()); b.onclick = () => go(SEC[b.dataset.sec]); });
+document.getElementById("tb-lang").onclick = () => setLang(LANG === "es" ? "en" : "es");
+document.getElementById("tb-lang").textContent = LANG === "es" ? "EN" : "ES";
+// static chrome strings
+document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; if (el.hasAttribute("title")) el.title = t(k); else if (el.hasAttribute("placeholder")) el.placeholder = t(k); else el.textContent = t(k); });
+document.getElementById("mhint").innerHTML = `<kbd>g</kbd> ${t("opens this index")} · <kbd>←</kbd> <kbd>→</kbd> ${t("move through the film")} · <kbd>Esc</kbd> ${t("closes")}`;
+document.getElementById("mfoot").innerHTML = PAGES.map(p => `<button onclick="pageInfo('${p[0]}')">${t(p[1])}</button>`).join("<span>·</span>");
 addEventListener("keydown", e => {
   if (e.key === "Escape") { document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
   if (e.key === "Enter" && e.target.id === "jq") { document.querySelector("#jlist .jrow")?.click(); return; }
-  if (e.target.matches("input,select")) return;
+  if (e.target.matches("input,select,textarea")) return;
   if (document.getElementById("smodal").classList.contains("on")) {
     if (e.key === "ArrowRight") { e.preventDefault(); stepStory(1); }
     if (e.key === "ArrowLeft") { e.preventDefault(); stepStory(-1); }
@@ -1083,6 +1315,7 @@ addEventListener("touchend", e => { const dx = e.changedTouches[0].clientX - tx,
 addEventListener("hashchange", () => { const n = parseInt(location.hash.slice(1), 10); if (n && n - 1 !== cur) go(n - 1); });
 
 refresh();
+consentStatus();
 leaderboard().forEach(x => lastPos[x.c.id] = `${x.tied ? "T" : ""}${x.pos}`);
 const start = parseInt(location.hash.slice(1), 10);
 go(start ? start - 1 : 0);

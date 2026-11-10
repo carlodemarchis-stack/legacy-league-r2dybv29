@@ -4,3 +4,10 @@ shots/
 data/desk-log.jsonl
 data/alerts.json
 proposal/
+app/node_modules/
+app/www/
+app/ios/App/App/public/
+app/android/app/src/main/assets/
+app/android/.gradle/
+app/android/build/
+app/android/app/build/
