@@ -1,0 +1,23 @@
+id: det
+name: Detroit
+short: DET
+color: "#0076b6"
+color2: "#c8102e"
+teams:
+- Lions
+- Pistons
+- Tigers
+- Red Wings
+captain: p1044
+charity: Hometown Minds
+sponsors:
+- Pacific Rail
+- Northline Capital
+- Summit Insurance
+story: "Detroit plays for the fans who stayed. Lions, Pistons, Tigers and Red Wings legends share one bag, one city and one cause: Hometown Minds, which the team funds with every point it scores."
+story_es: "Detroit juega por los aficionados que se quedaron. Leyendas de Lions, Pistons, Tigers y Red Wings comparten una bolsa, una ciudad y una causa: Hometown Minds, que el equipo financia con cada punto que suma."
+hub_sponsor: Pacific Rail
+photos:
+- img/course/R2026021.webp
+- img/action/file-golf-bunker-shot-2-jpg.jpg
+- img/action/file-bunker-shot-geograph-org-uk-4867695.jpg

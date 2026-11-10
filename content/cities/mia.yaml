@@ -1,0 +1,22 @@
+id: mia
+name: Miami
+short: MIA
+color: "#008e97"
+color2: "#fc4c02"
+teams:
+- Dolphins
+- Heat
+- Marlins
+captain: p1060
+charity: Clear Skies Collective
+sponsors:
+- Everlight Energy
+- Pacific Rail
+- Oakfield Bank
+story: "Miami plays for the fans who stayed. Dolphins, Heat and Marlins legends share one bag, one city and one cause: Clear Skies Collective, which the team funds with every point it scores."
+story_es: "Miami juega por los aficionados que se quedaron. Leyendas de Dolphins, Heat y Marlins comparten una bolsa, una ciudad y una causa: Clear Skies Collective, que el equipo financia con cada punto que suma."
+hub_sponsor: Everlight Energy
+photos:
+- img/course/R2026004.webp
+- img/course/R2026020.webp
+- img/course/R2026030.webp

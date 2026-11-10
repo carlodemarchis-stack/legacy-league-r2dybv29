@@ -1,0 +1,23 @@
+id: lax
+name: Los Angeles
+short: LA
+color: "#fdb927"
+color2: "#552583"
+teams:
+- Lakers
+- Dodgers
+- Rams
+- Kings
+captain: p1023
+charity: Second Half Wellbeing
+sponsors:
+- Northline Capital
+- Cobalt Motors
+- Harbor & Finch
+story: "Los Angeles plays for the fans who stayed. Lakers, Dodgers, Rams and Kings legends share one bag, one city and one cause: Second Half Wellbeing, which the team funds with every point it scores."
+story_es: "Los Angeles juega por los aficionados que se quedaron. Leyendas de Lakers, Dodgers, Rams y Kings comparten una bolsa, una ciudad y una causa: Second Half Wellbeing, que el equipo financia con cada punto que suma."
+hub_sponsor: Northline Capital
+photos:
+- img/course/R2026023.webp
+- img/course/R2026014.webp
+- img/course/R2026006.webp

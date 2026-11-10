@@ -1,0 +1,25 @@
+id: nyc
+name: New York
+short: NYC
+color: "#f58426"
+color2: "#003087"
+teams:
+- Yankees
+- Knicks
+- Giants
+- Jets
+- Mets
+- Rangers
+captain: p1021
+charity: Open Fairways Mental Health Fund
+sponsors:
+- Blue Heron Resorts
+- Atlas Home
+- Oakfield Bank
+story: "New York plays for the fans who stayed. Yankees, Knicks, Giants, Jets, Mets and Rangers legends share one bag, one city and one cause: Open Fairways Mental Health Fund, which the team funds with every point it scores."
+story_es: "New York juega por los aficionados que se quedaron. Leyendas de Yankees, Knicks, Giants, Jets, Mets y Rangers comparten una bolsa, una ciudad y una causa: Open Fairways Mental Health Fund, que el equipo financia con cada punto que suma."
+hub_sponsor: Blue Heron Resorts
+photos:
+- img/course/R2026522.webp
+- img/course/R2026525.webp
+- img/course/R2026002.webp

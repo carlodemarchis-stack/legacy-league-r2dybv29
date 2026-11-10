@@ -1,0 +1,16 @@
+id: p1072
+name: Brett Ingram
+city: den
+sport: NHL
+team: Avalanche
+role: Defenceman
+role_es: Defensa
+years: 2002–2009
+honours: Champion
+honours_es: Campeón
+handicap: 2.2
+bio: Defenceman for the Denver Avalanche, 2002–2009. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.
+bio_es: Defensa de los Denver Avalanche, 2002–2009. Campeón. Se tomó el golf en serio al retirarse y hoy juega por la ciudad que lo aclamó.
+captain: true
+face: img/faces/47591.webp
+full: img/full/47591.webp

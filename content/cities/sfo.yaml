@@ -1,0 +1,22 @@
+id: sfo
+name: San Francisco
+short: SF
+color: "#aa0000"
+color2: "#b3995d"
+teams:
+- 49ers
+- Giants
+- Warriors
+captain: p1052
+charity: The Long Game Trust
+sponsors:
+- Cobalt Motors
+- Kestrel Golf
+- Ridgeway Spirits
+story: "San Francisco plays for the fans who stayed. 49ers, Giants and Warriors legends share one bag, one city and one cause: The Long Game Trust, which the team funds with every point it scores."
+story_es: "San Francisco juega por los aficionados que se quedaron. Leyendas de 49ers, Giants y Warriors comparten una bolsa, una ciudad y una causa: The Long Game Trust, que el equipo financia con cada punto que suma."
+hub_sponsor: Cobalt Motors
+photos:
+- img/action/file-afa-charity-golf-tournament-7293245.jpg
+- img/course/R2026475.webp
+- img/course/R2026013.webp

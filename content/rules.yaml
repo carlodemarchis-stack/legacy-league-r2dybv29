@@ -1,0 +1,17 @@
+format: team_best_ball
+best_balls: 2
+counting_rounds: 2
+points:
+- 100
+- 80
+- 65
+- 55
+- 45
+- 38
+- 32
+- 27
+- 22
+- 18
+- 15
+tie_rule: shared_average
+note: "Administrator-editable in the CMS: best balls counted per hole, points table, tie handling."

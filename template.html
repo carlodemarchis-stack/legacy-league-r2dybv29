@@ -532,98 +532,7 @@ const PREF = {
    the fallback, which is the field-level model the brief asks for. */
 const LANG = PREF.get("lang", null) || ((navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en");
 document.documentElement.lang = LANG;
-const T = {
-  "Live": "En directo", "Stories": "Historias", "Cities": "Ciudades", "Players": "Jugadores", "Season": "Temporada",
-  "· 2027 season": "· temporada 2027", "· Mayakoba · live": "· Mayakoba · en directo", "· Stories": "· Historias", "· Season": "· Temporada",
-  "City hubs": "Hubs de ciudad", "Concept demo · sample data · A guy with a scarf": "Demo conceptual · datos de muestra · A guy with a scarf",
-  "Fictional rosters · Golf Genius-shaped feed · replayed clock": "Plantillas ficticias · feed tipo Golf Genius · reloj en repetición",
-  "Restart": "Reiniciar", "Previous": "Anterior", "Next": "Siguiente", "Fullscreen": "Pantalla completa", "Index: jump to a card (g)": "Índice: ir a una ficha (g)",
-  "Index": "Índice", "City, player, section…": "Ciudad, jugador, sección…", "opens this index": "abre este índice", "move through the film": "recorren la película", "closes": "cierra",
-  "Push alert preview": "Vista previa de notificación", "city follow": "ciudad seguida", "scoring feed": "feed de resultados",
-  // story card
-  "2027 season · Concept demo": "Temporada 2027 · demo conceptual", "Cities.": "Ciudades.", "Legends.": "Leyendas.", "A cause.": "Una causa.",
-  "Live now": "En directo", "Mayakoba · Round 2": "Mayakoba · Ronda 2", "Format": "Formato", "Best": "Mejores", "6 events": "6 eventos", "How this screen works": "Cómo funciona esta pantalla",
-  // live
-  "Event 1 of 6": "Evento 1 de 6", "Round 2 · live": "Ronda 2 · en directo", "Round 2 · final": "Ronda 2 · final", "Course time": "Hora en el campo", "Feed updated": "Feed actualizado",
-  "▶ Replay scores": "▶ Repetir resultados", "❚❚ Pause replay": "❚❚ Pausar", "Simulate feed outage": "Simular caída del feed", "Feed back online": "Feed recuperado", "Reset to 14:20": "Volver a las 14:20",
-  "Preview push alerts": "Ver notificaciones", "Scores delayed.": "Resultados con retraso.", "The scoring feed last answered at": "El feed de resultados respondió por última vez a las",
-  "Showing the last good board; retrying every 30 s.": "Se muestra la última clasificación válida; reintentando cada 30 s.",
-  "Team leaderboard · best": "Clasificación por equipos · mejores", "balls per hole": "bolas por hoyo", "Provisional": "Provisional", "Final · points awarded": "Final · puntos asignados",
-  "Leaderboard presented by": "Clasificación presentada por", "Hub presented by": "Hub presentado por", "Scheduled": "Programado", "impressions and clicks reported": "impresiones y clics medidos",
-  "Pos": "Pos", "City": "Ciudad", "Today": "Hoy", "Thru": "Hoyos", "Total": "Total", "Pts": "Pts", "Hole by hole": "Hoyo a hoyo", "Player": "Jugador", "Hole": "Hoyo", "Par": "Par", "Out": "Ida", "In": "Vuelta", "Tot": "Tot", "Team": "Equipo", "best": "mejores",
-  "Eagle": "Eagle", "Birdie": "Birdie", "Bogey": "Bogey", "Double+": "Doble+", "Counted for the team": "Cuenta para el equipo", "Provisional, team-mates still on the hole": "Provisional: compañeros aún en el hoyo",
-  "Provisional: team-mates still on this hole": "Provisional: compañeros aún en este hoyo", "Round 1 · final": "Ronda 1 · final", "Round 2 · thru": "Ronda 2 · tras",
-  // stories
-  "All stories": "Todas", "Following": "Siguiendo", "Video": "Vídeo", "Galleries": "Galerías", "News": "Noticias", "Mission": "Misión",
-  "Search stories, cities, players…": "Buscar historias, ciudades, jugadores…", "Clear": "Borrar", "story": "historia", "stories": "historias", "for": "para",
-  "Gallery": "Galería", "Live result": "Resultado en directo", "photos": "fotos", "pictures": "fotos", "just now": "ahora mismo", "yesterday": "ayer",
-  "No story matches": "Ninguna historia coincide con", "Try a city, a player or a word from a headline.": "Prueba con una ciudad, un jugador o una palabra del titular.",
-  "Nothing here yet. Follow a city or a player and their stories, results and alerts fill this view.": "Aún no hay nada. Sigue a una ciudad o a un jugador y sus historias, resultados y alertas llenarán esta vista.",
-  "Pick a city": "Elige una ciudad", "comments": "comentarios", "Share": "Compartir", "Link copied (demo)": "Enlace copiado (demo)", "Every story has its own URL with a social preview card.": "Cada historia tiene su propia URL con tarjeta de previsualización social.",
-  "Presented by · sponsor slot": "Presentado por · espacio patrocinado", "More like this": "Más como esta", "Video · hosted, adaptive, captioned": "Vídeo · alojado, adaptativo, subtitulado",
-  "Picture · supplied by Legacy": "Imagen · aportada por Legacy", "Captions": "Subtítulos", "Previous story": "Historia anterior", "Next story": "Historia siguiente",
-  // city
-  "City hub": "Hub de ciudad", "in the league": "en la liga", "Follow": "Seguir", "Season standing": "Posición en la temporada", "Mayakoba · live": "Mayakoba · en directo",
-  "City story": "La historia de la ciudad", "Playing for": "Juegan por", "a share of every league point the team scores goes to the charity.": "una parte de cada punto de liga que suma el equipo va a la organización.",
-  "Donate (deferred)": "Donar (aplazado)", "City partners": "Socios de la ciudad", "Roster": "Plantilla", "players": "jugadores", "Tap a player": "Toca un jugador",
-  "Supplied by Legacy · hosted, captioned, adaptive": "Aportado por Legacy · alojado, subtitulado, adaptativo", "at Del Mar · highlights 2:14": "en Del Mar · resumen 2:14",
-  "City documentary · trailer": "Documental de ciudad · tráiler", "Captain's round · ep. 1": "La vuelta del capitán · ep. 1", "league points": "puntos de liga", "projected": "proyectados",
-  "after": "tras", "1 of 6 events": "1 de 6 eventos", "0 of 6 events": "0 de 6 eventos", "Position": "Posición", "Round 1": "Ronda 1", "Round 2": "Ronda 2", "thru": "tras", "tee": "salida",
-  // player
-  "Captain": "Capitán", "Handicap index": "Índice de hándicap", "hub": "hub", "Legacy statistics · computed from the feed": "Estadísticas Legacy · calculadas desde el feed",
-  "Biography · published by the content team": "Biografía · publicada por el equipo de contenidos", "Mayakoba · hole by hole": "Mayakoba · hoyo a hoyo", "Gold ring = counted for": "Anillo dorado = cuenta para",
-  "Event": "Evento", "Birdies+": "Birdies+", "Balls counted": "Bolas contadas", "Portrait · placeholder": "Retrato · provisional",
-  // season / event
-  "2027 season": "Temporada 2027", "Six stops,": "Seis paradas,", "one table.": "una tabla.", "Schedule": "Calendario", "Upcoming": "Próximo", "TBA": "Por confirmar",
-  "Season standings · league points": "Clasificación de la temporada · puntos de liga", "Provisional while play is on": "Provisional mientras se juega", "Final after Mayakoba": "Final tras Mayakoba",
-  "Points table": "Tabla de puntos", "ties share the average. Both are settings an administrator changes in the CMS, not code.": "los empates reparten la media. Ambas cosas las cambia un administrador en el CMS, no en el código.",
-  "Cities 2027": "Ciudades 2027", "Planned markets": "Mercados previstos", "Add a city": "Añadir una ciudad", "No rebuild": "Sin reconstruir",
-  "Event page": "Página del evento", "24–29 January 2027": "24–29 de enero de 2027", "Programme": "Programa", "The four-day experience": "La experiencia de cuatro días",
-  "Venue": "Sede", "Where to watch": "Dónde verlo", "Tee times · Round 2": "Horarios de salida · Ronda 2", "first groups off the 1st tee": "primeros grupos desde el tee del 1", "Results": "Resultados",
-  "Highlights": "Resúmenes", "Pairings and full tee sheet": "Emparejamientos y horarios completos", "Par 71 · 7,034 yards · tournament tees": "Par 71 · 7.034 yardas · tees de torneo",
-  "Open the live board": "Abrir la clasificación en directo", "Sun": "Dom", "Mon": "Lun", "Tue": "Mar", "Wed": "Mié", "Thu": "Jue", "Fri": "Vie", "Sat": "Sáb",
-  // capture
-  "Stay close": "Sigue de cerca", "to your city.": "a tu ciudad.", "No account. Your email or your number, your city, and three separate choices you can change any time.": "Sin cuenta. Tu correo o tu número, tu ciudad y tres opciones independientes que puedes cambiar cuando quieras.",
-  "Stay close to your city": "Sigue de cerca a tu ciudad", "No account needed": "Sin cuenta", "Email": "Correo", "Mobile (SMS, optional)": "Móvil (SMS, opcional)", "Your city": "Tu ciudad", "Alerts": "Alertas",
-  "Live scores and results": "Resultados en directo y finales", "Results only": "Solo resultados finales", "News and video only": "Solo noticias y vídeo",
-  "Email me league news and my city's results. I can unsubscribe any time.": "Quiero recibir por correo las noticias de la liga y los resultados de mi ciudad. Puedo darme de baja cuando quiera.",
-  "Text me on event days, up to 2 messages per event.": "Enviadme SMS los días de evento, máximo 2 mensajes por evento.",
-  "Keep me posted on the mental-health mission and ways to get involved.": "Mantenedme al día de la misión de salud mental y de cómo participar.",
-  "I am 16 or older.": "Tengo 16 años o más.", "Follow my city": "Seguir a mi ciudad", "Withdraw consent": "Retirar el consentimiento",
-  "Consent recorded (demo, this device only)": "Consentimiento registrado (demo, solo en este dispositivo)", "email": "correo", "SMS": "SMS", "mission": "misión", "yes": "sí", "no": "no",
-  "Consent withdrawn. Nothing kept on this device.": "Consentimiento retirado. No queda nada en este dispositivo.",
-  "Separate consents, timestamped, stored with the marketing provider as one exportable list. Full fan accounts and CRM journeys are deferred, as the brief asks.": "Consentimientos independientes, con fecha y hora, guardados en el proveedor de marketing como una única lista exportable. Las cuentas completas de aficionado y los recorridos de CRM quedan aplazados, como pide el brief.",
-  "What you get": "Qué recibes", "Tee times the evening before each round": "Horarios de salida la víspera de cada ronda", "Round leader changes and final results for your city": "Cambios de líder y resultados finales de tu ciudad",
-  "Stories and video from your city's desk": "Historias y vídeo de la redacción de tu ciudad", "One email a week in the off-season, never more": "Un correo a la semana fuera de temporada, nunca más",
-  // mission
-  "The mission": "La misión", "Golf is the": "El golf es la", "excuse.": "excusa.",
-  "Every event funds mental-health work in its city. The league keeps the rights to a documentary series on athletes' mental health and to the city films, and publishes them here for free.": "Cada evento financia trabajo en salud mental en su ciudad. La liga conserva los derechos de una serie documental sobre la salud mental de los deportistas y de las películas de ciudad, y las publica aquí gratis.",
-  "Suicide & Crisis Lifeline": "Línea de crisis y prevención del suicidio", "Call or text 988 in the US, any time. If you are outside the US, your local line is one tap away in the app.": "Llama o envía un mensaje al 988 en EE. UU., a cualquier hora. Fuera de EE. UU., tu línea local está a un toque en la app.",
-  "City charities": "Organizaciones de cada ciudad", "Get involved": "Participa", "Volunteer with your city's charity": "Voluntariado con la organización de tu ciudad", "Donate to the season fund": "Donar al fondo de la temporada",
-  "Share the 988 card": "Compartir la tarjeta del 988", "Opens later in the season": "Se abre más adelante en la temporada", "Alerts the scoring feed can trigger": "Alertas que puede disparar el feed de resultados",
-  "Round leader changes": "Cambio de líder de la ronda", "Your city moves into the top 3": "Tu ciudad entra en el top 3", "Your player makes eagle": "Tu jugador hace eagle", "Final results, your city": "Resultados finales de tu ciudad", "Tee times published": "Horarios de salida publicados",
-  "Start of play": "Inicio del juego", "Shared (demo)": "Compartido (demo)", "The 988 card is ready to share with its own link.": "La tarjeta del 988 está lista para compartir con su propio enlace.",
-  // alerts
-  "New round leader": "Nuevo líder de la ronda", "overall, {today} today thru {thru}. Round 2 is live.": "en total, {today} hoy tras {thru}. La Ronda 2 está en directo.", "now": "ahora",
-  "Final at Mayakoba": "Final en Mayakoba", "league points. Season standings updated.": "puntos de liga. Clasificación de la temporada actualizada.", "finishes": "termina",
-  "Play is under way at El Camaleón": "Empieza el juego en El Camaleón", "First group off the 1st tee at 08:00. Follow your city for round leaders and the final result.": "Primer grupo desde el tee del 1 a las 08:00. Sigue a tu ciudad para los líderes de la ronda y el resultado final.",
-  "You will get round leaders, final results and tee times. Stored on this device; no account.": "Recibirás los líderes de la ronda, los resultados finales y los horarios de salida. Guardado en este dispositivo; sin cuenta.",
-  // index
-  "Start": "Inicio", "League": "Liga", "Round 2": "Ronda 2", "posts": "publicaciones", "Schedule and standings": "Calendario y clasificación", "Mayakoba · event page": "Mayakoba · página del evento",
-  "Follow your city": "Sigue a tu ciudad", "988 · get involved": "988 · participa", "More": "Más", "Press resources": "Prensa", "Press kit, logos, accreditation requests. Published by the league.": "Dossier de prensa, logos, acreditaciones. Publicado por la liga.",
-  "Commercial partners": "Socios comerciales", "Partnership enquiries go to the league's commercial team.": "Las consultas de patrocinio van al equipo comercial de la liga.", "Legal": "Legal",
-  "Privacy, terms and consent policies, supplied by Legacy before launch.": "Privacidad, condiciones y políticas de consentimiento, aportadas por Legacy antes del lanzamiento.",
-  "Merchandise": "Tienda", "Coming soon. A link or a full store is an option in the bid.": "Próximamente. Un enlace o una tienda completa es una opción de la oferta.", "Nothing matches.": "Nada coincide.",
-  "Demo page · would open as a plain page in the build": "Página de demo · en la versión real se abre como página normal",
-  "Retired Hall of Famers, All-Stars and celebrities play": "Miembros del Salón de la Fama, All-Stars y celebridades retirados juegan", "team best ball": "team best ball",
-  "for the cities they once represented. Eleven cities, six events, league points, a purse, a Team Championship, and a mental-health mission that runs through every round.": "por las ciudades que un día representaron. Once ciudades, seis eventos, puntos de liga, una bolsa de premios, un Campeonato por Equipos y una misión de salud mental presente en cada ronda.",
-  "Tap": "Toca", "for the full board with hole-by-hole team scoring,": "para la clasificación completa con el resultado del equipo hoyo a hoyo,", "for the editorial flow, or swipe on: every city, then every player.": "para el flujo editorial, o sigue deslizando: cada ciudad y después cada jugador.",
-  "One idea per screen, like a deck of cards.": "Una idea por pantalla, como una baraja.", "Laptop:": "Portátil:", "arrow keys or the bar below.": "flechas del teclado o la barra inferior.", "Phone:": "Móvil:",
-  "swipe left and right, scroll inside a card.": "desliza a izquierda y derecha, haz scroll dentro de la ficha.", "The same build ships to the web and, as a shell, to the iOS and Android apps; the live board below is computed from a scoring feed the way the brief asks.": "La misma versión se publica en la web y, como contenedor, en las apps de iOS y Android; la clasificación se calcula a partir de un feed de resultados tal como pide el brief.",
-  "Tap a city for hole-by-hole.": "Toca una ciudad para ver el hoyo a hoyo.", "are league points at the current position (shared on ties) and turn gold when the round is final. Source of truth for official results stays the scoring provider; league points and standings are computed here under the rulebook.": "son los puntos de liga en la posición actual (repartidos en los empates) y se vuelven dorados cuando la ronda es final. La fuente oficial de los resultados sigue siendo el proveedor; los puntos de liga y la clasificación se calculan aquí según el reglamento.",
-  "Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.": "Selecciona una ciudad en la clasificación. Verás la tarjeta de cada jugador en la ronda, las dos bolas que cuentan en cada hoyo con anillo dorado y la línea del equipo debajo. Los hoyos con parte del equipo aún en el campo aparecen como provisionales.",
-  "C": "C",
-};
+/*UI*/
 const t = s => LANG === "es" ? (T[s] ?? s) : s;
 const L = (o, k) => (LANG === "es" && o && o[k + "_es"]) ? o[k + "_es"] : (o ? o[k] : "");
 function setLang(l) { PREF.set("lang", l); location.reload(); }
@@ -633,7 +542,7 @@ const PLAYER = Object.fromEntries(LEAGUE.players.map(p => [p.id, p]));
 const PAR = FEED.event.course.holes.map(h => h.par);
 const RULES = LEAGUE.rules;
 const EVENT = LEAGUE.schedule[0];
-const LB_SPONSOR = "Kestrel Golf";
+const LB_SPONSOR = LEAGUE.league.leaderboard_sponsor || "Sponsor";
 const TEE = {};          // player id -> {r1: minutes, r2: minutes}
 FEED.tee_sheet.forEach(g => { const [h, m] = g.tee_time.slice(11, 16).split(":").map(Number);
   g.players.forEach(p => { (TEE[p.id] ||= {})[g.round_id] = h * 60 + m; }); });

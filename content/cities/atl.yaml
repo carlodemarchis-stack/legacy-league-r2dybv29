@@ -1,0 +1,22 @@
+id: atl
+name: Atlanta
+short: ATL
+color: "#ce1141"
+color2: "#13274f"
+teams:
+- Braves
+- Falcons
+- Hawks
+captain: p1068
+charity: Peachtree Minds
+sponsors:
+- Kestrel Golf
+- Meridian Air
+- Ridgeway Spirits
+story: "Atlanta plays for the fans who stayed. Braves, Falcons and Hawks legends share one bag, one city and one cause: Peachtree Minds, which the team funds with every point it scores."
+story_es: "Atlanta juega por los aficionados que se quedaron. Leyendas de Braves, Falcons y Hawks comparten una bolsa, una ciudad y una causa: Peachtree Minds, que el equipo financia con cada punto que suma."
+hub_sponsor: Kestrel Golf
+photos:
+- img/action/file-golf-bunker-shot-1-jpg.jpg
+- img/course/R2026018.webp
+- img/action/file-morgan-pressel-flickr-keith-allison.jpg

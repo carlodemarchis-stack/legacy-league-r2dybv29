@@ -1,0 +1,23 @@
+id: den
+name: Denver
+short: DEN
+color: "#fb4f14"
+color2: "#002244"
+teams:
+- Broncos
+- Nuggets
+- Rockies
+- Avalanche
+captain: p1072
+charity: Mile High Open Door
+sponsors:
+- Ridgeway Spirits
+- Pacific Rail
+- Harbor & Finch
+story: "Denver plays for the fans who stayed. Broncos, Nuggets, Rockies and Avalanche legends share one bag, one city and one cause: Mile High Open Door, which the team funds with every point it scores."
+story_es: "Denver juega por los aficionados que se quedaron. Leyendas de Broncos, Nuggets, Rockies y Avalanche comparten una bolsa, una ciudad y una causa: Mile High Open Door, que el equipo financia con cada punto que suma."
+hub_sponsor: Ridgeway Spirits
+photos:
+- img/course/R2026009.webp
+- img/action/file-golf-player-putting-green-2003-jpg.jpg
+- img/action/file-masters-tournament-2015-rory-mcilro.jpg

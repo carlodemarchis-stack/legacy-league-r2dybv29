@@ -1,0 +1,14 @@
+name: Legacy League Golf
+season: 2027
+tagline: Cities. Legends. A cause.
+mission: A city-based celebrity team golf league with a mental health mission.
+leaderboard_sponsor: Kestrel Golf
+hero:
+- img/course/R2026011.webp
+- img/course/R2026007.webp
+- img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg
+- img/course/R2026012.webp
+resources:
+- name: 988 Suicide & Crisis Lifeline
+  detail: Call or text 988 (US)
+  url: "https://988lifeline.org"

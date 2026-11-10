@@ -1,0 +1,59 @@
+name: El Camaleón Golf Club
+location: Mayakoba, Riviera Maya, Mexico
+par: 71
+yardage: 7034
+holes:
+- number: 1
+  par: 4
+  yardage: 438
+- number: 2
+  par: 4
+  yardage: 428
+- number: 3
+  par: 4
+  yardage: 389
+- number: 4
+  par: 3
+  yardage: 116
+- number: 5
+  par: 5
+  yardage: 554
+- number: 6
+  par: 4
+  yardage: 416
+- number: 7
+  par: 5
+  yardage: 571
+- number: 8
+  par: 3
+  yardage: 151
+- number: 9
+  par: 4
+  yardage: 462
+- number: 10
+  par: 3
+  yardage: 200
+- number: 11
+  par: 4
+  yardage: 360
+- number: 12
+  par: 4
+  yardage: 451
+- number: 13
+  par: 5
+  yardage: 532
+- number: 14
+  par: 4
+  yardage: 452
+- number: 15
+  par: 3
+  yardage: 155
+- number: 16
+  par: 4
+  yardage: 515
+- number: 17
+  par: 4
+  yardage: 386
+- number: 18
+  par: 4
+  yardage: 458

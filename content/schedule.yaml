@@ -1,0 +1,84 @@
+events:
+- n: 1
+  id: mayakoba-2027
+  name: Mayakoba
+  name_es: Mayakoba
+  venue: El Camaleón Golf Club
+  city: Riviera Maya, Mexico
+  city_es: Riviera Maya, México
+  start: '2027-01-24'
+  end: '2027-01-29'
+  status: live
+  programme:
+  - date: '2027-01-24'
+    en: Arrivals and practice
+    es: Llegadas y prácticas
+    core: false
+  - date: '2027-01-25'
+    en: Practice rounds · media day
+    es: Vueltas de prácticas · día de medios
+    core: false
+  - date: '2027-01-26'
+    en: Arrival evening and pairings party
+    es: Noche de llegada y fiesta de emparejamientos
+    core: true
+  - date: '2027-01-27'
+    en: Celebrity-Am
+    es: Celebrity-Am
+    core: true
+  - date: '2027-01-28'
+    en: "Round 1 · live scoring from 08:00"
+    es: "Ronda 1 · resultados en directo desde las 08:00"
+    core: true
+  - date: '2027-01-29'
+    en: Round 2 · city champion crowned
+    es: Ronda 2 · se corona al campeón de ciudad
+    core: true
+  watch:
+    en: No broadcast partner has been appointed yet. Highlights are published here within the hour; the where-to-watch link appears when a partner is confirmed.
+    es: Todavía no hay socio de televisión. Los resúmenes se publican aquí en menos de una hora; el enlace de dónde verlo aparecerá cuando se confirme un socio.
+- n: 2
+  id: event-2
+  name: Event 2
+  name_es: Evento 2
+  venue: TBA
+  city: TBA
+  start: '2027-03-07'
+  end: '2027-03-12'
+  status: upcoming
+- n: 3
+  id: event-3
+  name: Event 3
+  name_es: Evento 3
+  venue: TBA
+  city: TBA
+  start: '2027-04-18'
+  end: '2027-04-23'
+  status: upcoming
+- n: 4
+  id: event-4
+  name: Event 4
+  name_es: Evento 4
+  venue: TBA
+  city: TBA
+  start: '2027-06-06'
+  end: '2027-06-11'
+  status: upcoming
+- n: 5
+  id: event-5
+  name: Event 5
+  name_es: Evento 5
+  venue: TBA
+  city: TBA
+  start: '2027-08-22'
+  end: '2027-08-27'
+  status: upcoming
+- n: 6
+  id: team-championship-2027
+  name: Team Championship
+  name_es: Campeonato por Equipos
+  venue: TBA
+  city: TBA
+  start: '2027-10-10'
+  end: '2027-10-15'
+  status: upcoming

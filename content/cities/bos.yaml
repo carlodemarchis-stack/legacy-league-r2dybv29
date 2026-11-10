@@ -1,0 +1,23 @@
+id: bos
+name: Boston
+short: BOS
+color: "#007a33"
+color2: "#bd3039"
+teams:
+- Celtics
+- Red Sox
+- Patriots
+- Bruins
+captain: p1013
+charity: The Quiet Room Project
+sponsors:
+- Cobalt Motors
+- Meridian Air
+- Blue Heron Resorts
+story: "Boston plays for the fans who stayed. Celtics, Red Sox, Patriots and Bruins legends share one bag, one city and one cause: The Quiet Room Project, which the team funds with every point it scores."
+story_es: "Boston juega por los aficionados que se quedaron. Leyendas de Celtics, Red Sox, Patriots y Bruins comparten una bolsa, una ciudad y una causa: The Quiet Room Project, que el equipo financia con cada punto que suma."
+hub_sponsor: Cobalt Motors
+photos:
+- img/course/R2026100.webp
+- img/course/R2026005.webp
+- img/action/file-stars-stripes-golf-balls-drop-into.jpg

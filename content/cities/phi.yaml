@@ -1,0 +1,23 @@
+id: phi
+name: Philadelphia
+short: PHI
+color: "#004c54"
+color2: "#a5acaf"
+teams:
+- Eagles
+- 76ers
+- Phillies
+- Flyers
+captain: p1038
+charity: Still Standing Initiative
+sponsors:
+- Northline Capital
+- Oakfield Bank
+- Kestrel Golf
+story: "Philadelphia plays for the fans who stayed. Eagles, 76ers, Phillies and Flyers legends share one bag, one city and one cause: Still Standing Initiative, which the team funds with every point it scores."
+story_es: "Philadelphia juega por los aficionados que se quedaron. Leyendas de Eagles, 76ers, Phillies y Flyers comparten una bolsa, una ciudad y una causa: Still Standing Initiative, que el equipo financia con cada punto que suma."
+hub_sponsor: Northline Capital
+photos:
+- img/course/R2026026.webp
+- img/course/R2026041.webp
+- img/action/file-afa-charity-golf-tournament-7293244.jpg

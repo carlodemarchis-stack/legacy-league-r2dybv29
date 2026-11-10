@@ -1,0 +1,16 @@
+id: p1011
+name: Tyrell Rutledge
+city: bos
+sport: MLB
+team: Red Sox
+role: Catcher
+role_es: Receptor
+years: 2007–2014
+honours: Champion
+honours_es: Campeón
+handicap: 5.2
+bio: Catcher for the Boston Red Sox, 2007–2014. Champion. Took up golf seriously after retiring and now plays for the city that cheered him on.
+bio_es: Receptor de los Boston Red Sox, 2007–2014. Campeón. Se tomó el golf en serio al retirarse y hoy juega por la ciudad que lo aclamó.
+captain: false
+face: img/faces/59440.webp
+full: img/full/59440.webp

@@ -1,0 +1,24 @@
+id: chi
+name: Chicago
+short: CHI
+color: "#c83803"
+color2: "#0b162a"
+teams:
+- Bears
+- Bulls
+- Cubs
+- White Sox
+- Blackhawks
+captain: p1004
+charity: Mind Forward Foundation
+sponsors:
+- Blue Heron Resorts
+- Pacific Rail
+- Meridian Air
+story: "Chicago plays for the fans who stayed. Bears, Bulls, Cubs, White Sox and Blackhawks legends share one bag, one city and one cause: Mind Forward Foundation, which the team funds with every point it scores."
+story_es: "Chicago juega por los aficionados que se quedaron. Leyendas de Bears, Bulls, Cubs, White Sox y Blackhawks comparten una bolsa, una ciudad y una causa: Mind Forward Foundation, que el equipo financia con cada punto que suma."
+hub_sponsor: Blue Heron Resorts
+photos:
+- img/course/R2026003.webp
+- img/action/file-dz6-2456-a-golfer-lines-up-a-putt-w.jpg
+- img/course/R2026027.webp

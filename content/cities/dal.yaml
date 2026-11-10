@@ -1,0 +1,23 @@
+id: dal
+name: Dallas
+short: DAL
+color: "#869397"
+color2: "#002244"
+teams:
+- Cowboys
+- Mavericks
+- Stars
+- Rangers
+captain: p1030
+charity: Locker Room Talks
+sponsors:
+- Cobalt Motors
+- Kestrel Golf
+- Meridian Air
+story: "Dallas plays for the fans who stayed. Cowboys, Mavericks, Stars and Rangers legends share one bag, one city and one cause: Locker Room Talks, which the team funds with every point it scores."
+story_es: "Dallas juega por los aficionados que se quedaron. Leyendas de Cowboys, Mavericks, Stars y Rangers comparten una bolsa, una ciudad y una causa: Locker Room Talks, que el equipo financia con cada punto que suma."
+hub_sponsor: Cobalt Motors
+photos:
+- img/course/R2026060.webp
+- img/action/file-afa-charity-golf-tournament-7293217.jpg
+- img/course/R2026480.webp
