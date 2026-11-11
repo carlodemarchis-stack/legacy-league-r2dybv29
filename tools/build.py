@@ -8,10 +8,11 @@ content/            what the editors own, one record per file (the CMS, as files
   schedule.yaml     the season's events, with programme and where-to-watch text
   cities/*.yaml     one city hub each (story, story_es, charity, sponsors, photos)
   players/*.yaml    one player each (bio, bio_es, role, role_es, headshots)
-  stories/*.md      one story each: front matter + Markdown body; <id>.es.md = Spanish
+  stories/*.md      one story each: front matter + Markdown body; <id>.es.md = Spanish.
+                    Written by hand or by the editorial desk (desk/server.py), same format.
+                    status: draft | scheduled | published; no status means published.
   ui/es.json        interface strings, keyed by the English text
 data/feed.json      the scoring provider's payload (fixture from tools/gen.py)
-data/stories.json   the editorial desk's store; published items go in front of the file stories
 template.html       markup, styles, behaviour. No copy.
 
 The output is one static file. Nothing here runs on a server.
@@ -43,7 +44,11 @@ def load_content():
         if not s: continue
         for k in ("title", "dek", "body"):
             if es.get(k): s[k + "_es"] = es[k]
-    for s in stories.values():
+    now = dt.datetime.now().isoformat(timespec="minutes")
+    live = [s for s in stories.values() if s.get("status", "published") == "published"
+            or (s["status"] == "scheduled" and s.get("scheduled_at", "9999") <= now)]
+    live.sort(key=lambda s: s["id"]); live.sort(key=lambda s: s.get("at", ""), reverse=True)   # newest first, ties by id
+    for s in live:
         s.setdefault("cities", []); s.setdefault("players", []); s.setdefault("photos", [])
     cities = [Y(p) for p in sorted((C / "cities").glob("*.yaml"))]
     order = {c["id"]: i for i, c in enumerate(cities)}
@@ -53,21 +58,10 @@ def load_content():
         league=dict(name=league["name"], season=league["season"], tagline=league["tagline"], mission=league["mission"],
                     leaderboard_sponsor=league.get("leaderboard_sponsor")),
         cities=cities, players=players, schedule=Y(C / "schedule.yaml")["events"], rules=Y(C / "rules.yaml"),
-        stories=sorted(stories.values(), key=lambda s: s["id"]), hero=league["hero"], resources=league["resources"])
-
-def merge_desk(league):
-    store = ROOT / "data/stories.json"
-    if not store.exists(): return
-    now = dt.datetime.now().isoformat(timespec="minutes")
-    desk = [s for s in json.loads(store.read_text()).get("stories", [])
-            if s.get("status") == "published" or (s.get("status") == "scheduled" and s.get("scheduled_at", "9999") <= now)]
-    desk.sort(key=lambda s: s.get("at", ""), reverse=True)
-    seen = {s["id"] for s in desk}
-    league["stories"] = desk + [s for s in league["stories"] if s["id"] not in seen]
+        stories=live, hero=league["hero"], resources=league["resources"])
 
 def build():
     league = load_content()
-    merge_desk(league)
     feed = json.loads((ROOT / "data/feed.json").read_text())
     ui = json.loads((C / "ui/es.json").read_text())
     data = f"const LEAGUE={json.dumps(league, ensure_ascii=False)};\nconst FEED={json.dumps(feed, ensure_ascii=False)};"

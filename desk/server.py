@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Legacy League Golf — editorial desk (MCP server prototype).
 
-Editors talk to Claude; Claude calls these tools; the tools write to the demo's
-editorial store (data/stories.json). The site renders that store into the
-Stories collage. Nothing here replaces a CMS studio: every write is a draft
-until `publish_story` is called, every call is logged with the editor's name,
-and the live site only changes when `deploy_site(confirm=True)` runs.
+Editors talk to Claude; Claude calls these tools; the tools write the same files
+a human editor would: content/stories/<id>.md, front matter + Markdown body.
+The static build (tools/build.py) renders those files into the Stories collage.
+Nothing here replaces a CMS studio: every new story is a draft until
+`publish_story` is called, every call is logged with the editor's name, and the
+live site only changes when `deploy_site(confirm=True)` runs.
 
 Run (stdio):   desk/.venv/bin/python desk/server.py
 Editor name:   DESK_EDITOR=Jonathan desk/.venv/bin/python desk/server.py
@@ -18,13 +19,18 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
+import yaml
 from mcp.server.fastmcp import FastMCP
 
 ROOT = Path(__file__).resolve().parents[1]
-STORE = ROOT / "data" / "stories.json"
+sys.path.insert(0, str(ROOT / "tools"))
+from build import story as _parse  # noqa: E402  the build's own reader, so both sides agree on the format
+
+STORIES = ROOT / "content" / "stories"
 ALERTS = ROOT / "data" / "alerts.json"
 LOG = ROOT / "data" / "desk-log.jsonl"
 LEAGUE = json.loads((ROOT / "data" / "league.json").read_text())
@@ -101,26 +107,49 @@ def _pick_photo(seed: str) -> str:
     return pool[int(hashlib.sha1(seed.encode()).hexdigest(), 16) % len(pool)]
 
 
-def _new_id(prefix: str = "d") -> str:
-    n = len(_load(STORE, "stories")) + 1
-    return f"{prefix}{n:03d}"
+class _Dumper(yaml.SafeDumper):
+    pass
+
+
+def _str(dumper, s):
+    style = "|" if "\n" in s else ('"' if any(ch in s for ch in ":#{}[]") or s.strip() != s or s == "" else None)
+    return dumper.represent_scalar("tag:yaml.org,2002:str", s, style=style)
+
+
+_Dumper.add_representer(str, _str)
+
+
+def _all() -> list[dict]:
+    """Every story in content/stories (the English file; <id>.es.md is its Spanish sibling)."""
+    return [_parse(p) for p in sorted(STORIES.glob("*.md")) if not p.name.endswith(".es.md")]
+
+
+def _write(s: dict) -> None:
+    """One story -> content/stories/<id>.md: front matter, then the body as blank-line separated paragraphs."""
+    front = {k: v for k, v in s.items() if k != "body"}
+    fm = yaml.dump(front, Dumper=_Dumper, allow_unicode=True, sort_keys=False, width=1000).rstrip()
+    (STORIES / f"{s['id']}.md").write_text(f"---\n{fm}\n---\n\n" + "\n\n".join(s.get("body") or []) + "\n")
+
+
+def _new_id() -> str:
+    n = max([int(s["id"][1:]) for s in _all() if re.fullmatch(r"d\d+", s["id"])] or [0]) + 1
+    return f"d{n:03d}"
 
 
 def _feed_now() -> str:
     return FEED["generated_at"][:16]
 
 
-def _story(sid: str) -> tuple[list, dict]:
-    stories = _load(STORE, "stories")
-    for s in stories:
-        if s["id"] == sid:
-            return stories, s
-    raise ValueError(f"No desk story '{sid}'. Seed stories (s00–s18) are read-only in this prototype.")
+def _story(sid: str) -> dict:
+    p = STORIES / f"{sid}.md"
+    if not re.fullmatch(r"[a-z]\d+", sid) or not p.exists():
+        raise ValueError(f"No story '{sid}'. Use list_stories.")
+    return _parse(p)
 
 
 def _public(s: dict) -> dict:
     keep = ("id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count")
-    return {k: s.get(k) for k in keep if s.get(k) not in (None, [], "")}
+    return {"status": "published", **{k: s.get(k) for k in keep if s.get(k) not in (None, [], "")}}
 
 
 # ----------------------------------------------------------------- scoring
@@ -234,13 +263,10 @@ def live_board(clock: str = "14:20") -> dict:
 
 @mcp.tool()
 def list_stories(status: str = "all", limit: int = 30) -> list[dict]:
-    """Desk stories (status draft | scheduled | published | all), newest first, followed by the read-only seed stories."""
-    desk = [s for s in _load(STORE, "stories") if status == "all" or s.get("status") == status]
-    desk.sort(key=lambda s: s.get("at", ""), reverse=True)
-    out = [_public(s) for s in desk]
-    if status in ("all", "published"):
-        out += [dict(_public(s), status="seed") for s in LEAGUE["stories"]]
-    return out[:limit]
+    """Stories (status draft | scheduled | published | all), newest first. A file with no status is published."""
+    rows = [s for s in _all() if status == "all" or s.get("status", "published") == status]
+    rows.sort(key=lambda s: s.get("at", ""), reverse=True)
+    return [_public(s) for s in rows[:limit]]
 
 
 @mcp.tool()
@@ -286,9 +312,7 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
         story["count"] = int(count)
     if kind == "gallery":
         story["photos"] = [story["photo"], _pick_photo(sid + "b"), _pick_photo(sid + "c")]
-    stories = _load(STORE, "stories")
-    stories.append(story)
-    _save(STORE, "stories", stories)
+    _write(story)
     _log("draft_story", {"id": sid, "kind": kind, "title": title}, "draft")
     return {"ok": True, "story": _public(story), "next": "publish_story(id) to show it in the collage, then render_site() to preview."}
 
@@ -297,8 +321,9 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
 def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None, cities: Optional[list[str]] = None,
                  players: Optional[list[str]] = None, size: Optional[str] = None, photo_url: Optional[str] = None,
                  author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None) -> dict:
-    """Change fields of a desk story (draft or published). body replaces the article text (paragraphs separated by blank lines)."""
-    stories, s = _story(id)
+    """Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank lines).
+    Only the English file changes; a Spanish sibling (<id>.es.md), if there is one, is left as it is."""
+    s = _story(id)
     if title: s["title"] = title.strip()
     if dek: s["dek"] = dek.strip()
     if cities is not None: s["cities"] = [_city_id(c) for c in cities]
@@ -311,7 +336,7 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
     if at: s["at"] = at
     if body: s["body"] = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
     s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
-    _save(STORE, "stories", stories)
+    _write(s)
     _log("update_story", {"id": id}, "updated")
     return {"ok": True, "story": _public(s)}
 
@@ -320,12 +345,12 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
 def publish_story(id: str, schedule_at: Optional[str] = None) -> dict:
     """Publish a draft (status -> published) or schedule it (ISO time, status -> scheduled). Publishing changes the local
     build on the next render_site(); the public demo changes only with deploy_site(confirm=True)."""
-    stories, s = _story(id)
+    s = _story(id)
     s["status"] = "scheduled" if schedule_at else "published"
     if schedule_at:
         s["scheduled_at"] = schedule_at
     s["published_by"], s["published_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
-    _save(STORE, "stories", stories)
+    _write(s)
     _log("publish_story", {"id": id, "schedule_at": schedule_at}, s["status"])
     return {"ok": True, "story": _public(s), "next": "render_site() to preview locally."}
 
@@ -333,19 +358,19 @@ def publish_story(id: str, schedule_at: Optional[str] = None) -> dict:
 @mcp.tool()
 def unpublish_story(id: str) -> dict:
     """Take a story back to draft."""
-    stories, s = _story(id)
+    s = _story(id)
     s["status"] = "draft"
-    _save(STORE, "stories", stories)
+    _write(s)
     _log("unpublish_story", {"id": id}, "draft")
     return {"ok": True, "story": _public(s)}
 
 
 @mcp.tool()
 def delete_story(id: str) -> dict:
-    """Delete a desk story permanently."""
-    stories, s = _story(id)
-    stories = [x for x in stories if x["id"] != id]
-    _save(STORE, "stories", stories)
+    """Delete a story permanently (its Spanish file too)."""
+    s = _story(id)
+    for p in (STORIES / f"{id}.md", STORIES / f"{id}.es.md"):
+        p.unlink(missing_ok=True)
     _log("delete_story", {"id": id, "title": s["title"]}, "deleted")
     return {"ok": True, "deleted": id}
 
@@ -367,14 +392,14 @@ def draft_push_alert(city: str, title: str, body: str, players: Optional[list[st
 
 @mcp.tool()
 def render_site() -> dict:
-    """Rebuild index.html from the store (published + due scheduled stories first) and refresh the local preview."""
+    """Rebuild index.html from content/ (published + due scheduled stories, newest first) and refresh the local preview."""
     r = subprocess.run(["python3", str(ROOT / "render.py")], capture_output=True, text=True, cwd=ROOT)
     sync = ROOT / "tools" / "sync_preview.sh"
     if sync.exists():
         subprocess.run(["sh", str(sync)], capture_output=True, text=True, cwd=ROOT)
-    n = len([s for s in _load(STORE, "stories") if s.get("status") == "published"])
+    n = len([s for s in _all() if s.get("status", "published") == "published"])
     _log("render_site", {}, r.stdout.strip() or r.stderr.strip()[-200:])
-    return {"ok": r.returncode == 0, "output": (r.stdout or r.stderr).strip(), "published_desk_stories": n, "preview": LOCAL_URL}
+    return {"ok": r.returncode == 0, "output": (r.stdout or r.stderr).strip(), "published_stories": n, "preview": LOCAL_URL}
 
 
 @mcp.tool()
