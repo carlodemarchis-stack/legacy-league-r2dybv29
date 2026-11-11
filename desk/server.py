@@ -36,6 +36,8 @@ LOG = ROOT / "data" / "desk-log.jsonl"
 LEAGUE = json.loads((ROOT / "data" / "league.json").read_text())
 FEED = json.loads((ROOT / "data" / "feed.json").read_text())
 EDITOR = os.environ.get("DESK_EDITOR", "editor")
+INBOX = Path(os.environ.get("DESK_PHOTO_INBOX", "~/Downloads")).expanduser()   # where editors drop photos
+PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp", ".heic")
 LIVE_URL = "https://carlodemarchis-stack.github.io/legacy-league-r2dybv29/"
 LOCAL_URL = "http://localhost:8793/#3"
 
@@ -53,7 +55,8 @@ mcp = FastMCP(
         "Editorial desk for Legacy League Golf. Draft first, publish second. "
         "Use league_reference and find_players to resolve city and player tags before drafting. "
         "Use live_board when a story quotes scores and city_round to name the players behind them. "
-        "Read a story with get_story before changing it. "
+        "Read a story with get_story before changing it. An editor's own photo comes from the photo inbox: "
+        "photo_inbox lists what is waiting, add_photo attaches one. "
         "render_site previews locally; "
         "deploy_site(confirm=True) publishes to the public demo and must be asked for explicitly."
     ),
@@ -147,6 +150,16 @@ def _write_es(sid: str, title_es: Optional[str], dek_es: Optional[str], body_es:
     if dek_es: es["dek"] = dek_es.strip()
     if body_es: es["body"] = _paras(body_es)
     _write(es, p.name)
+
+
+def _inbox_files() -> list[Path]:
+    """Image files in the photo inbox, newest first."""
+    try:
+        files = [f for f in INBOX.iterdir() if f.is_file() and f.suffix.lower() in PHOTO_TYPES and not f.name.startswith(".")]
+    except (FileNotFoundError, PermissionError) as e:
+        raise ValueError(f"The desk cannot read the photo inbox ({INBOX}): {type(e).__name__}. On a Mac, allow Claude to "
+                         "use that folder in System Settings > Privacy & Security > Files and Folders.")
+    return sorted(files, key=lambda f: f.stat().st_mtime, reverse=True)
 
 
 def _new_id() -> str:
@@ -408,6 +421,47 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
 
 
 @mcp.tool()
+def photo_inbox(limit: int = 12) -> dict:
+    """The newest photos waiting in the photo inbox, newest first. The inbox is a folder on the desk's computer
+    (normally Downloads): the editor saves a photo there and names it. A picture pasted into the chat cannot reach the desk."""
+    return {"inbox": str(INBOX), "photos": [
+        {"file": f.name, "kb": round(f.stat().st_size / 1024), "saved": dt.datetime.fromtimestamp(f.stat().st_mtime).isoformat(timespec="minutes")}
+        for f in _inbox_files()[: max(1, min(int(limit), 40))]]}
+
+
+@mcp.tool()
+def add_photo(id: str, file: str, credit: Optional[str] = None) -> dict:
+    """Attach a photo from the photo inbox to a story. file = the exact file name as photo_inbox lists it.
+    The photo is copied into the site, resized for the web and set as the story's picture; the original stays where it is.
+    credit = who took it. When a photo shows people, ask the editor for the credit and for the right to publish it."""
+    s = _story(id)
+    src = INBOX / file
+    if Path(file).name != file or src not in _inbox_files():
+        raise ValueError(f"No photo '{file}' in the inbox. Use photo_inbox for the exact name.")
+    if src.stat().st_size > 30 * 1024 * 1024:
+        raise ValueError("That photo is over 30 MB. Export a smaller copy first.")
+    out_dir = ROOT / "img" / "stories"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"{id}-{hashlib.sha1(src.read_bytes()).hexdigest()[:8]}.jpg"   # new name per photo, so browsers never show a stale one
+    size = subprocess.run(["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(src)], capture_output=True, text=True).stdout
+    big = max([int(n) for n in re.findall(r"pixel(?:Width|Height): (\d+)", size)] or [0]) > 1600
+    r = subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "82"] + (["-Z", "1600"] if big else []) + [str(src), "--out", str(out)],
+                       capture_output=True, text=True)   # shrink large photos; never enlarge small ones
+    if r.returncode != 0 or not out.exists():
+        raise ValueError("The photo could not be converted: " + (r.stderr or r.stdout).strip()[-200:])
+    for old in out_dir.glob(f"{id}-*.jpg"):
+        if old != out:
+            old.unlink()
+    s["photo"] = str(out.relative_to(ROOT))
+    if credit:
+        s["photo_credit"] = credit.strip()
+    s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
+    _write(s)
+    _log("add_photo", {"id": id, "file": file}, s["photo"])
+    return {"ok": True, "story": _public(s), "kb": round(out.stat().st_size / 1024), "next": "render_site() to preview."}
+
+
+@mcp.tool()
 def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None, cities: Optional[list[str]] = None,
                  players: Optional[list[str]] = None, size: Optional[str] = None, photo_url: Optional[str] = None,
                  author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None,
@@ -503,6 +557,8 @@ def deploy_site(message: str = "Desk publish", confirm: bool = False) -> dict:
         return {"ok": False, "error": "deploy_site changes the public demo. Call again with confirm=True after the editor agrees."}
     render_site()
     paths = ["content", "data/league.json", "index.html"]   # what an editor can change; never code, tools or stray files
+    if (ROOT / "img" / "stories").exists():
+        paths.append("img/stories")                            # photos added through add_photo
     cmds = [["git", "add", "--"] + paths, ["git", "commit", "-q", "-m", f"{message} (desk: {EDITOR})", "--"] + paths,
             ["git", "push", "-q", "origin", "main"]]
     out = []
