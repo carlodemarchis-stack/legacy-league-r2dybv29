@@ -113,9 +113,9 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .scg > div{text-align:center;font-size:10.5px;font-variant-numeric:tabular-nums;min-height:22px;display:grid;place-items:center}
 .scg .lab{justify-items:start;text-align:left;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:22px}
 .scg .lab b{color:var(--ink);font-weight:700}
-.scg .lab .plink{all:unset;display:inline-block;min-height:24px;line-height:24px;color:var(--ink);font-weight:700;cursor:pointer;text-decoration:underline dotted rgba(255,255,255,.4);text-underline-offset:3px}
-.scg .lab .plink:hover{color:var(--acc);text-decoration-color:var(--acc)}
-.scg .lab .plink:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:3px}
+.plink{all:unset;display:inline-block;min-height:24px;line-height:24px;color:var(--ink);font-weight:700;cursor:pointer;text-decoration:underline dotted rgba(255,255,255,.4);text-underline-offset:3px}
+.plink:hover{color:var(--acc);text-decoration-color:var(--acc)}
+.plink:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:3px}
 .scg .lab small{color:var(--dim2);font-size:9.5px;margin-left:5px}
 .scg .hn{color:var(--dim2);font-size:9.5px}.scg .pr{color:var(--dim);font-size:10px}
 .scg .sub{font-weight:700;color:var(--dim);background:rgba(255,255,255,.04);border-radius:5px}
@@ -187,6 +187,9 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
   border:1px solid var(--line);background:rgba(255,255,255,.025);font-size:13px}
 .ev.live{border-color:rgba(255,77,77,.5)}
 .ev .n{font-weight:700;color:var(--dim2)}.ev b{display:block;font-weight:700}.ev small{color:var(--dim2);font-size:11px}
+.ev small em{font-style:normal;color:var(--dim2);font-size:10px;letter-spacing:.06em}
+.ev .wk{font-size:12px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ev .wk i{font-style:normal;font-weight:700;margin-right:4px}.ev .wk .u{color:var(--green)}.ev .wk .o{color:var(--red)}
 .ev .st{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2);display:flex;gap:7px;align-items:center}
 .bars{display:flex;flex-direction:column;gap:6px}
 .bar{display:grid;grid-template-columns:34px minmax(0,1fr) 52px;gap:10px;align-items:center;font-size:12px;font-variant-numeric:tabular-nums}
@@ -495,9 +498,11 @@ button.ev:hover{border-color:var(--acc)}
 
 <div id="bar">
   <button id="b-first" title="Restart" data-t="Restart"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></svg></button>
+  <button id="b-psec" title="Previous section" data-t="Previous section"><svg viewBox="0 0 24 24"><path d="M12 5l-7 7 7 7"/><path d="M19 5l-7 7 7 7"/></svg></button>
   <button id="b-prev" title="Previous" data-t="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
   <button id="count" title="Index: jump to a card (g)" data-t="Index: jump to a card (g)"><b>1</b> / 1</button>
   <button id="b-next" title="Next" data-t="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button id="b-nsec" title="Next section" data-t="Next section"><svg viewBox="0 0 24 24"><path d="M5 5l7 7-7 7"/><path d="M12 5l7 7-7 7"/></svg></button>
   <button id="b-full" title="Fullscreen" data-t="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></button>
 </div>
 <div class="modal" id="jmodal" onclick="if(event.target===this)closeModal('jmodal')"><div class="mbox">
@@ -549,6 +554,9 @@ const LB_SPONSOR = LEAGUE.league.leaderboard_sponsor || "Sponsor";
 const TEE = {};          // player id -> {r1: minutes, r2: minutes}
 FEED.tee_sheet.forEach(g => { const [h, m] = g.tee_time.slice(11, 16).split(":").map(Number);
   g.players.forEach(p => { (TEE[p.id] ||= {})[g.round_id] = h * 60 + m; }); });
+const GROUP = {};        // player id -> {r1: [partner ids], r2: [...]}
+FEED.tee_sheet.forEach(g => g.players.forEach(p => { (GROUP[p.id] ||= {})[g.round_id] = g.players.filter(x => x.id !== p.id).map(x => x.id); }));
+const RDATE = Object.fromEntries(FEED.rounds.map(r => [r.id, r.date]));
 const SCORE = {};        // round -> player -> holes[]
 FEED.scores.forEach(s => ((SCORE[s.round_id] ||= {})[s.player_id] = s.hole_scores));
 const [h0, m0] = FEED.sim.clock_start.slice(11, 16).split(":").map(Number);
@@ -877,6 +885,7 @@ function cityCard(c, i) {
   </div></div>`;
 }
 
+const nextEvent = () => { const e = LEAGUE.schedule.find(x => x.status !== "live"); return e ? `${t("Next")}: ${esc(L(e, "name"))} · ${dateShort(e.start)}` : ""; };
 function playerCard(p, n) {
   const c = CITY[p.city];
   return `<div class="card" data-k="player" data-id="${p.id}" style="--c:${c.color}"><div class="inner">
@@ -886,23 +895,26 @@ function playerCard(p, n) {
           <div class="sub">${p.team ? `<b>${esc(L(p, "role"))}</b> · ${esc(c.name)} ${esc(p.team)} · ${p.years}<br>${p.sport} · ${esc(L(p, "honours"))}` : `<b>${esc(L(p, "role"))}</b> · ${p.sport}`}<br>${t("Handicap index")} <b>${p.handicap}</b></div>
           <div><button class="pill follow" data-follow="${p.id}" onclick="toggleFollow('${p.id}')">${t("Follow")}</button> <button class="pill" onclick="goCity('${c.id}')">${c.short} ${t("hub")}</button></div></div></div>
       <div class="box"><div class="legend">${t("Legacy statistics · computed from the feed")}</div><div class="grid c4" data-pstats="${p.id}"></div></div>
-      <div class="box grow"><div class="legend">${t("Biography · published by the content team")}</div><p class="bio">${esc(L(p, "bio"))}</p></div>
+      <div class="box"><div class="legend">${t("Biography · published by the content team")}</div><p class="bio">${esc(L(p, "bio"))}</p></div>
+      <div class="box grow"><div class="legend"><span>${t("This week at Mayakoba")}</span><span>${t("Tee times and pairings from the feed")}</span></div><div class="sched" data-pweek="${p.id}"></div></div>
     </div>
     <div class="col r">
-      <div class="box grow"><div class="legend"><span>${t("Mayakoba · hole by hole")}</span><span>${t("Gold ring = counted for")} ${c.short}</span></div>
+      <div class="box"><div class="legend"><span>${t("Mayakoba · hole by hole")}</span><span>${t("Gold ring = counted for")} ${c.short}</span></div>
         <div data-pholes="${p.id}"></div>${LEGEND_PLAYER()}</div>
+      <div class="box grow"><div class="legend"><span>${t("Season ahead")}</span><span>${nextEvent()}</span></div><div class="sched">${schedRows()}</div></div>
     </div>
   </div></div>`;
 }
 
 const dateShort = iso => new Date(iso + "T12:00:00").toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { weekday: "short", day: "numeric", month: "short" });
+const schedRows = () => LEAGUE.schedule.map(e => `<div class="ev ${e.status}" ${e.n === 1 ? `onclick="go(SEC.event)" style="cursor:pointer"` : ""}><span class="n">${String(e.n).padStart(2, "0")}</span>
+        <span><b>${esc(L(e, "name"))}</b><small>${esc(e.venue === "TBA" ? t("TBA") : e.venue)} · ${esc(e.city === "TBA" ? t("TBA") : L(e, "city"))} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
+        <span class="st">${e.status === "live" ? `<span class="dot"></span>${t("Live")}` : t("Upcoming")}</span></div>`).join("");
 function seasonCard() {
   return `<div class="card" data-k="season" style="--c:rgba(217,173,78,.5)"><div class="inner">
     <div class="col l">
       <div class="kicker">${t("2027 season")}</div><h2 class="big">${t("Six stops,")}<br>${t("one table.")}</h2>
-      <div class="box grow"><div class="legend">${t("Schedule")}</div><div class="sched">${LEAGUE.schedule.map(e => `<div class="ev ${e.status}" ${e.n === 1 ? `onclick="go(SEC.event)" style="cursor:pointer"` : ""}><span class="n">${String(e.n).padStart(2, "0")}</span>
-        <span><b>${esc(L(e, "name"))}</b><small>${esc(e.venue === "TBA" ? t("TBA") : e.venue)} · ${esc(e.city === "TBA" ? t("TBA") : L(e, "city"))} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
-        <span class="st">${e.status === "live" ? `<span class="dot"></span>${t("Live")}` : t("Upcoming")}</span></div>`).join("")}</div></div>
+      <div class="box grow"><div class="legend">${t("Schedule")}</div><div class="sched">${schedRows()}</div></div>
     </div>
     <div class="col r">
       <div class="box grow"><div class="legend"><span>${t("Season standings · league points")}</span><span id="ss-note">${t("Provisional while play is on")}</span></div><div class="bars" id="ss-bars"></div>
@@ -1078,6 +1090,15 @@ function paintPlayer(p) {
     const cells = grid.querySelectorAll(".sq:not(.none)");
     let k = 0; tr.holes.forEach((x, h) => { if (SCORE[rid][p.id][h] != null && (rid === "r1" || posted(rid, p.id, h))) { if (x.counted.includes(p.id)) cells[k]?.classList.add("cnt"); k++; } });
   });
+  document.querySelector(`[data-pweek="${p.id}"]`).innerHTML = [["r1", h1, t1, t("Round 1")], ["r2", h2, t2, t("Round 2")]].map(([rid, hs, tr, name]) => {
+    const done = hs.filter(x => x != null).length, counted = tr.holes.filter(x => x.counted.includes(p.id)).length;
+    const mates = GROUP[p.id][rid].map(id => `<button type="button" class="plink" onclick="goPlayer('${id}')">${esc(PLAYER[id].name)}</button> <em>${CITY[PLAYER[id].city].short}</em>`);
+    const withWho = mates.length ? `${t("with")} ${mates.join(` ${t("and")} `)}` : t("alone in this group");
+    const state = !done ? `${t("tee")} ${fmt(TEE[p.id][rid])}` : `<i class="${cls(tp(hs))}">${sgn(tp(hs))}</i> ${done === 18 ? "F" : `${t("thru")} ${done}`}`;
+    return `<div class="ev ${done && done < 18 ? "live" : ""}"><span class="n">${rid.toUpperCase()}</span>
+      <span><b>${name} · ${dateShort(RDATE[rid])}</b><small>${t("tee")} ${fmt(TEE[p.id][rid])} · ${withWho}${done ? ` · ${(counted === 1 ? t("counted on 1 hole") : t("counted on {n} holes")).replace("{n}", counted)}` : ""}</small></span>
+      <span class="wk">${state}</span></div>`;
+  }).join("");
 }
 function paintFollow(root) {
   root.querySelectorAll("[data-follow]:not(#feed [data-follow])").forEach(b => {
@@ -1220,6 +1241,11 @@ function openJump() {
 function closeModal(id) { document.getElementById(id).classList.remove("on"); }
 
 /* --------------------------------------------------------- navigation */
+/* The film is moved in pixels and moved again whenever the window changes size. A position given in
+   viewport units is not recalculated when a phone is turned or a window resized, which left the
+   wrong card, or none, on screen. */
+const place = () => { film.style.transform = `translateX(${-cur * innerWidth}px)`; };
+addEventListener("resize", () => { film.style.transition = "none"; place(); });
 function go(n) {
   const target = Math.max(0, Math.min(total - 1, n));
   // a long jump (tab, chip, hash) cuts straight there: sliding across seventy
@@ -1227,7 +1253,7 @@ function go(n) {
   film.style.transition = Math.abs(target - cur) > 3 ? "none" : "";
   cur = target;
   drawNear();
-  film.style.transform = `translateX(${-cur * 100}vw)`;
+  place();
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
   const k = CARDS[cur].k;
   const sec = k === "live" ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event", "capture", "mission"].includes(k) ? "season" : null;
@@ -1238,8 +1264,14 @@ function go(n) {
   film.children[cur].querySelector(".inner").scrollTop = 0;
 }
 const next = () => go(cur + 1 >= total ? 0 : cur + 1), prev = () => go(cur - 1);
+/* The double arrows move a section at a time: start, live, stories, cities, players, season.
+   Back goes to the start of the current section first, then to the one before it. */
+const STOPS = [0, SEC.live, SEC.stories, SEC.cities, SEC.players, SEC.season];
+const nextSec = () => go(STOPS.find(n => n > cur) ?? 0), prevSec = () => go([...STOPS].reverse().find(n => n < cur) ?? 0);
 document.getElementById("b-next").onclick = next;
 document.getElementById("b-prev").onclick = prev;
+document.getElementById("b-nsec").onclick = nextSec;
+document.getElementById("b-psec").onclick = prevSec;
 document.getElementById("b-first").onclick = () => go(0);
 document.getElementById("count").onclick = openJump;
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
@@ -1263,6 +1295,8 @@ addEventListener("keydown", e => {
   if (e.key === "g") { e.preventDefault(); openJump(); return; }
   if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
   if (e.key === "ArrowLeft") prev();
+  if (e.key === "PageDown") { e.preventDefault(); nextSec(); }
+  if (e.key === "PageUp") { e.preventDefault(); prevSec(); }
   if (e.key === "Home") go(0);
   if (e.key === "End") go(total - 1);
   if (e.key === "f") document.getElementById("b-full").click();

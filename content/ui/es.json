@@ -279,5 +279,15 @@
  "Tap a city for hole-by-hole.": "Toca una ciudad para ver el hoyo a hoyo.",
  "are league points at the current position (shared on ties) and turn gold when the round is final. Source of truth for official results stays the scoring provider; league points and standings are computed here under the rulebook.": "son los puntos de liga en la posición actual (repartidos en los empates) y se vuelven dorados cuando la ronda es final. La fuente oficial de los resultados sigue siendo el proveedor; los puntos de liga y la clasificación se calculan aquí según el reglamento.",
  "Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.": "Selecciona una ciudad en la clasificación. Verás la tarjeta de cada jugador en la ronda, las dos bolas que cuentan en cada hoyo con anillo dorado y la línea del equipo debajo. Los hoyos con parte del equipo aún en el campo aparecen como provisionales.",
- "C": "C"
+ "C": "C",
+ "Season ahead": "Lo que viene esta temporada",
+ "This week at Mayakoba": "Esta semana en Mayakoba",
+ "Tee times and pairings from the feed": "Horarios y grupos desde el feed",
+ "with": "con",
+ "and": "y",
+ "alone in this group": "sale solo en este grupo",
+ "counted on 1 hole": "contó en 1 hoyo",
+ "counted on {n} holes": "contó en {n} hoyos",
+ "Previous section": "Sección anterior",
+ "Next section": "Sección siguiente"
 }
