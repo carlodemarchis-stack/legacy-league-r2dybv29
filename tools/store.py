@@ -8,6 +8,8 @@ What goes up, under the bucket's root:
   stories/index.json            every published story as the page lists it (no article text), newest first
   stories/<id>.<hash>.json      one article text each, English and Spanish; the name carries a hash of the content
   photos/<path>                 the pictures those stories use (img/<path> in the project)
+  site/index.json               which package of everything else is current: {"rev": "<hash>"}
+  site/site.<hash>.json         that package: city and player profiles, schedule, rules, and the interface wording
 
 The site on Cloudflare hands these out under /content/ (worker/index.js). The page asks for the index when it
 opens and shows what it finds, so a story published here appears without rebuilding the page.
@@ -38,8 +40,12 @@ def _npx():
 
 
 def collect():
-    """key -> bytes for everything the store should hold, and the index last."""
+    """key -> bytes for every file the store should hold, and key -> bytes for the indexes that point at them."""
     objects = {}
+    content = build.load_content()
+    ui = json.loads((ROOT / "content/ui/es.json").read_text())
+    rev, pack = build.site_content(content, ui)
+    objects[f"site/site.{rev}.json"] = json.dumps({"rev": rev, **pack}, ensure_ascii=False).encode()
 
     def photo(path):
         if not isinstance(path, str) or not path.startswith("img/"):
@@ -52,7 +58,7 @@ def collect():
         return PREFIX + key
 
     tiles = []
-    for s in build.load_content()["stories"]:
+    for s in content["stories"]:
         s = dict(s)
         body = {k: s.pop(k) for k in ("body", "body_es") if k in s}
         if body:
@@ -67,7 +73,8 @@ def collect():
         tiles.append(s)
     raw = json.dumps(tiles, ensure_ascii=False)
     index = {"rev": hashlib.sha1(raw.encode()).hexdigest()[:12], "stories": tiles}
-    return objects, json.dumps(index, ensure_ascii=False).encode()
+    return objects, {"stories/index.json": json.dumps(index, ensure_ascii=False).encode(),
+                     "site/index.json": json.dumps({"rev": rev}).encode()}
 
 
 def _put(npx, key, data):
@@ -86,12 +93,14 @@ def _put(npx, key, data):
 
 
 def push(dry=False):
-    objects, index = collect()
+    objects, indexes = collect()
     sent = json.loads(SENT.read_text()) if SENT.exists() else {}
     sha = lambda b: hashlib.sha1(b).hexdigest()
     todo = {k: v for k, v in objects.items() if sent.get(k) != sha(v)}
-    rev = json.loads(index)["rev"]
-    result = {"stories": len(json.loads(index)["stories"]), "rev": rev, "sent": sorted(todo), "index_changed": sent.get("stories/index.json") != sha(index)}
+    changed = [k for k, v in indexes.items() if sent.get(k) != sha(v)]
+    stories = json.loads(indexes["stories/index.json"])
+    result = {"stories": len(stories["stories"]), "rev": stories["rev"], "site_rev": json.loads(indexes["site/index.json"])["rev"],
+              "sent": sorted(todo), "index_changed": bool(changed), "indexes": changed}
     if dry:
         return result
     npx = _npx()
@@ -99,9 +108,9 @@ def push(dry=False):
         for key in pool.map(lambda kv: _put(npx, *kv), todo.items()):
             sent[key] = sha(objects[key])
             SENT.write_text(json.dumps(sent, indent=0))
-    if result["index_changed"]:                                  # the index last: it must never point at a file not yet there
-        _put(npx, "stories/index.json", index)
-        sent["stories/index.json"] = sha(index)
+    for key in changed:                                          # the indexes last: one must never point at a file not yet there
+        _put(npx, key, indexes[key])
+        sent[key] = sha(indexes[key])
         SENT.write_text(json.dumps(sent, indent=0))
     return result
 

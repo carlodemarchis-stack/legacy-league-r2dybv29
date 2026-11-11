@@ -629,6 +629,15 @@ button.ev:hover{border-color:var(--acc)}
 
 <script>
 /*DATA*/
+/* Profiles, schedule, rules and wording can be newer in the content store than in this page (an editor changed
+   something since the page was built). A newer package found on an earlier visit is kept on this device and
+   used here, before anything is drawn; loadSite, further down, looks for a newer one on each visit. */
+let STORE_UI = null;
+try {
+  const c = JSON.parse(localStorage.getItem("ll.site") || "null");
+  if (c && c.rev && c.site && c.rev !== LEAGUE.site_rev) { Object.assign(LEAGUE, c.site); LEAGUE.site_rev = c.rev; STORE_UI = c.ui; }
+  else if (c) localStorage.removeItem("ll.site");        // the page has caught up with the store
+} catch (e) {}
 </script>
 <script>
 "use strict";
@@ -644,6 +653,7 @@ const PREF = {
 const LANG = PREF.get("lang", null) || ((navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en");
 document.documentElement.lang = LANG;
 /*UI*/
+if (STORE_UI) { Object.keys(T).forEach(k => delete T[k]); Object.assign(T, STORE_UI); }
 const t = s => LANG === "es" ? (T[s] ?? s) : s;
 const L = (o, k) => (LANG === "es" && o && o[k + "_es"]) ? o[k + "_es"] : (o ? o[k] : "");
 function setLang(l) { PREF.set("lang", l); location.reload(); }
@@ -1543,8 +1553,20 @@ function loadStore() {
     document.getElementById("hnrow").innerHTML = newsTiles();
   }).catch(() => {});
 }
-(window.requestIdleCallback || setTimeout)(loadStore);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) loadStore(); });
+/* The same for everything that is not a story. The store says which package is current; when it is not the one
+   this page is showing, the package is fetched and kept on this device. Cards are built once from that content,
+   so it is applied by loading the page again: at once when the page has just opened, otherwise on the next visit. */
+function loadSite(justOpened) {
+  fetch("content/site/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
+    if (!ix || !ix.rev || ix.rev === LEAGUE.site_rev) return;
+    return fetch(`content/site/site.${ix.rev}.json`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(c => {
+      localStorage.setItem("ll.site", JSON.stringify(c));
+      if (justOpened && sessionStorage.getItem("ll.site.reloaded") !== c.rev) { sessionStorage.setItem("ll.site.reloaded", c.rev); location.reload(); }
+    });
+  }).catch(() => {});
+}
+(window.requestIdleCallback || setTimeout)(() => { loadStore(); loadSite(true); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadStore(); loadSite(false); } });
 </script>
 </body>
 </html>

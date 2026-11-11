@@ -19,3 +19,5 @@ cat > .site/_headers <<'H'
   Cache-Control: public, max-age=604800
 H
 npx --yes wrangler deploy
+# keep the content store level with the page just published, so the store never hands out something older than the page
+python3 tools/store.py push

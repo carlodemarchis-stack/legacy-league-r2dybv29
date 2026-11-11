@@ -68,6 +68,16 @@ def load_content():
         cities=cities, players=players, schedule=Y(C / "schedule.yaml")["events"], rules=Y(C / "rules.yaml"),
         stories=live, hero=league["hero"], resources=league["resources"])
 
+SITE_KEYS = ("league", "cities", "players", "schedule", "rules", "hero", "resources")
+
+def site_content(league, ui):
+    """Everything an editor owns that is not a story: profiles, schedule, rules, and the interface wording.
+    Returned with a short hash of itself. The page carries that hash, and the content store holds the same
+    package under the same hash, so each side can tell whether the other has something newer."""
+    pack = {"site": {k: league[k] for k in SITE_KEYS}, "ui": ui}
+    rev = hashlib.sha1(json.dumps(pack, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:8]
+    return rev, pack
+
 def split_stories(league):
     """What the page carries of the stories: the newest tiles, without bodies. Everything else goes to data/stories/."""
     out = ROOT / "data/stories"
@@ -97,6 +107,7 @@ def build():
     feed = json.loads((ROOT / "data/feed.json").read_text())
     ui = json.loads((C / "ui/es.json").read_text())
     page = split_stories(league)
+    page["site_rev"] = site_content(league, ui)[0]
     data = f"const LEAGUE={json.dumps(page, ensure_ascii=False)};\nconst FEED={json.dumps(feed, ensure_ascii=False)};"
     html = (ROOT / "template.html").read_text()
     assert "/*DATA*/" in html and "/*UI*/" in html, "template placeholders missing"
