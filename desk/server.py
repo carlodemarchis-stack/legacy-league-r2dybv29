@@ -556,7 +556,7 @@ def deploy_site(message: str = "Desk publish", confirm: bool = False) -> dict:
     if not confirm:
         return {"ok": False, "error": "deploy_site changes the public demo. Call again with confirm=True after the editor agrees."}
     render_site()
-    paths = ["content", "data/league.json", "index.html"]   # what an editor can change; never code, tools or stray files
+    paths = ["content", "data/league.json", "data/stories", "index.html"]   # what an editor can change; never code, tools or stray files
     if (ROOT / "img" / "stories").exists():
         paths.append("img/stories")                            # photos added through add_photo
     cmds = [["git", "add", "--"] + paths, ["git", "commit", "-q", "-m", f"{message} (desk: {EDITOR})", "--"] + paths,

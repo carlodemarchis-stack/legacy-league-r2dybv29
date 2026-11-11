@@ -15,9 +15,16 @@ content/            what the editors own, one record per file (the CMS, as files
 data/feed.json      the scoring provider's payload (fixture from tools/gen.py)
 template.html       markup, styles, behaviour. No copy.
 
-The output is one static file. Nothing here runs on a server.
+The output is static files. Nothing here runs on a server.
+
+index.html           the page, with what the first screen needs inside it
+data/stories/*.json  what is fetched later: one small file per article body, and the tiles of the
+                     older stories beyond the first screen. Names carry a hash of the content, so a
+                     file never changes once published and can be cached for good.
 """
-import json, pathlib, datetime as dt, yaml
+import hashlib, json, os, pathlib, shutil, datetime as dt, yaml
+
+FIRST_STORIES = int(os.environ.get("FIRST_STORIES", 24))   # story tiles carried inside the page
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 C = ROOT / "content"
@@ -61,16 +68,37 @@ def load_content():
         cities=cities, players=players, schedule=Y(C / "schedule.yaml")["events"], rules=Y(C / "rules.yaml"),
         stories=live, hero=league["hero"], resources=league["resources"])
 
+def split_stories(league):
+    """What the page carries of the stories: the newest tiles, without bodies. Everything else goes to data/stories/."""
+    out = ROOT / "data/stories"
+    shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    def put(stem, obj):
+        raw = json.dumps(obj, ensure_ascii=False)
+        name = f"{stem}.{hashlib.sha1(raw.encode()).hexdigest()[:8]}.json"
+        (out / name).write_text(raw)
+        return f"data/stories/{name}"
+    tiles = []
+    for s in league["stories"]:
+        s = dict(s)
+        body = {k: s.pop(k) for k in ("body", "body_es") if k in s}
+        if body: s["body_ref"] = put(s["id"], body)
+        tiles.append(s)
+    first, older = tiles[:FIRST_STORIES], tiles[FIRST_STORIES:]
+    return dict(league, stories=first, story_count=len(tiles), more_stories=put("older", older) if older else None)
+
 def build():
     league = load_content()
     feed = json.loads((ROOT / "data/feed.json").read_text())
     ui = json.loads((C / "ui/es.json").read_text())
-    data = f"const LEAGUE={json.dumps(league, ensure_ascii=False)};\nconst FEED={json.dumps(feed, ensure_ascii=False)};"
+    page = split_stories(league)
+    data = f"const LEAGUE={json.dumps(page, ensure_ascii=False)};\nconst FEED={json.dumps(feed, ensure_ascii=False)};"
     html = (ROOT / "template.html").read_text()
     assert "/*DATA*/" in html and "/*UI*/" in html, "template placeholders missing"
     html = html.replace("/*DATA*/", data).replace("/*UI*/", f"const T = {json.dumps(ui, ensure_ascii=False)};")
     (ROOT / "index.html").write_text(html)
-    print(f"index.html {len(html)} bytes, {len(league['cities'])} cities, {len(league['players'])} players, {len(league['stories'])} stories, {len(ui)} ui strings")
+    files = list((ROOT / "data/stories").glob("*.json"))
+    print(f"index.html {len(html)} bytes, {len(league['cities'])} cities, {len(league['players'])} players, "
+          f"{len(page['stories'])} of {len(league['stories'])} stories in the page, {len(files)} story files, {len(ui)} ui strings")
     # also keep data/league.json as the machine-readable export of the content tree (what a CMS API would return)
     (ROOT / "data/league.json").write_text(json.dumps(league, indent=1, ensure_ascii=False))
 
