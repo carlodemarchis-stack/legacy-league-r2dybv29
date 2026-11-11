@@ -52,7 +52,8 @@ mcp = FastMCP(
     instructions=(
         "Editorial desk for Legacy League Golf. Draft first, publish second. "
         "Use league_reference and find_players to resolve city and player tags before drafting. "
-        "Use live_board when a story quotes scores. render_site previews locally; "
+        "Use live_board when a story quotes scores. Read a story with get_story before changing it. "
+        "render_site previews locally; "
         "deploy_site(confirm=True) publishes to the public demo and must be asked for explicitly."
     ),
 )
@@ -214,6 +215,12 @@ def _team_round(cid: str, rid: str, clock: int) -> dict:
     return {"to_par": to_par, "thru": thru, "final": thru == 18, "best": rounds[:2]}
 
 
+def _final_at() -> str:
+    """Course time on day 2 when the last group has posted its 18th hole."""
+    t = max(v["r2"] for v in TEE.values()) + 18 * FEED["sim"]["minutes_per_hole"]
+    return f"{t // 60:02d}:{t % 60:02d}"
+
+
 def _board(clock_hhmm: str) -> list[dict]:
     h, m = map(int, clock_hhmm.split(":"))
     clock = h * 60 + m
@@ -271,10 +278,12 @@ def find_players(query: str, city: Optional[str] = None) -> list[dict]:
 
 @mcp.tool()
 def live_board(clock: str = "14:20") -> dict:
-    """The team leaderboard as the fans see it at a course time (HH:MM on day 2, 14:20 = where the demo opens; 15:40 = final).
-    Returns positions, today, thru, total, league points and each city's best individual rounds today."""
+    """The team leaderboard as the fans see it at a course time (HH:MM on day 2; 14:20 = where the demo opens).
+    Returns positions, today, thru, total, league points and each city's best individual rounds today.
+    final_at is the course time when the last group finishes: ask for that time, or later, to get the final board.
+    Every score (r1, today, total, to_par) is strokes relative to par: negative is under par, positive is over."""
     rows = _board(clock)
-    return {"event": FEED["event"]["name"], "round": "Round 2", "course_time": clock,
+    return {"event": FEED["event"]["name"], "round": "Round 2", "course_time": clock, "final_at": _final_at(),
             "final": all(r["thru"] == "F" for r in rows), "board": rows}
 
 
@@ -284,6 +293,18 @@ def list_stories(status: str = "all", limit: int = 30) -> list[dict]:
     rows = [s for s in _all() if status == "all" or s.get("status", "published") == status]
     rows.sort(key=lambda s: s.get("at", ""), reverse=True)
     return [_public(s) for s in rows[:limit]]
+
+
+@mcp.tool()
+def get_story(id: str) -> dict:
+    """One story in full: every field, the body paragraphs, and the Spanish version if there is one.
+    Read this before correcting a story, so the change reaches every place the fact appears, in both languages.
+    {p0} and {c0} in the text stand for the first tagged player and city; leave them as they are."""
+    s = _story(id)
+    p = STORIES / f"{id}.es.md"
+    es = _parse(p) if p.exists() else None
+    return {"story": {"status": "published", **s},
+            "spanish": {k: es[k] for k in ("title", "dek", "body") if k in es} if es else None}
 
 
 @mcp.tool()
