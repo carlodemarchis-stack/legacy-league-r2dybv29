@@ -16,7 +16,7 @@
 <meta name="twitter:image" content="https://carlodemarchis-stack.github.io/legacy-league-r2dybv29/img/og.jpg">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#080c0e">
-<script>try{var th=JSON.parse(localStorage.getItem("ll.theme")||'"dark"');if(th==="light"||(th==="system"&&matchMedia("(prefers-color-scheme: light)").matches))document.documentElement.dataset.theme="light"}catch(e){}</script>
+<script>try{var th=JSON.parse(localStorage.getItem("ll.theme")||'"dark"');if(th==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>
 :root{
   --bg:#080c0e; --panel:rgba(var(--veil),.055); --panel2:rgba(var(--veil),.014);
@@ -51,6 +51,35 @@ a{color:var(--acc-ink);text-decoration:none}
 .legend{font-size:clamp(8.5px,.82vw,10.5px);letter-spacing:.2em;text-transform:uppercase;color:var(--dim2);
   font-weight:700;margin-bottom:clamp(5px,.85vh,10px);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .legend .live{color:var(--live)}
+/* the start card's board: the tournament name leads, and the whole panel opens Live */
+.box.golive{cursor:pointer;transition:border-color .18s}
+.box.golive:hover{border-color:var(--acc)}
+.box.golive:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.legend.hl{flex-wrap:wrap;row-gap:4px}
+.hl-ev{display:flex;align-items:center;gap:10px}
+.hl-ev b{font-size:clamp(17px,1.7vw,24px);letter-spacing:-.02em;text-transform:none;color:var(--ink);line-height:1}
+.hl-go{color:var(--acc-ink)}
+/* the start card: the two columns, then a row of the latest stories as landscape tiles */
+.inner.home{flex-direction:column;gap:clamp(10px,1.8vh,20px)}
+.hometop{flex:1 1 auto;min-height:0;display:flex;gap:clamp(16px,2.4vw,40px)}
+.hnews{flex:0 0 auto;min-width:0}
+.hnews .plink{color:var(--acc-ink);min-height:0;line-height:inherit;text-decoration:none}
+.hnrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(8px,.9vw,14px)}
+.hn{all:unset;box-sizing:border-box;position:relative;display:block;height:clamp(74px,14vh,150px);border-radius:14px;overflow:hidden;
+  border:1px solid var(--line);background:#0b0f11;cursor:pointer}
+.hn img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.92);transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.hn:hover img{transform:scale(1.04)}
+.hn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.hn-t{position:absolute;left:0;right:0;bottom:0;padding:24px 11px 9px;display:flex;flex-direction:column;gap:3px;color:#fff;
+  background:linear-gradient(180deg,rgba(5,8,10,0),rgba(5,8,10,.93))}
+.hn-t small{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.78)}
+.hn-t b{font-size:clamp(11.5px,.95vw,14.5px);font-weight:700;letter-spacing:-.01em;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:1100px){.hnrow{grid-template-columns:repeat(4,minmax(0,1fr))}.hn:nth-child(n+5){display:none}}
+/* a shorter window has no room for the three figures as well (the paragraph beside them says the same);
+   a really short one has no room for the stories row at all, and keeps the figures */
+@media(max-height:760px) and (min-aspect-ratio:1/1){.home .grid.c3{display:none}}
+@media(max-height:680px) and (min-aspect-ratio:1/1){.hnews{display:none}.home .grid.c3{display:grid}}
 .kicker{font-size:clamp(9.5px,.9vw,12px);letter-spacing:.22em;text-transform:uppercase;color:var(--acc-ink);font-weight:700}
 h1.big{font-size:clamp(34px,5.2vw,78px);font-weight:700;letter-spacing:-.04em;line-height:.95}
 h2.big{font-size:clamp(26px,3.4vw,50px);font-weight:700;letter-spacing:-.035em;line-height:1}
@@ -468,6 +497,17 @@ button.ev:hover{border-color:var(--acc)}
   /* the film stacks: a % flex-basis would now be a height, so every column sizes to its content */
   .col,.col.l,.col.r{flex:0 0 auto!important}
   .evpane{flex-direction:column;flex:0 0 auto;gap:12px}
+  /* start card on a phone: one stack, with the latest story alone, as a compact row, right under the live board */
+  .hometop,.home .col.r{display:contents}
+  .home .golive{order:1}.hnews{order:2}.home .grid.c3{order:3}.home .col.r > .box:last-child{order:4}
+  .hnews{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:10px 12px 12px}
+  .hnrow{display:block}
+  .hn:nth-child(n+2){display:none}
+  .hn{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;align-items:center;width:100%;height:auto;border:0;border-radius:0;background:none;overflow:visible}
+  .hn img{position:static;height:auto;aspect-ratio:16/9;border-radius:10px;border:1px solid var(--line)}
+  .hn-t{position:static;padding:0;background:none;color:var(--ink)}
+  .hn-t small{color:var(--dim2)}
+  .hn-t b{font-size:14px;-webkit-line-clamp:3}
   .evside{align-items:flex-start;width:100%}
   .rt.evtabs{max-width:100%;overflow-x:auto;scrollbar-width:none}
   .rt.evtabs button{padding:6px 11px;font-size:10px;letter-spacing:.08em}
@@ -532,17 +572,8 @@ button.ev:hover{border-color:var(--acc)}
 :root[data-theme="light"] .stale{color:var(--red)}
 :root[data-theme="light"] .stale b{color:var(--ink)}
 :root[data-theme="light"] .sq.dbl{color:#a3261e}
-:root[data-theme="light"] :is(#bar,#toast,#thmenu){box-shadow:0 10px 30px rgba(30,40,44,.16)}
+:root[data-theme="light"] :is(#bar,#toast){box-shadow:0 10px 30px rgba(30,40,44,.16)}
 
-/* the theme picker: one button in the bar opens three choices above it */
-#thmenu{position:fixed;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 54px);transform:translateX(-50%);z-index:41;display:none;gap:4px;padding:5px;
-  border-radius:999px;background:rgba(var(--bg-rgb),.96);border:1px solid var(--line);backdrop-filter:blur(16px);box-shadow:0 16px 40px rgba(0,0,0,.4)}
-#thmenu.on{display:flex}
-#thmenu button{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid transparent;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
-#thmenu button:hover{color:var(--ink)}
-#thmenu button.on{color:var(--ink);border-color:var(--acc);background:rgba(217,173,78,.14)}
-#thmenu svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#b-theme.on{color:var(--acc-ink)!important}
 </style>
 </head>
 <body>
@@ -570,9 +601,8 @@ button.ev:hover{border-color:var(--acc)}
   <button id="b-next" title="Next" data-t="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <button id="b-nsec" title="Next section" data-t="Next section"><svg viewBox="0 0 24 24"><path d="M5 5l7 7-7 7"/><path d="M12 5l7 7-7 7"/></svg></button>
   <button id="b-full" title="Fullscreen" data-t="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/></svg></button>
-  <button id="b-theme" title="Theme" data-t="Theme" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 010 16z" fill="currentColor" stroke="none"/></svg></button>
+  <button id="b-theme" title="Theme" data-t="Theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 010 16z" fill="currentColor" stroke="none"/></svg></button>
 </div>
-<div id="thmenu" role="menu" aria-label="Theme"></div>
 <div class="modal" id="jmodal" onclick="if(event.target===this)closeModal('jmodal')"><div class="mbox">
   <button class="mclose" onclick="closeModal('jmodal')">&times;</button>
   <h3 data-t="Index">Index</h3>
@@ -735,7 +765,10 @@ const LEGEND_PLAYER = () => LEGEND_P() + `</div>`;
 const placement = (label, name, when) => `<div class="placement"><span class="pl-lab">${label}</span><i class="pl-logo">${esc(name)}</i><span class="pl-sched"><b>${t("Scheduled")}</b> · ${when} · ${t("impressions and clicks reported")}</span></div>`;
 
 function storyCard() {
-  return `<div class="card" data-k="story" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[0]}" alt=""><div class="inner">
+  // the newest stories with a picture; the live result is the board on this card already, a quote has no headline
+  const news = LEAGUE.stories.filter(s => s.photo && !["result", "quote"].includes(s.kind)).slice(0, 5);
+  return `<div class="card" data-k="story" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[0]}" alt=""><div class="inner home">
+   <div class="hometop">
     <div class="col l" style="justify-content:center">
       <div class="kicker">${t("2027 season · Concept demo")}</div>
       <h1 class="big">${t("Cities.")}<br>${t("Legends.")}<br>${t("A cause.")}</h1>
@@ -743,8 +776,8 @@ function storyCard() {
       <div class="chips">${LEAGUE.cities.map(c => `<button class="chip" style="--c:${c.color}" onclick="goCity('${c.id}')"><i></i>${c.name}</button>`).join("")}</div>
     </div>
     <div class="col r" style="justify-content:center">
-      <div class="box">
-        <div class="legend"><span><span class="dot" style="display:inline-block;margin-right:8px"></span><span class="live">${t("Live now")}</span></span><span>${t("Mayakoba · Round 2")}</span></div>
+      <div class="box golive" role="link" tabindex="0" onclick="go(SEC.live)" onkeydown="if(event.key==='Enter')go(SEC.live)">
+        <div class="legend hl"><span class="hl-ev"><span class="dot"></span><b>${esc(L(EVENT, "name"))}</b><span class="live">${t("Live now")}</span></span><span class="hl-go">${t("Round 2")} · ${t("Full leaderboard")} ›</span></div>
         <div class="lb" id="story-lb"></div>
         <div class="lbfoot">${t("Tap")} <b>${t("Live")}</b> ${t("for the full board with hole-by-hole team scoring,")} <b>${t("Stories")}</b> ${t("for the editorial flow, or swipe on: every city, then every player.")}</div>
       </div>
@@ -756,6 +789,10 @@ function storyCard() {
       <div class="box"><div class="legend">${t("How this screen works")}</div>
         <p class="lead" style="font-size:13px;max-width:none">${t("One idea per screen, like a deck of cards.")} <b>${t("Laptop:")}</b> ${t("arrow keys or the bar below.")} <b>${t("Phone:")}</b> ${t("swipe left and right, scroll inside a card.")} ${t("The same build ships to the web and, as a shell, to the iOS and Android apps; the live board below is computed from a scoring feed the way the brief asks.")}</p></div>
     </div>
+   </div>
+   <div class="hnews"><div class="legend"><span>${t("Latest stories")}</span><button type="button" class="plink" onclick="go(SEC.stories)">${t("All stories")} ›</button></div>
+    <div class="hnrow">${news.map(s => `<button type="button" class="hn" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
+      <span class="hn-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kind)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("")}</div></div>
   </div></div>`;
 }
 
@@ -1154,10 +1191,10 @@ film.innerHTML = storyCard() + `<div class="card" data-k="slot"></div>` + storie
 const total = CARDS.length;
 let cur = 0, lastPos = {}, lastLeader = null, finalSeen = false;
 
-function lbRows(lb, compact) {
+function lbRows(lb, compact, pick = "selectCity") {
   const final = allFinal(lb);
   return `<div class="lbr h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Today")}</span><span>${t("Thru")}</span><span>${t("Total")}</span><span>${t("Pts")}</span></div>` +
-    lb.map(x => `<div class="lbr ${x.c.id === state.sel ? "sel" : ""} ${state.follow.has(x.c.id) ? "fol" : ""}" onclick="selectCity('${x.c.id}')">
+    lb.map(x => `<div class="lbr ${x.c.id === state.sel ? "sel" : ""} ${state.follow.has(x.c.id) ? "fol" : ""}" onclick="${pick}('${x.c.id}')">
       <span class="pos">${x.tied ? "T" : ""}${x.pos}</span>
       <span class="nm"><i class="sw" style="--c:${x.c.color}"></i>${compact ? x.c.short : esc(x.c.name)}${compact ? "" : ` <em>${x.c.short}</em>`}</span>
       <span class="${x.r2.thru ? cls(x.today) : "e"}">${x.r2.thru ? sgn(x.today) : "–"}</span>
@@ -1259,7 +1296,7 @@ function refresh() {
   const lb = leaderboard();
   const final = allFinal(lb);
   document.getElementById("lv-lb").innerHTML = lbRows(lb, false);
-  document.getElementById("story-lb").innerHTML = lbRows(lb.slice(0, 5), false);
+  document.getElementById("story-lb").innerHTML = lbRows(lb.slice(0, 5), false, "openCity");
   document.getElementById("lv-clock").textContent = fmt(state.clock);
   document.getElementById("lv-upd").textContent = fmt(state.feedClock) + (state.stale ? " ⚠" : "");
   document.getElementById("lv-status").textContent = final ? t("Round 2 · final") : t("Round 2 · live");
@@ -1312,6 +1349,8 @@ function tick() {
 function togglePlay() { state.playing = !state.playing; if (state.playing) tickTimer = setInterval(tick, 700); else { clearInterval(tickTimer); tickTimer = null; } refresh(); }
 function toggleStale() { state.stale = !state.stale; if (!state.stale) state.feedClock = state.clock; refresh(); }
 function resetClock() { state.clock = state.feedClock = h0 * 60 + m0; state.stale = false; refresh(); }
+/* A city tapped on the start card's board is selected, and the tap carries on to open Live with it. */
+function openCity(id) { if (state.sel !== id) selectCity(id); }
 function selectCity(id) { state.sel = state.sel === id ? null : id; PREF.set("sel", state.sel); refresh(); }
 function setRound(r) { state.round = r; PREF.set("round", r); refresh(); }
 function toggleFollow(id) { state.follow.has(id) ? state.follow.delete(id) : state.follow.add(id); PREF.set("follow", [...state.follow]); refresh();
@@ -1429,27 +1468,13 @@ document.getElementById("b-nsec").onclick = nextSec;
 document.getElementById("b-psec").onclick = prevSec;
 document.getElementById("b-first").onclick = () => go(0);
 document.getElementById("count").onclick = openJump;
-/* Theme: dark is the design, light is the alternative, "computer" follows the device setting. */
-const THEMES = [["dark", "Dark", '<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>'],
-                ["light", "Light", '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>'],
-                ["system", "Computer", '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>']];
-const sysLight = matchMedia("(prefers-color-scheme: light)");
+/* Theme: dark is the design, light is the alternative. The icon in the bar switches between the two. */
 function applyTheme() {
-  const th = PREF.get("theme", "dark"), light = th === "light" || (th === "system" && sysLight.matches);
+  const light = PREF.get("theme", "dark") === "light";
   if (light) document.documentElement.dataset.theme = "light"; else delete document.documentElement.dataset.theme;
   document.querySelector('meta[name="theme-color"]').content = light ? "#e7ecea" : "#080c0e";
-  document.getElementById("thmenu").innerHTML = THEMES.map(([k, label, icon]) =>
-    `<button role="menuitemradio" aria-checked="${k === th}" class="${k === th ? "on" : ""}" onclick="setTheme('${k}')"><svg viewBox="0 0 24 24">${icon}</svg>${t(label)}</button>`).join("");
 }
-function setTheme(th) { PREF.set("theme", th); applyTheme(); toggleThemeMenu(false); }
-function toggleThemeMenu(on) {
-  const m = document.getElementById("thmenu"), b = document.getElementById("b-theme");
-  on = on ?? !m.classList.contains("on");
-  m.classList.toggle("on", on); b.classList.toggle("on", on); b.setAttribute("aria-expanded", on);
-}
-sysLight.addEventListener("change", applyTheme);
-document.getElementById("b-theme").onclick = e => { e.stopPropagation(); toggleThemeMenu(); };
-addEventListener("click", e => { if (!e.target.closest("#thmenu")) toggleThemeMenu(false); });
+document.getElementById("b-theme").onclick = () => { PREF.set("theme", PREF.get("theme", "dark") === "light" ? "dark" : "light"); applyTheme(); };
 applyTheme();
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
 document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.textContent = t(b.textContent.trim()); b.onclick = () => go(SEC[b.dataset.sec]); });
@@ -1460,7 +1485,7 @@ document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; if
 document.getElementById("mhint").innerHTML = `<kbd>g</kbd> ${t("opens this index")} · <kbd>←</kbd> <kbd>→</kbd> ${t("move through the film")} · <kbd>Esc</kbd> ${t("closes")}`;
 document.getElementById("mfoot").innerHTML = PAGES.map(p => `<button onclick="pageInfo('${p[0]}')">${t(p[1])}</button>`).join("<span>·</span>");
 addEventListener("keydown", e => {
-  if (e.key === "Escape") { toggleThemeMenu(false); document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
+  if (e.key === "Escape") { document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
   if (e.key === "Enter" && e.target.id === "jq") { document.querySelector("#jlist .jrow")?.click(); return; }
   if (e.target.matches("input,select,textarea")) return;
   if (document.getElementById("smodal").classList.contains("on")) {

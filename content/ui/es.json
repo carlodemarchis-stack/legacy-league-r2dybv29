@@ -29,7 +29,6 @@
  "Legends.": "Leyendas.",
  "A cause.": "Una causa.",
  "Live now": "En directo",
- "Mayakoba · Round 2": "Mayakoba · Ronda 2",
  "Format": "Formato",
  "Best": "Mejores",
  "6 events": "6 eventos",
@@ -283,9 +282,6 @@
  "Next section": "Sección siguiente",
  "Scorecard": "Tarjeta",
  "Theme": "Tema",
- "Dark": "Oscuro",
- "Light": "Claro",
- "Computer": "Sistema",
  "Tournament": "Torneo",
  "has not been played yet.": "todavía no se ha jugado.",
  "It starts": "Empieza el",
@@ -305,5 +301,6 @@
  "Standard programme · to be confirmed": "Programa habitual · por confirmar",
  "To be announced": "Por anunciar",
  "Full leaderboard": "Clasificación completa",
- "cities": "ciudades"
+ "cities": "ciudades",
+ "Latest stories": "Últimas historias"
 }
