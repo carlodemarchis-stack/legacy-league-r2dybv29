@@ -773,8 +773,23 @@ function tile(s) {
 let rList = [], rIdx = -1;
 const fill = (txt, s) => String(txt || "").replace(/\{p0\}/g, s.players && s.players[0] && PLAYER[s.players[0]] ? PLAYER[s.players[0]].name : (LANG === "es" ? "el capitán" : "the captain"))
   .replace(/\{c0\}/g, s.cities && s.cities[0] ? CITY[s.cities[0]].name : (LANG === "es" ? "la liga" : "the league")).replace(/\{author\}/g, "Legacy League Golf");
+/* Article bodies are not in the page. Each lives in its own small file and is fetched when the story is opened. */
+function loadBody(s) {
+  if (!s || !s.body_ref || s.body || s._loading) return;
+  s._loading = fetch(s.body_ref).then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(b => Object.assign(s, b))
+    .catch(() => { s.body = []; })                        // offline or blocked: the summary stands in for the body
+    .finally(() => { if (rList[rIdx] === s) paintBody(s); });
+}
+function paintBody(s) {
+  const el = document.getElementById("rtext"); if (!el) return;
+  if (s.body_ref && !s.body) { el.innerHTML = ""; return loadBody(s); }
+  const paras = L(s, "body");
+  el.innerHTML = (paras && paras.length ? paras : [L(s, "dek")]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
+}
 function openStory(id) {
   const s = LEAGUE.stories.find(x => x.id === id);
+  if (!s) return;
   if (s.kind === "result") return go(SEC.live);
   rList = LEAGUE.stories.filter(x => matchFilter(x, state.filter) && x.kind !== "result");
   rIdx = rList.findIndex(x => x.id === id);
@@ -797,7 +812,6 @@ function renderStory() {
       <track kind="captions" srclang="es" label="Español" src="img/video/swing.es.vtt"${LANG === "es" ? " default" : ""}></video>
       <span class="cap">${t("Video · hosted, adaptive, captioned")} · <u class="cc">CC</u> EN · ES</span></div>`;
   else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">${t("Video · hosted, adaptive, captioned")}</span>` : `<span class="cap">${s.kind === "article" ? t("Picture · supplied by Legacy") : ""}</span>`}</div>`;
-  const bodyArr = L(s, "body"); const body = (bodyArr && bodyArr.length ? bodyArr : [L(s, "dek")]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
   const tags = (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
                (s.players || []).filter(id => PLAYER[id]).map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
   const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && ((x.cities || []).some(id => (s.cities || []).includes(id)) || x.topic === s.topic)).slice(0, 3);
@@ -807,7 +821,7 @@ function renderStory() {
     ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(sTitle(s))}</h2>`}
     <p class="rlead">${esc(sDek(s))}</p>
     <div class="rtags">${tags}</div>
-    <div class="rtext">${body}</div>
+    <div class="rtext" id="rtext"></div>
     ${s.credit ? `<div class="lbfoot">${esc(s.credit)}</div>` : ""}
     <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
       <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} ${t("comments")}</button>
@@ -817,6 +831,8 @@ function renderStory() {
   </div>`;
   document.getElementById("rcount").textContent = `${rIdx + 1} / ${rList.length}`;
   document.getElementById("rbody").scrollTop = 0;
+  paintBody(s);
+  loadBody(rList[rIdx + 1]); loadBody(rList[rIdx - 1]);     // so stepping to the next story is instant
 }
 function renderFeed() {
   renderFilters();
@@ -979,8 +995,19 @@ const playerOrder = cityOrder.flatMap(c => LEAGUE.players.filter(p => p.city ===
 const CARDS = [{ k: "story" }, { k: "live" }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
                ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, { k: "event" }, { k: "capture" }, { k: "mission" }];
 const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: CARDS.length - 4, event: CARDS.length - 3, capture: CARDS.length - 2, mission: CARDS.length - 1 };
+/* Player cards are most of the page (76 of 94 cards), so only the ones near the current card are drawn.
+   Every other player card is an empty slot of the same size until the reader gets close to it. */
+const playerShell = p => `<div class="card" data-k="player" data-id="${p.id}" style="--c:${CITY[p.city].color}"></div>`;
+const NEAR = 2, FAR = 4;
+function drawNear() {
+  playerOrder.forEach((p, i) => {
+    const n = SEC.players + i, el = film.children[n], d = Math.abs(n - cur);
+    if (d <= NEAR && !el.firstElementChild) { el.outerHTML = playerCard(p, i + 1); paintPlayer(p); paintFollow(film.children[n]); }
+    else if (d > FAR && el.firstElementChild) el.outerHTML = playerShell(p);
+  });
+}
 film.innerHTML = storyCard() + liveCard() + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
-  playerOrder.map((p, i) => playerCard(p, i + 1)).join("") + seasonCard() + eventCard() + captureCard() + missionCard();
+  playerOrder.map(playerShell).join("") + seasonCard() + eventCard() + captureCard() + missionCard();
 const total = CARDS.length;
 let cur = 0, lastPos = {}, lastLeader = null, finalSeen = false;
 
@@ -1007,6 +1034,37 @@ function detail() {
   el.innerHTML = `<div class="legend"><span><i class="sw" style="--c:${c.color}"></i>${esc(c.name)} · ${state.round === "r1" ? t("Round 1 · final") : tr.firm ? t("Round 2 · final") : `${t("Round 2 · thru")} ${tr.thru}`}</span>
     <span class="rt"><button class="${state.round === "r1" ? "on" : ""}" onclick="setRound('r1')">R1</button><button class="${state.round === "r2" ? "on" : ""}" onclick="setRound('r2')">R2</button></span></div>
     ${holeGrid(rows, tr, t("Player"))}${LEGEND()}`;
+}
+/* One player's live figures: the roster tile always, the card only while it is drawn. */
+function paintPlayer(p) {
+  const h1 = playerHoles("r1", p.id), h2 = playerHoles("r2", p.id);
+  const tp = arr => arr.reduce((a, s, h) => s == null ? a : a + s - PAR[h], 0);
+  const done2 = h2.filter(x => x != null).length;
+  const tl = document.querySelector(`[data-plive="${p.id}"]`);
+  if (tl) tl.innerHTML = `<span class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</span><small>${done2 === 18 ? "F" : done2 ? t("thru") + " " + done2 : t("tee") + " " + fmt(TEE[p.id].r2)}</small>`;
+  const t1 = teamRound(p.city, "r1"), t2 = teamRound(p.city, "r2");
+  const counted = [...t1.holes, ...t2.holes].filter(x => x.counted.includes(p.id)).length;
+  const played = h1.length + done2;
+  const birdies = [...h1, ...h2].filter((s, i) => s != null && s - PAR[i % 18] < 0).length;
+  const r1tot = h1.reduce((a, b) => a + b, 0);
+  const stats = document.querySelector(`[data-pstats="${p.id}"]`);
+  if (!stats) return;                                   // this player's card is not drawn right now
+  stats.innerHTML = `<div class="cell"><small>${t("Event")}</small><b class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</b></div><div class="cell"><small>${t("Round 1")}</small><b>${r1tot}</b></div><div class="cell"><small>${t("Birdies+")}</small><b>${birdies}</b></div><div class="cell"><small>${t("Balls counted")}</small><b>${played ? Math.round(counted / played * 100) : 0}%</b></div>`;
+  const holes = document.querySelector(`[data-pholes="${p.id}"]`);
+  holes.innerHTML = holeGrid([{ pid: p.id, label: t("Round 1"), holes: h1 }], null, t("Hole")) +
+    `<div style="height:10px"></div>` + holeGrid([{ pid: p.id, label: t("Round 2"), sub: done2 < 18 ? (done2 ? `${t("thru")} ${done2}` : `${t("tee")} ${fmt(TEE[p.id].r2)}`) : "F", holes: h2 }], null, t("Hole"));
+  // ring the counted ones for this player across both grids
+  [["r1", t1, 0], ["r2", t2, 1]].forEach(([rid, tr, gi]) => {
+    const grid = holes.querySelectorAll(".scg")[gi];
+    const cells = grid.querySelectorAll(".sq:not(.none)");
+    let k = 0; tr.holes.forEach((x, h) => { if (SCORE[rid][p.id][h] != null && (rid === "r1" || posted(rid, p.id, h))) { if (x.counted.includes(p.id)) cells[k]?.classList.add("cnt"); k++; } });
+  });
+}
+function paintFollow(root) {
+  root.querySelectorAll("[data-follow]:not(#feed [data-follow])").forEach(b => {
+    const on = state.follow.has(b.dataset.follow); b.classList.toggle("on", on);
+    b.textContent = (on ? t("Following") : t("Follow")) + (CITY[b.dataset.follow] ? " " + CITY[b.dataset.follow].short : "");
+  });
 }
 function refresh() {
   const lb = leaderboard();
@@ -1036,34 +1094,8 @@ function refresh() {
     const cl = document.querySelector(`[data-citylive="${x.c.id}"]`);
     cl.innerHTML = `<div class="cell"><small>${t("Position")}</small><b>${x.tied ? "T" : ""}${x.pos}</b></div><div class="cell"><small>${t("Total")}</small><b class="${cls(x.total)}">${sgn(x.total)}</b></div><div class="cell"><small>${t("Round 1")}</small><b class="${cls(x.r1.toPar)}">${sgn(x.r1.toPar)}</b></div><div class="cell"><small>${t("Round 2")}</small><b class="${cls(x.today)}">${x.thru ? sgn(x.today) + (x.thru < 18 ? `<span style="font-size:.55em;color:var(--dim2);margin-left:4px">${t("thru")} ${x.thru}</span>` : "") : "–"}</b></div>`;
   });
-  // player live figures on tiles + player cards
-  LEAGUE.players.forEach(p => {
-    const h1 = playerHoles("r1", p.id), h2 = playerHoles("r2", p.id);
-    const tp = arr => arr.reduce((a, s, h) => s == null ? a : a + s - PAR[h], 0);
-    const done2 = h2.filter(x => x != null).length;
-    const tl = document.querySelector(`[data-plive="${p.id}"]`);
-    if (tl) tl.innerHTML = `<span class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</span><small>${done2 === 18 ? "F" : done2 ? t("thru") + " " + done2 : t("tee") + " " + fmt(TEE[p.id].r2)}</small>`;
-    const t1 = teamRound(p.city, "r1"), t2 = teamRound(p.city, "r2");
-    const counted = [...t1.holes, ...t2.holes].filter(x => x.counted.includes(p.id)).length;
-    const played = h1.length + done2;
-    const birdies = [...h1, ...h2].filter((s, i) => s != null && s - PAR[i % 18] < 0).length;
-    const r1tot = h1.reduce((a, b) => a + b, 0);
-    const stats = document.querySelector(`[data-pstats="${p.id}"]`);
-    stats.innerHTML = `<div class="cell"><small>${t("Event")}</small><b class="${cls(tp(h1) + tp(h2))}">${sgn(tp(h1) + tp(h2))}</b></div><div class="cell"><small>${t("Round 1")}</small><b>${r1tot}</b></div><div class="cell"><small>${t("Birdies+")}</small><b>${birdies}</b></div><div class="cell"><small>${t("Balls counted")}</small><b>${played ? Math.round(counted / played * 100) : 0}%</b></div>`;
-    const holes = document.querySelector(`[data-pholes="${p.id}"]`);
-    holes.innerHTML = holeGrid([{ pid: p.id, label: t("Round 1"), holes: h1 }], null, t("Hole")) +
-      `<div style="height:10px"></div>` + holeGrid([{ pid: p.id, label: t("Round 2"), sub: done2 < 18 ? (done2 ? `${t("thru")} ${done2}` : `${t("tee")} ${fmt(TEE[p.id].r2)}`) : "F", holes: h2 }], null, t("Hole"));
-    // ring the counted ones for this player across both grids
-    [["r1", t1, 0], ["r2", t2, 1]].forEach(([rid, tr, gi]) => {
-      const grid = holes.querySelectorAll(".scg")[gi];
-      const cells = grid.querySelectorAll(".sq:not(.none)");
-      let k = 0; tr.holes.forEach((x, h) => { if (SCORE[rid][p.id][h] != null && (rid === "r1" || posted(rid, p.id, h))) { if (x.counted.includes(p.id)) cells[k]?.classList.add("cnt"); k++; } });
-    });
-  });
-  document.querySelectorAll("[data-follow]:not(#feed [data-follow])").forEach(b => {
-    const on = state.follow.has(b.dataset.follow); b.classList.toggle("on", on);
-    b.textContent = (on ? t("Following") : t("Follow")) + (CITY[b.dataset.follow] ? " " + CITY[b.dataset.follow].short : "");
-  });
+  LEAGUE.players.forEach(paintPlayer);
+  paintFollow(document);
   renderFeed();
   // automated alerts from the scoring feed: position change for a followed city,
   // a new round leader, and the final result once the last group signs
@@ -1138,7 +1170,7 @@ function jumpEntries() {
   return CARDS.map((c, n) => {
     if (c.k === "story") return { n, sec: t("Start"), label: `${t("Cities.")} ${t("Legends.")} ${t("A cause.")}`, sub: t("League"), color: "var(--acc)" };
     if (c.k === "live") return { n, sec: t("Start"), label: `${t("Live")} · Mayakoba`, sub: t("Round 2"), color: "var(--live)" };
-    if (c.k === "stories") return { n, sec: t("Start"), label: t("Stories"), sub: `${LEAGUE.stories.length} ${t("posts")}`, color: "var(--acc)" };
+    if (c.k === "stories") return { n, sec: t("Start"), label: t("Stories"), sub: `${LEAGUE.story_count || LEAGUE.stories.length} ${t("posts")}`, color: "var(--acc)" };
     if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: t("City hubs"), label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
     if (c.k === "player") { const pl = PLAYER[c.id], ci = CITY[pl.city]; return { n, sec: t("Players"), label: pl.name, sub: `${ci.short}${pl.captain ? " · C" : ""} · ${pl.team ? pl.sport : L(pl, "role")}`, color: ci.color, q: `${ci.name} ${pl.team || ""} ${pl.role}` }; }
     if (c.k === "season") return { n, sec: t("Season"), label: t("Schedule and standings"), sub: t("6 events"), color: "var(--acc)" };
@@ -1175,6 +1207,7 @@ function go(n) {
   // cards would lay every one of them out on the way
   film.style.transition = Math.abs(target - cur) > 3 ? "none" : "";
   cur = target;
+  drawNear();
   film.style.transform = `translateX(${-cur * 100}vw)`;
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
   const k = CARDS[cur].k;
@@ -1228,6 +1261,9 @@ consentStatus();
 leaderboard().forEach(x => lastPos[x.c.id] = `${x.tied ? "T" : ""}${x.pos}`);
 const start = parseInt(location.hash.slice(1), 10);
 go(start ? start - 1 : 0);
+/* The page carries the newest stories. Older ones arrive once the first screen is up. */
+if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
+  fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { LEAGUE.stories.push(...older); renderFeed(); }).catch(() => {}));
 </script>
 </body>
 </html>
