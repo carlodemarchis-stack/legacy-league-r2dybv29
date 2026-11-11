@@ -23,6 +23,7 @@
   --line:rgba(160,180,190,.14); --ink:#eef3f2; --dim:#97a6a8; --dim2:#66757a;
   --acc:#d9ad4e; --green:#39b26f; --red:#e4645b; --live:#ff4d4d;
   --r:20px;
+  color-scheme:dark;
   --veil:255,255,255; --bg-rgb:8,12,14; --m1:#121a1c; --m2:#0a0e10; --on-acc:#1a1206; --acc-ink:#d9ad4e;   /* the parts of the palette a theme swaps */
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -111,6 +112,12 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rt{display:flex;gap:4px;margin-left:auto}
 .rt button{padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .rt.hubsw{margin-left:0}
+.legend.hubleg{flex-wrap:wrap;row-gap:6px;justify-content:flex-start}
+.legend.hubleg > span:not(.rt){margin-left:4px}
+.evsel{appearance:none;-webkit-appearance:none;font:inherit;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);cursor:pointer;
+  padding:4px 26px 4px 11px;border-radius:999px;border:1px solid var(--acc);
+  background:rgba(217,173,78,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a979a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center/12px}
+.evsel:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .rt button.on{color:var(--ink);border-color:var(--acc);background:rgba(217,173,78,.14)}
 .scwrap{overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
 .scg{display:grid;grid-template-columns:96px repeat(9,1fr) 32px repeat(9,1fr) 32px 38px;gap:2px;align-items:center;min-width:560px}
@@ -316,6 +323,8 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 #bar button:not(#count){width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--dim);transition:.18s}
 #bar button:not(#count):hover{background:rgba(var(--veil),.09);color:var(--ink)}
 #bar svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* no full-screen button on a phone, upright or on its side: phones do not offer it for a page */
+@media (max-aspect-ratio:1/1),(pointer:coarse) and (max-height:500px){#bar button#b-full{display:none}}
 #count{font-size:11px;letter-spacing:.1em;color:var(--dim);padding:5px 11px;font-variant-numeric:tabular-nums;white-space:nowrap}
 #count b{color:var(--ink);font-weight:700}
 #toast{position:fixed;left:50%;top:max(64px,calc(env(safe-area-inset-top) + 56px));transform:translate(-50%,-20px);z-index:50;opacity:0;
@@ -422,6 +431,16 @@ u.cc{text-decoration:none;display:inline-block;padding:0 4px;border:1px solid cu
 .mfoot{margin-top:8px;padding-top:10px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim2)}
 .mfoot button{color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-size:11px}
 .mfoot button:hover{color:var(--acc-ink)}
+/* event page: a header with the three tabs, then one pane of two columns per tab */
+.inner.evp{flex-direction:column;gap:clamp(10px,1.6vh,18px)}
+.evside{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.rt.evtabs{margin-left:0}
+.rt.evtabs button{white-space:nowrap;padding:6px 14px;font-size:11px;font-weight:700;color:var(--ink);background:var(--panel)}
+.rt.evtabs button.on{color:var(--on-acc);background:var(--acc);border-color:var(--acc)}
+.evpane{display:none;flex:1 1 auto;min-height:0;gap:clamp(16px,2.4vw,40px)}
+.card[data-tab="board"] .evpane[data-pane="board"],.card[data-tab="tee"] .evpane[data-pane="tee"],.card[data-tab="info"] .evpane[data-pane="info"]{display:flex}
+.evpane .empty{grid-column:auto}
+.tp{display:inline-block;white-space:nowrap;margin-right:12px}
 .ev.core{border-color:rgba(217,173,78,.4)}
 .ev .n{font-size:11px;white-space:nowrap}
 .card[data-k="event"] .ev{grid-template-columns:auto minmax(0,1fr) auto}
@@ -432,7 +451,9 @@ button.ev:hover{border-color:var(--acc)}
 .ok .pill{color:var(--dim)}
 @media(max-aspect-ratio:1/1){
   .placement .pl-sched{margin-left:0;flex:1 1 100%}
-  #tb-lang{margin-left:4px;padding:5px 9px}
+  /* six sections fill the row on a phone, so the language button sits on the title line instead */
+  #tb-lang{position:absolute;top:3px;right:clamp(14px,4vw,22px);margin-left:0;padding:4px 9px}
+  #topbar .tb-l{padding-right:48px}
 }
 
 /* -------------------------------------------------------- portrait/mobile */
@@ -445,6 +466,10 @@ button.ev:hover{border-color:var(--acc)}
   .inner{flex-direction:column;overflow-y:auto;padding:clamp(14px,4vw,22px);padding-top:92px;padding-bottom:96px;gap:12px}
   /* the film stacks: a % flex-basis would now be a height, so every column sizes to its content */
   .col,.col.l,.col.r{flex:0 0 auto!important}
+  .evpane{flex-direction:column;flex:0 0 auto;gap:12px}
+  .evside{align-items:flex-start;width:100%}
+  .rt.evtabs{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .rt.evtabs button{padding:6px 11px;font-size:10px;letter-spacing:.08em}
   .box.grow{overflow:visible;flex:0 0 auto}
   .box.lbbox{overflow:visible}
   h1.big{font-size:clamp(36px,12vw,60px)}
@@ -529,6 +554,7 @@ button.ev:hover{border-color:var(--acc)}
     <button data-sec="cities">Cities</button>
     <button data-sec="players">Players</button>
     <button data-sec="season">Season</button>
+    <button data-sec="league">League</button>
     <button id="tb-lang" class="lang" title="English / Español">ES</button>
   </div>
 </div>
@@ -610,6 +636,8 @@ const state = {
   sel: PREF.get("sel", null),
   follow: new Set(PREF.get("follow", [])),
 };
+if (!LEAGUE.schedule.some(e => e.id === PREF.get("event", null))) PREF.set("event", EVENT.id);
+state.event = PREF.get("event", EVENT.id);            // the tournament the hub scorecards show
 const hubScore = new Set(PREF.get("hubscore", []));   // cities whose hub shows the scorecard instead of the roster; survives a reload
 const fmt = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const sgn = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
@@ -730,13 +758,32 @@ function storyCard() {
   </div></div>`;
 }
 
-function liveCard() {
-  return `<div class="card" data-k="live" style="--c:rgba(57,178,111,.45)"><div class="inner">
-    <div class="col l" style="flex-basis:52%">
-      <div class="lbhead">
-        <div><div class="kicker">${t("Event 1 of 6")} · ${esc(FEED.event.course.name)}</div><h2 class="big">Mayakoba</h2></div>
-        <div class="meta"><span><span class="dot" style="display:inline-block;margin-right:7px;vertical-align:0"></span><b id="lv-status">${t("Round 2 · live")}</b></span><span>${t("Course time")} <b id="lv-clock"></b></span><span>${t("Feed updated")} <b id="lv-upd"></b></span></div>
+/* Every tournament has one page, the same in three states: upcoming, live, final.
+   Leaderboard, tee times and info are three tabs of it. The Live menu item opens the page of the
+   tournament in play; the Season schedule opens any of them. */
+const EVTABS = [["board", "Leaderboard"], ["tee", "Tee times"], ["info", "Info"]];
+const evTab = PREF.get("evtab", {});                    // event id -> the tab last opened there
+const tabOf = e => evTab[e.id] || (e.id === EVENT.id ? "board" : "info");
+const dateRange = e => new Intl.DateTimeFormat(LANG === "es" ? "es-MX" : "en-US", { day: "numeric", month: "long", year: "numeric" })
+  .formatRange(new Date(e.start + "T12:00:00"), new Date(e.end + "T12:00:00"));
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const teeRows = rid => FEED.tee_sheet.filter(g => g.round_id === rid).map(g => `<div class="ev"><span class="n">${g.tee_time.slice(11, 16)}</span>
+  <span><b>${g.players.map(p => `<span class="tp"><i class="sw" style="--c:${CITY[p.team_id].color}"></i><button type="button" class="plink" onclick="goPlayer('${p.id}')">${esc(lastName(PLAYER[p.id].name))}</button></span>`).join(" ")}</b><small>${g.players.map(p => CITY[p.team_id].short).join(" · ")}</small></span>
+  <span class="st">${t("Hole")} ${g.starting_hole}</span></div>`).join("");
+function eventCard(e) {
+  const live = e.id === EVENT.id, tab = tabOf(e), name = esc(L(e, "name"));
+  const venue = e.venue === "TBA" ? "" : esc(e.venue);
+  const notYet = what => `<div class="empty"><b>${name}</b> ${t("has not been played yet.")} ${t("It starts")} ${dateShort(e.start)}. ${what}</div>`;
+  const head = `<div class="lbhead evhead">
+      <div><div class="kicker">${t("Event {n} of {m}").replace("{n}", e.n).replace("{m}", LEAGUE.schedule.length)}${venue ? " · " + venue : ""} · ${dateRange(e)}</div><h2 class="big">${name}</h2></div>
+      <div class="evside">
+        <div class="meta">${live ? `<span><span class="dot" style="display:inline-block;margin-right:7px;vertical-align:0"></span><b id="lv-status">${t("Round 2 · live")}</b></span><span>${t("Course time")} <b id="lv-clock"></b></span><span>${t("Feed updated")} <b id="lv-upd"></b></span>`
+          : `<span><b>${t("Upcoming")}</b></span><span>${t("It starts")} <b>${dateShort(e.start)}</b></span>`}</div>
+        <span class="rt evtabs" role="tablist">${EVTABS.map(([k, label]) => `<button role="tab" data-tab="${k}" class="${k === tab ? "on" : ""}" onclick="setEvTab('${e.id}','${k}')">${t(label)}</button>`).join("")}</span>
       </div>
+    </div>`;
+  const board = live ? `<div class="col l" style="flex-basis:52%">
       <div class="ctrls">
         <button class="pill" id="lv-play" onclick="togglePlay()">${t("▶ Replay scores")}</button>
         <button class="pill" id="lv-stale" onclick="toggleStale()">${t("Simulate feed outage")}</button>
@@ -752,9 +799,51 @@ function liveCard() {
     </div>
     <div class="col r">
       <div class="box grow" id="lv-detail"></div>
+    </div>` : `<div class="col l" style="flex-basis:52%">
+      <div class="box"><div class="legend"><span>${t("Team leaderboard · best")} ${RULES.best_balls} ${t("balls per hole")}</span><span>${t("Upcoming")}</span></div>
+        ${notYet(t("The leaderboard appears here when the first round begins."))}</div>
     </div>
+    <div class="col r">
+      <div class="box"><div class="legend"><span>${t("The field")}</span><span>${LEAGUE.cities.length} ${t("cities")}</span></div>
+        <div class="chips">${LEAGUE.cities.map(c => `<button class="chip" style="--c:${c.color}" onclick="goCity('${c.id}')"><i></i>${esc(c.name)}</button>`).join("")}</div></div>
+      <div class="box"><div class="legend">${t("Format")}</div>
+        <p class="bio">${t("Team best ball over two rounds: on every hole the best")} ${RULES.best_balls} ${t("balls of each city count.")} ${t("Points table")} <b style="color:var(--ink)">${RULES.points.join(" · ")}</b>, ${t("ties share the average.")}</p></div>
+    </div>`;
+  const round = (rid, label) => `<div class="box grow"><div class="legend"><span>${label} · ${dateShort(RDATE[rid])}</span><span>${FEED.tee_sheet.filter(g => g.round_id === rid).length} ${t("groups")}</span></div><div class="sched">${teeRows(rid)}</div></div>`;
+  const tee = live ? `<div class="col l" style="flex-basis:50%">${round("r1", t("Round 1"))}</div><div class="col r">${round("r2", t("Round 2"))}</div>`
+    : `<div class="col r"><div class="box"><div class="legend"><span>${t("Tee times")}</span><span>${t("Upcoming")}</span></div>
+        <div class="empty">${t("Tee times and pairings are published the evening before each round.")} ${t("Follow your city and they reach you as soon as they are out.")}<br><br><button class="pill" onclick="go(SEC.capture)">${t("Follow your city")}</button></div></div></div>`;
+  // the league runs the same six days at every stop, so an event without its own programme shows the standard one
+  const programme = e.programme || EVENT.programme.map((d, i) => ({ ...d, date: addDays(e.start, i) }));
+  const clips = live ? LEAGUE.stories.filter(s => s.kind === "video" && ["s02", "s07", "s16"].includes(s.id)) : [];
+  const info = `<div class="col l">
+      <div class="box grow"><div class="legend"><span>${t("Programme")}</span><span>${e.programme ? t("The four-day experience") : t("Standard programme · to be confirmed")}</span></div>
+        <div class="sched">${programme.map(d => { const on = live && d.date === RDATE.r2; return `<div class="ev ${d.core ? "core" : ""} ${on ? "live" : ""}"><span class="n">${dateShort(d.date).replace(",", "")}</span><span><b>${esc(LANG === "es" ? d.es : d.en)}</b></span><span class="st">${on ? `<span class="dot"></span>${t("Live")}` : d.core ? "●" : ""}</span></div>`; }).join("")}</div></div>
+    </div>
+    <div class="col r">
+      <div class="grid c2">
+        <div class="box"><div class="legend">${t("Venue")}</div><p class="bio">${live ? `<b style="color:var(--ink)">${esc(FEED.event.course.name)}</b><br>${esc(L(e, "city"))}<br>${t("Par 71 · 7,034 yards · tournament tees")}`
+          : `<b style="color:var(--ink)">${venue || t("To be announced")}</b><br>${e.city === "TBA" ? dateRange(e) : esc(L(e, "city"))}`}</p></div>
+        <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc((e.watch || EVENT.watch)[LANG === "es" ? "es" : "en"])}</p></div>
+      </div>
+      ${clips.length ? `<div class="box"><div class="legend">${t("Highlights")}</div>
+        <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${s.photo}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>` : ""}
+    </div>`;
+  return `<div class="card" data-k="event" data-id="${e.id}" data-tab="${tab}" style="--c:${live ? "rgba(57,178,111,.45)" : "rgba(217,173,78,.5)"}"><div class="inner evp">
+    ${head}
+    <div class="evpane" data-pane="board">${board}</div>
+    <div class="evpane" data-pane="tee">${tee}</div>
+    <div class="evpane" data-pane="info">${info}</div>
   </div></div>`;
 }
+function setEvTab(id, tab) {
+  evTab[id] = tab; PREF.set("evtab", evTab);
+  const card = film.querySelector(`.card[data-k="event"][data-id="${id}"]`);
+  card.dataset.tab = tab;
+  card.querySelectorAll(".evtabs button").forEach(b => { b.classList.toggle("on", b.dataset.tab === tab); b.setAttribute("aria-selected", b.dataset.tab === tab); });
+  card.querySelector(".inner").scrollTop = 0;
+}
+function goEvent(id, tab) { if (tab) setEvTab(id, tab); go(CARDS.findIndex(c => c.k === "event" && c.id === id)); }
 
 /* --- stories: the editorial layer as a social flow. One CMS entry = one post,
    published once for web and app. Posts are tagged by city and player, so
@@ -910,7 +999,7 @@ function cityCard(c, i) {
           <div><button class="pill follow" data-follow="${c.id}" onclick="toggleFollow('${c.id}')">${t("Follow")} ${c.short}</button></div></div></div>
       <div class="box"><div class="legend">${t("Season standing")}</div>
         <div class="standing" data-standing="${c.id}"></div></div>
-      <div class="box"><div class="legend">${t("Mayakoba · live")}</div><div class="grid c4" data-citylive="${c.id}"></div></div>
+      <div class="box"><div class="legend"><span>${t("Mayakoba · live")}</span><button type="button" class="plink" onclick="goEvent(EVENT.id,'board')">${t("Full leaderboard")}</button></div><div class="grid c4" data-citylive="${c.id}"></div></div>
       <div class="box grow"><div class="legend">${t("City story")}</div><p class="bio">${esc(L(c, "story"))}</p>
         <div class="legend" style="margin-top:12px">${t("Playing for")}</div><p class="bio"><b style="color:var(--ink)">${esc(c.charity)}</b> · ${t("a share of every league point the team scores goes to the charity.")} <a href="#" onclick="return false">${t("Donate (deferred)")}</a></p></div>
       ${placement(t("Hub presented by"), c.hub_sponsor, "Jan–Oct 2027")}
@@ -946,7 +1035,7 @@ function playerCard(p, n) {
 }
 
 const dateShort = iso => new Date(iso + "T12:00:00").toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { weekday: "short", day: "numeric", month: "short" });
-const schedRows = () => LEAGUE.schedule.map(e => `<div class="ev ${e.status}" ${e.n === 1 ? `onclick="go(SEC.event)" style="cursor:pointer"` : ""}><span class="n">${String(e.n).padStart(2, "0")}</span>
+const schedRows = () => LEAGUE.schedule.map(e => `<div class="ev ${e.status}" onclick="goEvent('${e.id}')" style="cursor:pointer"><span class="n">${String(e.n).padStart(2, "0")}</span>
         <span><b>${esc(L(e, "name"))}</b><small>${esc(e.venue === "TBA" ? t("TBA") : e.venue)} · ${esc(e.city === "TBA" ? t("TBA") : L(e, "city"))} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
         <span class="st">${e.status === "live" ? `<span class="dot"></span>${t("Live")}` : t("Upcoming")}</span></div>`).join("");
 function seasonCard() {
@@ -963,31 +1052,6 @@ function seasonCard() {
         <div class="box cell"><small>${t("Planned markets")}</small><b>18</b></div>
         <div class="box cell"><small>${t("Add a city")}</small><b>${t("No rebuild")}</b></div>
       </div>
-    </div>
-  </div></div>`;
-}
-
-function eventCard() {
-  const e = EVENT;
-  const groups = FEED.tee_sheet.filter(g => g.round_id === "r2").slice(0, 8);
-  const clips = LEAGUE.stories.filter(s => s.kind === "video" && ["s02", "s07", "s16"].includes(s.id));
-  return `<div class="card" data-k="event" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[1]}" alt="" loading="lazy"><div class="inner">
-    <div class="col l">
-      <div class="kicker">${t("Event page")} · ${t("Event 1 of 6")} · ${t("24–29 January 2027")}</div><h2 class="big">Mayakoba</h2>
-      <div class="box grow"><div class="legend"><span>${t("Programme")}</span><span>${t("The four-day experience")}</span></div>
-        <div class="sched">${e.programme.map(d => `<div class="ev ${d.core ? "core" : ""} ${d.date === "2027-01-29" ? "live" : ""}"><span class="n">${dateShort(d.date).replace(",", "")}</span><span><b>${esc(LANG === "es" ? d.es : d.en)}</b></span><span class="st">${d.date === "2027-01-29" ? `<span class="dot"></span>${t("Live")}` : d.core ? "●" : ""}</span></div>`).join("")}</div></div>
-      <div class="grid c2">
-        <div class="box"><div class="legend">${t("Venue")}</div><p class="bio"><b style="color:var(--ink)">${esc(FEED.event.course.name)}</b><br>${esc(L(e, "city"))}<br>${t("Par 71 · 7,034 yards · tournament tees")}</p></div>
-        <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc(LANG === "es" ? e.watch.es : e.watch.en)}</p></div>
-      </div>
-    </div>
-    <div class="col r">
-      <div class="box"><div class="legend"><span>${t("Results")}</span><button class="pill" onclick="go(SEC.live)">${t("Open the live board")}</button></div><div class="lb" id="ev-lb"></div></div>
-      <div class="box grow"><div class="legend"><span>${t("Tee times · Round 2")}</span><span>${t("first groups off the 1st tee")}</span></div>
-        <div class="sched">${groups.map(g => `<div class="ev"><span class="n">${g.tee_time.slice(11, 16)}</span><span><b>${g.players.map(p => `<i class="sw" style="--c:${CITY[p.team_id].color}"></i>${esc(lastName(PLAYER[p.id].name))}`).join(" &nbsp; ")}</b><small>${g.players.map(p => CITY[p.team_id].short).join(" · ")}</small></span><span class="st">${t("Hole")} ${g.starting_hole}</span></div>`).join("")}</div>
-        <div class="lbfoot"><a href="#" onclick="openStory('s08');return false">${t("Pairings and full tee sheet")}</a></div></div>
-      <div class="box"><div class="legend">${t("Highlights")}</div>
-        <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${s.photo}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>
     </div>
   </div></div>`;
 }
@@ -1047,9 +1111,13 @@ const film = document.getElementById("film");
 const lb0 = leaderboard();
 const cityOrder = lb0.map(x => x.c);
 const playerOrder = cityOrder.flatMap(c => LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap));
-const CARDS = [{ k: "story" }, { k: "live" }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
-               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, { k: "event" }, { k: "capture" }, { k: "mission" }];
-const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: CARDS.length - 4, event: CARDS.length - 3, capture: CARDS.length - 2, mission: CARDS.length - 1 };
+/* The tournament in play sits right after the start card, where the Live menu item opens it.
+   The other tournaments follow the Season card, in schedule order. */
+const LATER = LEAGUE.schedule.filter(e => e.id !== EVENT.id);
+const CARDS = [{ k: "story" }, { k: "event", id: EVENT.id }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
+               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, ...LATER.map(e => ({ k: "event", id: e.id })), { k: "mission" }, { k: "capture" }];
+const at = k => CARDS.findIndex(c => c.k === k);
+const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: at("season"), league: at("mission"), capture: at("capture") };
 /* Player cards are most of the page (76 of 94 cards), so only the ones near the current card are drawn.
    Every other player card is an empty slot of the same size until the reader gets close to it. */
 const playerShell = p => `<div class="card" data-k="player" data-id="${p.id}" style="--c:${CITY[p.city].color}"></div>`;
@@ -1073,8 +1141,8 @@ function warmMenu() {
   Object.entries(WARM).forEach(([sec, n]) =>
     [...film.children[SEC[sec]].querySelectorAll('img[loading="lazy"]')].slice(0, n).forEach(img => { img.loading = "eager"; }));
 }
-film.innerHTML = storyCard() + liveCard() + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
-  playerOrder.map(playerShell).join("") + seasonCard() + eventCard() + captureCard() + missionCard();
+film.innerHTML = storyCard() + eventCard(EVENT) + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
+  playerOrder.map(playerShell).join("") + seasonCard() + LATER.map(eventCard).join("") + missionCard() + captureCard();
 const total = CARDS.length;
 let cur = 0, lastPos = {}, lastLeader = null, finalSeen = false;
 
@@ -1117,7 +1185,16 @@ function detail() {
 function hubBox(c) {
   const score = hubScore.has(c.id);
   const sw = `<span class="rt hubsw"><button class="${score ? "" : "on"}" onclick="setHub('${c.id}', false)">${t("Roster")}</button><button class="${score ? "on" : ""}" onclick="setHub('${c.id}', true)">${t("Scorecard")}</button></span>`;
-  if (score) { const g = teamGrid(c.id); return `<div class="legend">${sw}<span>${g.status}</span>${g.rounds}</div>${g.table}`; }
+  if (score) {
+    const ev = LEAGUE.schedule.find(e => e.id === state.event);
+    const pick = `<select class="evsel" aria-label="${t("Tournament")}" onchange="setEvent(this.value)">${LEAGUE.schedule.map(e =>
+      `<option value="${e.id}"${e.id === ev.id ? " selected" : ""}>${esc(L(e, "name"))}${e.status === "live" ? " · " + t("Live") : ""}</option>`).join("")}</select>`;
+    // only the tournament the scoring feed covers has a scorecard; the others have not been played
+    if (ev.id !== EVENT.id) return `<div class="legend hubleg">${sw}${pick}<span>${t("Upcoming")}</span></div>
+      <div class="empty"><b>${esc(L(ev, "name"))}</b> ${t("has not been played yet.")} ${t("It starts")} ${dateShort(ev.start)}${ev.venue === "TBA" ? "" : " · " + esc(ev.venue)}. ${t("The scorecard appears here when the first round begins.")}</div>`;
+    const g = teamGrid(c.id);
+    return `<div class="legend hubleg">${sw}${pick}<span>${g.status.split(" · ").pop()}</span>${g.rounds}</div>${g.table}`;
+  }
   const roster = LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap);
   return `<div class="legend">${sw}<span>${roster.length} ${t("players")} · ${t("Tap a player")}</span></div>
         <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="rtile" onclick="goPlayer('${p.id}')"><span class="ava"><img src="${p.face}" alt="" loading="lazy"></span>
@@ -1128,6 +1205,7 @@ function paintHub(id) {
   redraw(document.querySelector(`[data-hub="${id}"]`), hubBox(CITY[id]));
   if (!hubScore.has(id)) LEAGUE.players.filter(p => p.city === id).forEach(paintPlayer);   // the roster tiles carry live figures
 }
+function setEvent(id) { state.event = id; PREF.set("event", id); hubScore.forEach(paintHub); }
 function setHub(id, score) { score ? hubScore.add(id) : hubScore.delete(id); PREF.set("hubscore", [...hubScore]); paintHub(id); }
 /* One player's live figures: the roster tile always, the card only while it is drawn. */
 function paintPlayer(p) {
@@ -1174,7 +1252,6 @@ function refresh() {
   const final = allFinal(lb);
   document.getElementById("lv-lb").innerHTML = lbRows(lb, false);
   document.getElementById("story-lb").innerHTML = lbRows(lb.slice(0, 5), false);
-  document.getElementById("ev-lb").innerHTML = lbRows(lb.slice(0, 6), true);
   document.getElementById("lv-clock").textContent = fmt(state.clock);
   document.getElementById("lv-upd").textContent = fmt(state.feedClock) + (state.stale ? " ⚠" : "");
   document.getElementById("lv-status").textContent = final ? t("Round 2 · final") : t("Round 2 · live");
@@ -1273,14 +1350,14 @@ function pageInfo(key) { const p = PAGES.find(x => x[0] === key); closeModal("jm
 function jumpEntries() {
   return CARDS.map((c, n) => {
     if (c.k === "story") return { n, sec: t("Start"), label: `${t("Cities.")} ${t("Legends.")} ${t("A cause.")}`, sub: t("League"), color: "var(--acc)" };
-    if (c.k === "live") return { n, sec: t("Start"), label: `${t("Live")} · Mayakoba`, sub: t("Round 2"), color: "var(--live)" };
+    if (c.k === "event" && c.id === EVENT.id) return { n, sec: t("Start"), label: `${t("Live")} · ${L(EVENT, "name")}`, sub: t("Round 2"), color: "var(--live)", q: `${t("Leaderboard")} ${t("Tee times")}` };
+    if (c.k === "event") { const e = LEAGUE.schedule.find(x => x.id === c.id); return { n, sec: t("Season"), label: L(e, "name"), sub: dateRange(e), color: "var(--acc)" }; }
     if (c.k === "stories") return { n, sec: t("Start"), label: t("Stories"), sub: `${LEAGUE.story_count || LEAGUE.stories.length} ${t("posts")}`, color: "var(--acc)" };
     if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: t("City hubs"), label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
     if (c.k === "player") { const pl = PLAYER[c.id], ci = CITY[pl.city]; return { n, sec: t("Players"), label: pl.name, sub: `${ci.short}${pl.captain ? " · C" : ""} · ${pl.team ? pl.sport : L(pl, "role")}`, color: ci.color, q: `${ci.name} ${pl.team || ""} ${pl.role}` }; }
     if (c.k === "season") return { n, sec: t("Season"), label: t("Schedule and standings"), sub: t("6 events"), color: "var(--acc)" };
-    if (c.k === "event") return { n, sec: t("Season"), label: t("Mayakoba · event page"), sub: t("24–29 January 2027"), color: "var(--acc)" };
-    if (c.k === "capture") return { n, sec: t("Season"), label: t("Follow your city"), sub: t("No account needed"), color: "var(--green)" };
-    return { n, sec: t("Season"), label: t("The mission"), sub: t("988 · get involved"), color: "var(--green)" };
+    if (c.k === "capture") return { n, sec: t("League"), label: t("Follow your city"), sub: t("No account needed"), color: "var(--green)" };
+    return { n, sec: t("League"), label: t("The mission"), sub: t("988 · get involved"), color: "var(--green)" };
   });
 }
 const JUMP = jumpEntries();
@@ -1319,18 +1396,19 @@ function go(n) {
   drawNear();
   place();
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
-  const k = CARDS[cur].k;
-  const sec = k === "live" ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event", "capture", "mission"].includes(k) ? "season" : null;
+  const k = CARDS[cur].k, liveEv = k === "event" && CARDS[cur].id === EVENT.id;
+  const sec = liveEv ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event"].includes(k) ? "season" : ["capture", "mission"].includes(k) ? "league" : null;
   document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => b.classList.toggle("on", b.dataset.sec === sec));
-  document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : k === "live" ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
-    k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` : t("· Season");
+  document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : liveEv ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
+    k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` :
+    k === "event" ? `· ${t("Season")} · ${L(LEAGUE.schedule.find(e => e.id === CARDS[cur].id), "name")}` : k === "season" ? t("· Season") : `· ${t("League")}`;
   location.hash = cur ? "#" + (cur + 1) : "";
   film.children[cur].querySelector(".inner").scrollTop = 0;
 }
 const next = () => go(cur + 1 >= total ? 0 : cur + 1), prev = () => go(cur - 1);
-/* The double arrows move a section at a time: start, live, stories, cities, players, season.
+/* The double arrows move a section at a time: start, live, stories, cities, players, season, league.
    Back goes to the start of the current section first, then to the one before it. */
-const STOPS = [0, SEC.live, SEC.stories, SEC.cities, SEC.players, SEC.season];
+const STOPS = [0, SEC.live, SEC.stories, SEC.cities, SEC.players, SEC.season, SEC.league];
 const nextSec = () => go(STOPS.find(n => n > cur) ?? 0), prevSec = () => go([...STOPS].reverse().find(n => n < cur) ?? 0);
 document.getElementById("b-next").onclick = next;
 document.getElementById("b-prev").onclick = prev;
@@ -1386,7 +1464,7 @@ addEventListener("keydown", e => {
   if (e.key === "Home") go(0);
   if (e.key === "End") go(total - 1);
   if (e.key === "f") document.getElementById("b-full").click();
-  if (e.key === "p" && CARDS[cur].k === "live") togglePlay();
+  if (e.key === "p" && CARDS[cur].k === "event" && CARDS[cur].id === EVENT.id) togglePlay();
   if (e.key === "/" && CARDS[cur].k === "stories") { e.preventDefault(); document.getElementById("st-q").focus(); }
 });
 let tx = 0, ty = 0;
