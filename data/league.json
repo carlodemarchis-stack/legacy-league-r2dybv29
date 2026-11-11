@@ -1898,14 +1898,14 @@
    "kind": "video",
    "topic": "city",
    "at": "2027-01-29T12:10",
-   "author": "Dallas desk",
+   "author": "Boston desk",
    "title": "{p0}'s eagle on 13, from three angles",
-   "dek": "The captain had not made an eagle since Del Mar. Then he hit a 5-wood to six feet.",
+   "dek": "The captain had not made an eagle since Del Mar. Then came a 5-wood to six feet.",
    "cities": [
-    "dal"
+    "bos"
    ],
    "players": [
-    "p1030"
+    "p1013"
    ],
    "dur": "0:48",
    "likes": 2140,
@@ -1915,13 +1915,13 @@
    "size": "l",
    "body": [
     "The 13th at El Camaleón is the par five everyone circles: 532 yards, reachable with a good drive, water left of the green. {p0} found the fairway, then hit a 5-wood that never left the flag and stopped six feet past.",
-    "The putt went in dead centre and the team line for {c0} dropped two shots in one hole. It was the first eagle of the league season and, by the captain's own count, his first since the Del Mar exhibition."
+    "The putt went in dead centre and the team line for {c0} dropped two shots in one hole. It was the first eagle by a captain this season and, by the captain's own count, the first since the Del Mar exhibition."
    ],
    "title_es": "El eagle de {p0} en el 13, desde tres ángulos",
    "dek_es": "El capitán no hacía un eagle desde Del Mar. Entonces pegó una madera 5 a dos metros.",
    "body_es": [
     "El 13 de El Camaleón es el par cinco que todos marcan: 532 yardas, alcanzable con un buen drive, agua a la izquierda del green. {p0} encontró la calle y pegó una madera 5 que nunca se separó de la bandera y se paró a dos metros.",
-    "El putt entró por el centro y la línea de equipo de {c0} bajó dos golpes en un solo hoyo. Fue el primer eagle de la temporada de liga y, según el propio capitán, el primero desde la exhibición de Del Mar."
+    "El putt entró por el centro y la línea de equipo de {c0} bajó dos golpes en un solo hoyo. Fue el primer eagle de un capitán esta temporada y, según el propio capitán, el primero desde la exhibición de Del Mar."
    ]
   },
   {
@@ -1930,11 +1930,12 @@
    "topic": "league",
    "at": "2027-01-29T09:30",
    "author": "Legacy League",
-   "title": "Round 1 recap: Dallas lead a bunched field at −17",
-   "dek": "Five cities inside four shots. Chicago's back nine of −9 was the round of the day; Miami lost two balls to the wind on 16 and never recovered.",
+   "title": "Round 1 recap: Chicago lead a bunched field at −17",
+   "dek": "Five cities inside four shots. Philadelphia's back nine of −11 was the charge of the day; Miami dropped two shots at the 9th and finished last.",
    "cities": [
-    "dal",
     "chi",
+    "dal",
+    "phi",
     "mia"
    ],
    "players": [],
@@ -1944,52 +1945,14 @@
    "photos": [],
    "size": "xl",
    "body": [
-    "Five cities finished round one inside four shots of each other, which is roughly what the format promised. Dallas led after a steady day in which seven players contributed at least one counted ball, and nobody posted worse than a bogey on a counted hole.",
-    "Chicago were the movers. A back nine of nine under, built on three birdies in a row from the 14th, took them from the middle of the board to second. Miami's two lost balls on 16, both to the same gust, cost them a counted double and the chance of a top-five start."
+    "Five cities finished round one inside four shots of each other, which is roughly what the format promised. Chicago led after a day in which all eight players contributed at least one counted ball and the team never counted worse than a par. They are three clear of Dallas and Philadelphia, who share second at −14.",
+    "Philadelphia were the movers. A back nine of eleven under, with two birdies on each of the last two holes, took them from joint last at the turn to a share of second. Miami went the other way: two counted bogeys at the 9th cost them two shots, and they finished last at −5."
    ],
-   "title_es": "Resumen de la Ronda 1: Dallas lidera un pelotón apretado con −17",
-   "dek_es": "Cinco ciudades en cuatro golpes. Los −9 de Chicago en la segunda vuelta fueron la vuelta del día; Miami perdió dos bolas con el viento en el 16 y no se recuperó.",
+   "title_es": "Resumen de la Ronda 1: Chicago lidera un pelotón apretado con −17",
+   "dek_es": "Cinco ciudades en cuatro golpes. Los −11 de Filadelfia en la segunda vuelta fueron la remontada del día; Miami cedió dos golpes en el 9 y terminó último.",
    "body_es": [
-    "Cinco ciudades terminaron la primera ronda a menos de cuatro golpes entre sí, que es más o menos lo que prometía el formato. Dallas lideró tras un día sólido en el que siete jugadores aportaron al menos una bola contada y nadie firmó peor que bogey en un hoyo contado.",
-    "Chicago fue el equipo que más se movió. Una segunda vuelta de nueve bajo par, construida sobre tres birdies seguidos desde el 14, los llevó de la mitad de la tabla al segundo puesto. Las dos bolas que Miami perdió en el 16, ambas con la misma racha de viento, les costaron un doble contado y la opción de empezar entre los cinco primeros."
-   ]
-  },
-  {
-   "id": "s04",
-   "kind": "gallery",
-   "topic": "city",
-   "at": "2027-01-28T21:05",
-   "author": "Legacy League",
-   "title": "Celebrity-Am at Mayakoba: 24 pictures",
-   "dek": "The night before it counts. Pairings dinner on the beach, the Am draw, and a very long putt from a very famous comedian.",
-   "cities": [
-    "lax",
-    "nyc",
-    "mia"
-   ],
-   "players": [
-    "p1028",
-    "p1061"
-   ],
-   "count": 24,
-   "likes": 3310,
-   "comments": 128,
-   "photo": "img/course/R2026026.webp",
-   "photos": [
-    "img/course/R2026026.webp",
-    "img/course/R2026041.webp",
-    "img/action/file-afa-charity-golf-tournament-7293244.jpg"
-   ],
-   "size": "m",
-   "body": [
-    "The Celebrity-Am is the one day of the week with no points on the line and the only one where the crowd is allowed inside the ropes. Twenty-four pictures from an evening that started with the pairings draw on the beach and ended with a very long putt from a very famous comedian.",
-    "Every picture in this gallery is tagged by city and player, so it also appears on the hubs and the player cards of everyone in it."
-   ],
-   "title_es": "Celebrity-Am en Mayakoba: 24 fotos",
-   "dek_es": "La noche antes de que cuente. Cena de emparejamientos en la playa, el sorteo del Am y un putt muy largo de un humorista muy famoso.",
-   "body_es": [
-    "El Celebrity-Am es el único día de la semana sin puntos en juego y el único en que el público puede entrar dentro de las cuerdas. Veinticuatro fotos de una velada que empezó con el sorteo de emparejamientos en la playa y terminó con un putt muy largo de un humorista muy famoso.",
-    "Cada foto de esta galería está etiquetada por ciudad y jugador, así que aparece también en los hubs y en las fichas de todos los que salen en ella."
+    "Cinco ciudades terminaron la primera ronda a menos de cuatro golpes entre sí, que es más o menos lo que prometía el formato. Chicago lideró tras un día en el que sus ocho jugadores aportaron al menos una bola contada y el equipo nunca contó nada peor que un par. Aventaja en tres golpes a Dallas y Filadelfia, que comparten el segundo puesto con −14.",
+    "Filadelfia fue el equipo que más se movió. Una segunda vuelta de once bajo par, con dos birdies en cada uno de los dos últimos hoyos, los llevó del último puesto compartido al paso por el 9 a compartir el segundo. Miami hizo el camino contrario: dos bogeys contados en el 9 le costaron dos golpes y terminó último con −5."
    ]
   },
   {
@@ -2034,7 +1997,7 @@
     "phi"
    ],
    "players": [
-    "p1037"
+    "p1038"
    ],
    "dur": "22:14",
    "likes": 4410,
@@ -2059,14 +2022,14 @@
    "topic": "city",
    "at": "2027-01-28T15:00",
    "author": "Chicago desk",
-   "title": "Chicago's back nine, hole by hole",
-   "dek": "Nine holes, nine under. Every counted ball and who made it.",
+   "title": "Chicago's front nine, hole by hole",
+   "dek": "Nine holes, eleven under. Every counted ball and who made it.",
    "cities": [
     "chi"
    ],
    "players": [
     "p1001",
-    "p1003"
+    "p1004"
    ],
    "dur": "3:02",
    "likes": 1760,
@@ -2075,14 +2038,14 @@
    "photos": [],
    "size": "l",
    "body": [
-    "Nine holes, nine under. This cut shows every counted ball on Chicago's back nine on Thursday: who hit it, from where, and which of the two scores it replaced on the team card.",
-    "The run started with three birdies in a row from the 14th and ended with the captain's long two-putt on 18 that kept the par and the position."
+    "Nine holes, eleven under. This cut shows every counted ball on Chicago's front nine on Thursday: who hit it, from where, and which of the two scores it replaced on the team card.",
+    "The run started with two birdies at the 1st and ended with two more at the 9th, one of them the captain's. In between, the 6th and the 7th were each played in two under."
    ],
-   "title_es": "La segunda vuelta de Chicago, hoyo a hoyo",
-   "dek_es": "Nueve hoyos, nueve bajo par. Cada bola contada y quién la hizo.",
+   "title_es": "La primera vuelta de Chicago, hoyo a hoyo",
+   "dek_es": "Nueve hoyos, once bajo par. Cada bola contada y quién la hizo.",
    "body_es": [
-    "Nueve hoyos, nueve bajo par. Este montaje muestra cada bola contada de la segunda vuelta de Chicago el jueves: quién la pegó, desde dónde y a cuál de los dos resultados sustituyó en la tarjeta del equipo.",
-    "La racha empezó con tres birdies seguidos desde el 14 y terminó con el largo dos putts del capitán en el 18 que salvó el par y la posición."
+    "Nueve hoyos, once bajo par. Este montaje muestra cada bola contada de la primera vuelta de Chicago el jueves: quién la pegó, desde dónde y a cuál de los dos resultados sustituyó en la tarjeta del equipo.",
+    "La racha empezó con dos birdies en el 1 y terminó con otros dos en el 9, uno de ellos del capitán. Entre medias, el 6 y el 7 se jugaron cada uno en dos bajo par."
    ]
   },
   {
@@ -2092,7 +2055,7 @@
    "at": "2027-01-28T07:00",
    "author": "Legacy League",
    "title": "Pairings and tee times for Round 1",
-   "dek": "Groups of three, one city each, off the first tee from 08:00 local. Follow your city to get your times pushed.",
+   "dek": "Groups of three from three different cities, off the first tee from 08:00 local. Follow your city to get your times pushed.",
    "cities": [],
    "players": [],
    "likes": 620,
@@ -2101,14 +2064,52 @@
    "photos": [],
    "size": "s",
    "body": [
-    "Groups of three, one player from each city, off the first tee from 08:00 local time at eleven-minute intervals. Captains were drawn into the first seven groups so that every city has a counted score on the board early.",
+    "Groups of three, each player from a different city, off the first tee from 08:00 local time at eleven-minute intervals. There are twenty-six tee times and the last is at 12:35.",
     "Follow your city and tee times will be pushed to you the evening before each round, together with the round leaders and the final result."
    ],
    "title_es": "Emparejamientos y horarios de salida de la Ronda 1",
-   "dek_es": "Grupos de tres, una ciudad cada uno, desde el tee del 1 a partir de las 08:00 hora local. Sigue a tu ciudad para recibir tus horarios.",
+   "dek_es": "Grupos de tres de tres ciudades distintas, desde el tee del 1 a partir de las 08:00 hora local. Sigue a tu ciudad para recibir tus horarios.",
    "body_es": [
-    "Grupos de tres, un jugador de cada ciudad, desde el tee del 1 a partir de las 08:00 hora local, con intervalos de once minutos. Los capitanes se sortearon en los siete primeros grupos para que cada ciudad tenga pronto un resultado contado en la clasificación.",
+    "Grupos de tres, cada jugador de una ciudad distinta, desde el tee del 1 a partir de las 08:00 hora local, con intervalos de once minutos. Hay veintiséis horarios de salida y el último es a las 12:35.",
     "Sigue a tu ciudad y recibirás los horarios de salida la víspera de cada ronda, junto con los líderes de la ronda y el resultado final."
+   ]
+  },
+  {
+   "id": "s04",
+   "kind": "gallery",
+   "topic": "city",
+   "at": "2027-01-27T21:05",
+   "author": "Legacy League",
+   "title": "Celebrity-Am at Mayakoba: 24 pictures",
+   "dek": "The night before it counts. Pairings dinner on the beach, the Am draw, and a very long putt from a very famous comedian.",
+   "cities": [
+    "lax",
+    "nyc",
+    "mia"
+   ],
+   "players": [
+    "p1028",
+    "p1061"
+   ],
+   "count": 24,
+   "likes": 3310,
+   "comments": 128,
+   "photo": "img/course/R2026026.webp",
+   "photos": [
+    "img/course/R2026026.webp",
+    "img/course/R2026041.webp",
+    "img/action/file-afa-charity-golf-tournament-7293244.jpg"
+   ],
+   "size": "m",
+   "body": [
+    "The Celebrity-Am is the one day of the week with no points on the line and the only one where the crowd is allowed inside the ropes. Twenty-four pictures from an evening that started with the pairings draw on the beach and ended with a very long putt from a very famous comedian.",
+    "Every picture in this gallery is tagged by city and player, so it also appears on the hubs and the player cards of everyone in it."
+   ],
+   "title_es": "Celebrity-Am en Mayakoba: 24 fotos",
+   "dek_es": "La noche antes de que cuente. Cena de emparejamientos en la playa, el sorteo del Am y un putt muy largo de un humorista muy famoso.",
+   "body_es": [
+    "El Celebrity-Am es el único día de la semana sin puntos en juego y el único en que el público puede entrar dentro de las cuerdas. Veinticuatro fotos de una velada que empezó con el sorteo de emparejamientos en la playa y terminó con un putt muy largo de un humorista muy famoso.",
+    "Cada foto de esta galería está etiquetada por ciudad y jugador, así que aparece también en los hubs y en las fichas de todos los que salen en ella."
    ]
   },
   {
@@ -2154,7 +2155,7 @@
    "at": "2027-01-27T16:00",
    "author": "Legacy League",
    "title": "City documentary: New York, trailer",
-   "dek": "Six boroughs, five franchises, one team. The first of eleven city films, coming through the season.",
+   "dek": "Five boroughs, six franchises, one team. The first of eleven city films, coming through the season.",
    "cities": [
     "nyc"
    ],
@@ -2170,7 +2171,7 @@
     "The full film premieres on this platform in March. The trailer is ninety seconds and ends on a shot of the 7 train."
    ],
    "title_es": "Documental de ciudad: Nueva York, tráiler",
-   "dek_es": "Seis distritos, cinco franquicias, un equipo. La primera de once películas de ciudad, a lo largo de la temporada.",
+   "dek_es": "Cinco distritos, seis franquicias, un equipo. La primera de once películas de ciudad, a lo largo de la temporada.",
    "body_es": [
     "La primera de once películas de ciudad, una por mercado, cada una contando la historia de una ciudad a través de los deportistas que jugaron por ella y de la organización benéfica a la que apoya su equipo. Nueva York va primero porque Nueva York insistió.",
     "La película completa se estrena en esta plataforma en marzo. El tráiler dura noventa segundos y termina con un plano del tren 7."
@@ -2239,8 +2240,8 @@
    "topic": "city",
    "at": "2027-01-25T19:20",
    "author": "Detroit desk",
-   "title": "“I played fourteen years in that city. I owe it a few birdies.”",
-   "dek": "Detroit's captain on why he said yes.",
+   "title": "“I played eleven years in that city. I owe it a few birdies.”",
+   "dek": "Detroit's captain on saying yes.",
    "cities": [
     "det"
    ],
@@ -2253,13 +2254,13 @@
    "photos": [],
    "size": "m",
    "body": [
-    "{p0} played fourteen seasons in Detroit and never considered playing for anyone else, in any sport. Asked why he said yes to a golf league, the answer took four seconds.",
+    "{p0} played eleven seasons in Detroit and never considered playing for anyone else, in any sport. Asked why a golf league got a yes, the answer took four seconds.",
     "The full interview runs on the Detroit hub, together with the roster and the city's charity partner."
    ],
-   "title_es": "«Jugué catorce años en esa ciudad. Le debo unos cuantos birdies.»",
+   "title_es": "«Jugué once años en esa ciudad. Le debo unos cuantos birdies.»",
    "dek_es": "El capitán de Detroit explica por qué dijo que sí.",
    "body_es": [
-    "{p0} jugó catorce temporadas en Detroit y nunca se planteó jugar para nadie más, en ningún deporte. Preguntado por qué dijo que sí a una liga de golf, la respuesta tardó cuatro segundos.",
+    "{p0} jugó once temporadas en Detroit y nunca se planteó jugar para nadie más, en ningún deporte. Preguntado por qué dijo que sí a una liga de golf, la respuesta tardó cuatro segundos.",
     "La entrevista completa está en el hub de Detroit, junto con la plantilla y la organización benéfica de la ciudad."
    ]
   },
@@ -2391,7 +2392,7 @@
    "at": "2026-11-15T22:00",
    "author": "Miami desk",
    "title": "Miami's roster, announced",
-   "dek": "Dolphins, Heat and Marlins. Seven players, one broadcaster, zero handicaps under five.",
+   "dek": "Dolphins and Marlins. Five players, one actor, two handicaps under five.",
    "cities": [
     "mia"
    ],
@@ -2400,7 +2401,7 @@
     "p1059",
     "p1060"
    ],
-   "count": 9,
+   "count": 6,
    "likes": 1120,
    "comments": 39,
    "photo": "img/action/file-dsc-6915-a-golfer-in-a-straw-hat-an.jpg",
@@ -2411,14 +2412,14 @@
    ],
    "size": "m",
    "body": [
-    "Dolphins, Heat and Marlins. Seven players and one broadcaster who insists he is the best putter on the team. Miami's roster was the last of the eleven to be announced and the first to sell out its Celebrity-Am places.",
-    "Nine portraits from the announcement day, tagged to each player's card."
+    "Dolphins and Marlins. Five players and one actor who claims to be the best putter on the team. Miami's roster was the last of the eleven to be announced and the first to sell out its Celebrity-Am places.",
+    "Six portraits from the announcement day, tagged to each player's card."
    ],
    "title_es": "La plantilla de Miami, anunciada",
-   "dek_es": "Dolphins, Heat y Marlins. Siete jugadores, un presentador, ningún hándicap por debajo de cinco.",
+   "dek_es": "Dolphins y Marlins. Cinco jugadores, un actor, dos hándicaps por debajo de cinco.",
    "body_es": [
-    "Dolphins, Heat y Marlins. Siete jugadores y un presentador que insiste en que es el mejor pateador del equipo. La plantilla de Miami fue la última de las once en anunciarse y la primera en agotar sus plazas del Celebrity-Am.",
-    "Nueve retratos del día del anuncio, etiquetados a la ficha de cada jugador."
+    "Dolphins y Marlins. Cinco jugadores y un actor que insiste en que es el mejor pateador del equipo. La plantilla de Miami fue la última de las once en anunciarse y la primera en agotar sus plazas del Celebrity-Am.",
+    "Seis retratos del día del anuncio, etiquetados a la ficha de cada jugador."
    ]
   }
  ],
