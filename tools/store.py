@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""The content store: published stories and their photos, kept in a Cloudflare R2 bucket.
+
+    python3 tools/store.py push        send what changed, then the index
+    python3 tools/store.py push --dry  say what would be sent, send nothing
+
+What goes up, under the bucket's root:
+  stories/index.json            every published story as the page lists it (no article text), newest first
+  stories/<id>.<hash>.json      one article text each, English and Spanish; the name carries a hash of the content
+  photos/<path>                 the pictures those stories use (img/<path> in the project)
+
+The site on Cloudflare hands these out under /content/ (worker/index.js). The page asks for the index when it
+opens and shows what it finds, so a story published here appears without rebuilding the page.
+
+Files go up through wrangler, with the Cloudflare login already on this machine: no keys are kept here.
+A list of what was sent last time (.store-sent.json, not in git) keeps a push to what changed.
+"""
+import concurrent.futures, glob, hashlib, json, mimetypes, os, pathlib, shutil, subprocess, sys, tempfile
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import build  # noqa: E402  the build's own reader: the store and the page list the same stories in the same order
+
+BUCKET = "legacy-league-content"
+SENT = ROOT / ".store-sent.json"
+PREFIX = "content/"                      # where the site serves the bucket
+
+
+def _npx():
+    """wrangler runs through npx. A program started by the Claude app has a short PATH, so look where node usually is."""
+    found = shutil.which("npx")
+    if not found:
+        places = sorted(glob.glob(os.path.expanduser("~/.nvm/versions/node/*/bin/npx"))) + ["/opt/homebrew/bin/npx", "/usr/local/bin/npx"]
+        found = next((p for p in reversed(places) if os.path.exists(p)), None)
+    if not found:
+        raise SystemExit("npx (Node.js) was not found, so nothing can be sent to the store.")
+    return found
+
+
+def collect():
+    """key -> bytes for everything the store should hold, and the index last."""
+    objects = {}
+
+    def photo(path):
+        if not isinstance(path, str) or not path.startswith("img/"):
+            return path                                    # a web address, or nothing: left as it is
+        src = ROOT / path
+        if not src.exists():
+            return path
+        key = "photos/" + path[4:]
+        objects[key] = src.read_bytes()
+        return PREFIX + key
+
+    tiles = []
+    for s in build.load_content()["stories"]:
+        s = dict(s)
+        body = {k: s.pop(k) for k in ("body", "body_es") if k in s}
+        if body:
+            raw = json.dumps(body, ensure_ascii=False).encode()
+            key = f"stories/{s['id']}.{hashlib.sha1(raw).hexdigest()[:8]}.json"
+            objects[key] = raw
+            s["body_ref"] = PREFIX + key
+        if s.get("photo"):
+            s["photo"] = photo(s["photo"])
+        if s.get("photos"):
+            s["photos"] = [photo(p) for p in s["photos"]]
+        tiles.append(s)
+    raw = json.dumps(tiles, ensure_ascii=False)
+    index = {"rev": hashlib.sha1(raw.encode()).hexdigest()[:12], "stories": tiles}
+    return objects, json.dumps(index, ensure_ascii=False).encode()
+
+
+def _put(npx, key, data):
+    kind = mimetypes.guess_type(key)[0] or "application/octet-stream"
+    with tempfile.NamedTemporaryFile(suffix=pathlib.Path(key).suffix, delete=False) as f:
+        f.write(data)
+    try:
+        env = dict(os.environ, PATH=os.path.dirname(npx) + os.pathsep + os.environ.get("PATH", ""))
+        r = subprocess.run([npx, "--yes", "wrangler", "r2", "object", "put", f"{BUCKET}/{key}", "--file", f.name,
+                            "--content-type", kind, "--remote"], capture_output=True, text=True, cwd=ROOT, env=env)
+        if r.returncode != 0:
+            raise RuntimeError(f"{key}: {(r.stderr or r.stdout).strip()[-300:]}")
+    finally:
+        os.unlink(f.name)
+    return key
+
+
+def push(dry=False):
+    objects, index = collect()
+    sent = json.loads(SENT.read_text()) if SENT.exists() else {}
+    sha = lambda b: hashlib.sha1(b).hexdigest()
+    todo = {k: v for k, v in objects.items() if sent.get(k) != sha(v)}
+    rev = json.loads(index)["rev"]
+    result = {"stories": len(json.loads(index)["stories"]), "rev": rev, "sent": sorted(todo), "index_changed": sent.get("stories/index.json") != sha(index)}
+    if dry:
+        return result
+    npx = _npx()
+    with concurrent.futures.ThreadPoolExecutor(6) as pool:      # article texts and photos first
+        for key in pool.map(lambda kv: _put(npx, *kv), todo.items()):
+            sent[key] = sha(objects[key])
+            SENT.write_text(json.dumps(sent, indent=0))
+    if result["index_changed"]:                                  # the index last: it must never point at a file not yet there
+        _put(npx, "stories/index.json", index)
+        sent["stories/index.json"] = sha(index)
+        SENT.write_text(json.dumps(sent, indent=0))
+    return result
+
+
+if __name__ == "__main__":
+    if sys.argv[1:2] != ["push"]:
+        raise SystemExit(__doc__)
+    out = push(dry="--dry" in sys.argv)
+    print(json.dumps({**out, "sent": len(out["sent"])}))
+    for k in out["sent"]:
+        print("  " + k)

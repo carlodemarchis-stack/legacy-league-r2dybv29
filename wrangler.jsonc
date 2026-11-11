@@ -1,0 +1,10 @@
+{
+  // The demo on Cloudflare. The files in .site/ are served as they are; worker/index.js adds one thing:
+  // /content/* is read from the content store (the R2 bucket), which stays private otherwise.
+  // tools/publish_cloudflare.sh builds the page, fills .site/ and deploys. tools/store.py fills the bucket.
+  "name": "legacy-league-7awe9upn",
+  "compatibility_date": "2026-11-01",
+  "main": "worker/index.js",
+  "assets": { "directory": "./.site", "binding": "ASSETS" },
+  "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }]
+}

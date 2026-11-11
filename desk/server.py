@@ -40,6 +40,7 @@ INBOX = Path(os.environ.get("DESK_PHOTO_INBOX", "~/Downloads")).expanduser()   #
 PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp", ".heic")
 LIVE_URL = "https://carlodemarchis-stack.github.io/legacy-league-r2dybv29/"
 LOCAL_URL = "http://localhost:8793/#3"
+STORE_URL = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/#3"   # the site that reads the content store
 
 CITY = {c["id"]: c for c in LEAGUE["cities"]}
 PLAYER = {p["id"]: p for p in LEAGUE["players"]}
@@ -57,8 +58,10 @@ mcp = FastMCP(
         "Use live_board when a story quotes scores and city_round to name the players behind them. "
         "Read a story with get_story before changing it. An editor's own photo comes from the photo inbox: "
         "photo_inbox lists what is waiting, add_photo attaches one. "
-        "render_site previews locally; "
-        "deploy_site(confirm=True) publishes to the public demo and must be asked for explicitly."
+        "publish_story is public at once: it sends the story to the content store, and the site that reads the store "
+        "shows it on its next load. So ask the editor before publishing, and before changing, unpublishing or deleting "
+        "a story that is already published. render_site previews locally; "
+        "deploy_site(confirm=True) also rebuilds and pushes the page itself and must be asked for explicitly."
     ),
 )
 
@@ -150,6 +153,21 @@ def _write_es(sid: str, title_es: Optional[str], dek_es: Optional[str], body_es:
     if dek_es: es["dek"] = dek_es.strip()
     if body_es: es["body"] = _paras(body_es)
     _write(es, p.name)
+
+
+def _live(s: dict) -> bool:
+    return s.get("status", "published") == "published"
+
+
+def _store_push() -> dict:
+    """Send the published stories and their photos to the content store (tools/store.py). The site that reads the
+    store shows the change on its next load; no page is rebuilt."""
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "store.py"), "push"], capture_output=True, text=True, cwd=ROOT)
+    ok = r.returncode == 0
+    line = (r.stdout.strip().splitlines() or [""])[0] if ok else (r.stderr or r.stdout).strip()[-300:]
+    _log("store_push", {}, line)
+    return {"ok": True, "live": STORE_URL, "detail": line} if ok else {"ok": False, "error": line,
+            "note": "The story file is saved, but the content store was not updated. Nothing changed on the public site."}
 
 
 def _inbox_files() -> list[Path]:
@@ -458,7 +476,10 @@ def add_photo(id: str, file: str, credit: Optional[str] = None) -> dict:
     s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
     _write(s)
     _log("add_photo", {"id": id, "file": file}, s["photo"])
-    return {"ok": True, "story": _public(s), "kb": round(out.stat().st_size / 1024), "next": "render_site() to preview."}
+    out_ = {"ok": True, "story": _public(s), "kb": round(out.stat().st_size / 1024), "next": "render_site() to preview."}
+    if _live(s):
+        out_["store"] = _store_push()                         # already public: the new picture goes to the store now
+    return out_
 
 
 @mcp.tool()
@@ -485,13 +506,17 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
     _write(s)
     _write_es(id, title_es, dek_es, body_es)
     _log("update_story", {"id": id}, "updated")
-    return {"ok": True, "story": _public(s)}
+    out = {"ok": True, "story": _public(s)}
+    if _live(s):
+        out["store"] = _store_push()                          # already public: the change goes to the store now
+    return out
 
 
 @mcp.tool()
 def publish_story(id: str, schedule_at: Optional[str] = None) -> dict:
-    """Publish a draft (status -> published) or schedule it (ISO time, status -> scheduled). Publishing changes the local
-    build on the next render_site(); the public demo changes only with deploy_site(confirm=True)."""
+    """Publish a draft (status -> published) or schedule it (ISO time, status -> scheduled). Publishing is PUBLIC at once:
+    the story goes to the content store, and the site that reads the store shows it on its next load. Ask the editor first.
+    A scheduled story is not sent until something is published after its time has come."""
     s = _story(id)
     s["status"] = "scheduled" if schedule_at else "published"
     if schedule_at:
@@ -499,27 +524,39 @@ def publish_story(id: str, schedule_at: Optional[str] = None) -> dict:
     s["published_by"], s["published_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
     _write(s)
     _log("publish_story", {"id": id, "schedule_at": schedule_at}, s["status"])
-    return {"ok": True, "story": _public(s), "next": "render_site() to preview locally."}
+    out = {"ok": True, "story": _public(s)}
+    if _live(s):
+        out["store"] = _store_push()
+    else:
+        out["next"] = "Scheduled. It is sent to the content store with the first publish after its time has come."
+    return out
 
 
 @mcp.tool()
 def unpublish_story(id: str) -> dict:
-    """Take a story back to draft."""
+    """Take a story back to draft. If it was published, it leaves the public site at once (the content store is updated)."""
     s = _story(id)
+    was_live = _live(s)
     s["status"] = "draft"
     _write(s)
     _log("unpublish_story", {"id": id}, "draft")
-    return {"ok": True, "story": _public(s)}
+    out = {"ok": True, "story": _public(s)}
+    if was_live:
+        out["store"] = _store_push()
+    return out
 
 
 @mcp.tool()
 def delete_story(id: str) -> dict:
-    """Delete a story permanently (its Spanish file too)."""
+    """Delete a story permanently (its Spanish file too). If it was published, it leaves the public site at once."""
     s = _story(id)
     for p in (STORIES / f"{id}.md", STORIES / f"{id}.es.md"):
         p.unlink(missing_ok=True)
     _log("delete_story", {"id": id, "title": s["title"]}, "deleted")
-    return {"ok": True, "deleted": id}
+    out = {"ok": True, "deleted": id}
+    if _live(s):
+        out["store"] = _store_push()
+    return out
 
 
 @mcp.tool()

@@ -769,9 +769,14 @@ const LEGEND = () => LEGEND_P() + `<span><i class="sq prov team" style="width:14
 const LEGEND_PLAYER = () => LEGEND_P() + `</div>`;
 const placement = (label, name, when) => `<div class="placement"><span class="pl-lab">${label}</span><i class="pl-logo">${esc(name)}</i><span class="pl-sched"><b>${t("Scheduled")}</b> · ${when} · ${t("impressions and clicks reported")}</span></div>`;
 
-function storyCard() {
-  // the newest stories with a picture; the live result is the board on this card already, a quote has no headline
+/* The newest stories with a picture, for the start card. The live result is the board on that card already,
+   and a quote has no headline. */
+function newsTiles() {
   const news = LEAGUE.stories.filter(s => s.photo && !["result", "quote"].includes(s.kind)).slice(0, 5);
+  return news.map(s => `<button type="button" class="ntile" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
+      <span class="ntile-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kind)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("");
+}
+function storyCard() {
   return `<div class="card" data-k="story" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[0]}" alt=""><div class="inner home">
    <div class="hometop">
     <div class="col l" style="justify-content:center">
@@ -796,8 +801,7 @@ function storyCard() {
     </div>
    </div>
    <div class="hnews"><div class="legend"><span>${t("Latest stories")}</span><button type="button" class="plink" onclick="go(SEC.stories)">${t("All stories")} ›</button></div>
-    <div class="hnrow">${news.map(s => `<button type="button" class="ntile" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
-      <span class="ntile-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kind)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("")}</div></div>
+    <div class="hnrow" id="hnrow">${newsTiles()}</div></div>
   </div></div>`;
 }
 
@@ -1524,7 +1528,24 @@ go(start ? start - 1 : 0);
 (window.requestIdleCallback || setTimeout)(warmMenu);
 /* The page carries the newest stories. Older ones arrive once the first screen is up. */
 if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
-  fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { LEAGUE.stories.push(...older); renderFeed(); }).catch(() => {}));
+  fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { if (!storeRev) { LEAGUE.stories.push(...older); renderFeed(); } }).catch(() => {}));
+/* Where the site is served with a content store behind it, the stories come from there: the page asks for the
+   store's list when it opens and each time the reader comes back to it, so a story published in the store shows
+   without a new page. Anywhere else the request finds nothing and the stories in the page stand. */
+let storeRev = null;
+function loadStore() {
+  fetch("content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
+    if (!ix || !Array.isArray(ix.stories) || ix.rev === storeRev) return;
+    const name = ref => (ref || "").split("/").pop();           // an article text already fetched is kept
+    const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
+    ix.stories.forEach(s => { const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; if (o.body_es) s.body_es = o.body_es; } });
+    storeRev = ix.rev; LEAGUE.stories = ix.stories; LEAGUE.story_count = ix.stories.length;
+    renderFeed();
+    document.getElementById("hnrow").innerHTML = newsTiles();
+  }).catch(() => {});
+}
+(window.requestIdleCallback || setTimeout)(loadStore);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadStore(); });
 </script>
 </body>
 </html>

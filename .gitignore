@@ -11,3 +11,6 @@ app/android/app/src/main/assets/
 app/android/.gradle/
 app/android/build/
 app/android/app/build/
+.site/
+.wrangler/
+.store-sent.json
