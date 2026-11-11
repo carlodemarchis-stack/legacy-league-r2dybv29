@@ -124,11 +124,27 @@ def _all() -> list[dict]:
     return [_parse(p) for p in sorted(STORIES.glob("*.md")) if not p.name.endswith(".es.md")]
 
 
-def _write(s: dict) -> None:
+def _write(s: dict, name: Optional[str] = None) -> None:
     """One story -> content/stories/<id>.md: front matter, then the body as blank-line separated paragraphs."""
     front = {k: v for k, v in s.items() if k != "body"}
     fm = yaml.dump(front, Dumper=_Dumper, allow_unicode=True, sort_keys=False, width=1000).rstrip()
-    (STORIES / f"{s['id']}.md").write_text(f"---\n{fm}\n---\n\n" + "\n\n".join(s.get("body") or []) + "\n")
+    (STORIES / (name or f"{s['id']}.md")).write_text(f"---\n{fm}\n---\n\n" + "\n\n".join(s.get("body") or []) + "\n")
+
+
+def _paras(text: str) -> list[str]:
+    return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+
+
+def _write_es(sid: str, title_es: Optional[str], dek_es: Optional[str], body_es: Optional[str]) -> None:
+    """Create or update the Spanish sibling <id>.es.md. Only the fields given change."""
+    if not (title_es or dek_es or body_es):
+        return
+    p = STORIES / f"{sid}.es.md"
+    es = _parse(p) if p.exists() else {"id": sid, "lang": "es"}
+    if title_es: es["title"] = title_es.strip()
+    if dek_es: es["dek"] = dek_es.strip()
+    if body_es: es["body"] = _paras(body_es)
+    _write(es, p.name)
 
 
 def _new_id() -> str:
@@ -149,7 +165,8 @@ def _story(sid: str) -> dict:
 
 def _public(s: dict) -> dict:
     keep = ("id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count")
-    return {"status": "published", **{k: s.get(k) for k in keep if s.get(k) not in (None, [], "")}}
+    return {"status": "published", **{k: s.get(k) for k in keep if s.get(k) not in (None, [], "")},
+            "spanish": (STORIES / f"{s['id']}.es.md").exists()}
 
 
 # ----------------------------------------------------------------- scoring
@@ -273,11 +290,14 @@ def list_stories(status: str = "all", limit: int = 30) -> list[dict]:
 def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = None, players: Optional[list[str]] = None,
                 topic: str = "league", author: Optional[str] = None, dur: Optional[str] = None, count: Optional[int] = None,
                 photo_url: Optional[str] = None, size: Optional[str] = None, at: Optional[str] = None,
-                body: Optional[str] = None) -> dict:
+                body: Optional[str] = None, title_es: Optional[str] = None, dek_es: Optional[str] = None,
+                body_es: Optional[str] = None) -> dict:
     """Create a DRAFT story for the Stories collage. body = the article text, paragraphs separated by blank lines
     (2–4 short paragraphs; the collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and players may be names or ids.
     video needs dur ("2:14"); gallery needs count. Without photo_url a golf photo from the library is picked.
-    at = ISO time in the demo's event timeline (default: the feed's current time, shows as "just now")."""
+    at = ISO time in the demo's event timeline (default: the feed's current time, shows as "just now").
+    title_es, dek_es, body_es = the Spanish version (Mexican Spanish), saved as the story's Spanish file. The site is
+    bilingual: without them Spanish readers see the English text."""
     kind = kind.strip().lower()
     if kind not in KINDS or kind == "result":
         raise ValueError("kind must be video, gallery, article or quote")
@@ -313,6 +333,7 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
     if kind == "gallery":
         story["photos"] = [story["photo"], _pick_photo(sid + "b"), _pick_photo(sid + "c")]
     _write(story)
+    _write_es(sid, title_es, dek_es, body_es)
     _log("draft_story", {"id": sid, "kind": kind, "title": title}, "draft")
     return {"ok": True, "story": _public(story), "next": "publish_story(id) to show it in the collage, then render_site() to preview."}
 
@@ -320,9 +341,11 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
 @mcp.tool()
 def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None, cities: Optional[list[str]] = None,
                  players: Optional[list[str]] = None, size: Optional[str] = None, photo_url: Optional[str] = None,
-                 author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None) -> dict:
+                 author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None,
+                 title_es: Optional[str] = None, dek_es: Optional[str] = None, body_es: Optional[str] = None) -> dict:
     """Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank lines).
-    Only the English file changes; a Spanish sibling (<id>.es.md), if there is one, is left as it is."""
+    title_es, dek_es, body_es change the Spanish version (created if missing). English and Spanish are separate texts:
+    when you change one, pass the matching change for the other, or they drift apart."""
     s = _story(id)
     if title: s["title"] = title.strip()
     if dek: s["dek"] = dek.strip()
@@ -337,6 +360,7 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
     if body: s["body"] = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
     s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
     _write(s)
+    _write_es(id, title_es, dek_es, body_es)
     _log("update_story", {"id": id}, "updated")
     return {"ok": True, "story": _public(s)}
 
