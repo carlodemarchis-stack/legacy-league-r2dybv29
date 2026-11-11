@@ -52,7 +52,8 @@ mcp = FastMCP(
     instructions=(
         "Editorial desk for Legacy League Golf. Draft first, publish second. "
         "Use league_reference and find_players to resolve city and player tags before drafting. "
-        "Use live_board when a story quotes scores. Read a story with get_story before changing it. "
+        "Use live_board when a story quotes scores and city_round to name the players behind them. "
+        "Read a story with get_story before changing it. "
         "render_site previews locally; "
         "deploy_site(confirm=True) publishes to the public demo and must be asked for explicitly."
     ),
@@ -285,6 +286,53 @@ def live_board(clock: str = "14:20") -> dict:
     rows = _board(clock)
     return {"event": FEED["event"]["name"], "round": "Round 2", "course_time": clock, "final_at": _final_at(),
             "final": all(r["thru"] == "F" for r in rows), "board": rows}
+
+
+@mcp.tool()
+def city_round(city: str, clock: str = "14:20", round: int = 2) -> dict:
+    """Who is doing what for one city: each player's holes played and score, how many of the team's counted scores
+    each has supplied, the team's score hole by hole, and the notable holes (eagles, holes in one).
+    Use it to name players in a story. clock = course time HH:MM on day 2 (ignored for round 1, which is complete).
+    A hole is firm once every player on the team has finished it. Only firm holes are on the board, and whether a
+    score counted is known only for firm holes. Every score is strokes relative to par: negative is under par."""
+    cid, rid = _city_id(city), f"r{int(round)}"
+    if rid not in SCORE:
+        raise ValueError("round must be 1 or 2")
+    h, m = map(int, clock.split(":"))
+    now, mph, holes = h * 60 + m, FEED["sim"]["minutes_per_hole"], FEED["event"]["course"]["holes"]
+    ids = [p["id"] for p in LEAGUE["players"] if p["city"] == cid]
+    posted_at = lambda pid, i: TEE[pid][rid] + (i + 1) * mph
+    hhmm = lambda t: f"{t // 60:02d}:{t % 60:02d}"
+    tally = {pid: {"counted_scores": 0, "counted_under_par": 0} for pid in ids}
+    team, counted_on = [], {}
+    for i, par in enumerate(PAR):
+        if not all(_posted(rid, pid, i, now) for pid in ids):
+            continue
+        best = sorted((SCORE[rid][pid][i], pid) for pid in ids)[: RULES["best_balls"]]
+        counted_on[i] = {pid for _, pid in best}
+        for sc, pid in best:
+            tally[pid]["counted_scores"] += 1
+            tally[pid]["counted_under_par"] += sc < par
+        team.append({"hole": i + 1, "par": par, "to_par": sum(sc for sc, _ in best) - par * RULES["best_balls"],
+                     "counted": [{"player": PLAYER[pid]["name"], "to_par": sc - par} for sc, pid in best]})
+    players, notable = [], []
+    for pid in ids:
+        done = [i for i in range(18) if _posted(rid, pid, i, now)]
+        players.append({"id": pid, "name": PLAYER[pid]["name"], "captain": PLAYER[pid]["captain"], "thru": len(done),
+                        "finished": len(done) == 18, "to_par": sum(SCORE[rid][pid][i] - PAR[i] for i in done),
+                        "birdies_or_better": sum(SCORE[rid][pid][i] < PAR[i] for i in done), **tally[pid]})
+        for i in done:
+            sc = SCORE[rid][pid][i]
+            if sc == 1 or sc <= PAR[i] - 2:
+                what = "hole in one" if sc == 1 else {2: "eagle", 3: "albatross"}[PAR[i] - sc]
+                notable.append({"what": what, "player": PLAYER[pid]["name"], "id": pid, "hole": i + 1, "par": PAR[i],
+                                "yardage": holes[i]["yardage"], "score": sc, "posted": hhmm(posted_at(pid, i)),
+                                "firm": i in counted_on, "counted": (pid in counted_on[i]) if i in counted_on else None})
+    players.sort(key=lambda r: (-r["counted_under_par"], -r["counted_scores"], r["name"]))
+    notable.sort(key=lambda r: r["posted"])
+    return {"city": CITY[cid]["name"], "round": int(round), "course_time": clock if rid == "r2" else "complete",
+            "team": {"thru": len(team), "to_par": sum(x["to_par"] for x in team), "holes": team},
+            "players": players, "notable": notable}
 
 
 @mcp.tool()
