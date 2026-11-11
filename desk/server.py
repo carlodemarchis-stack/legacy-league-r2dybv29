@@ -58,9 +58,8 @@ mcp = FastMCP(
         "Use live_board when a story quotes scores and city_round to name the players behind them. "
         "Read a story with get_story before changing it. An editor's own photo comes from the photo inbox: "
         "photo_inbox lists what is waiting, add_photo attaches one. "
-        "publish_story is public at once: it sends the story to the content store, and the site that reads the store "
-        "shows it on its next load. So ask the editor before publishing, and before changing, unpublishing or deleting "
-        "a story that is already published. render_site previews locally; "
+        "This is the desk on the Mac: it edits the story files in the project. The public site and the app take their "
+        "stories from the hosted desk, so nothing done here reaches them. render_site previews locally; "
         "deploy_site(confirm=True) also rebuilds and pushes the page itself and must be asked for explicitly."
     ),
 )
@@ -160,14 +159,10 @@ def _live(s: dict) -> bool:
 
 
 def _store_push() -> dict:
-    """Send the published stories and their photos to the content store (tools/store.py). The site that reads the
-    store shows the change on its next load; no page is rebuilt."""
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "store.py"), "push"], capture_output=True, text=True, cwd=ROOT)
-    ok = r.returncode == 0
-    line = (r.stdout.strip().splitlines() or [""])[0] if ok else (r.stderr or r.stdout).strip()[-300:]
-    _log("store_push", {}, line)
-    return {"ok": True, "live": STORE_URL, "detail": line} if ok else {"ok": False, "error": line,
-            "note": "The story file is saved, but the content store was not updated. Nothing changed on the public site."}
+    """Stories on the public site now belong to the hosted desk (hosted-desk/), which keeps them in the content
+    store. This desk on the Mac still edits the files in content/stories, but no longer sends them anywhere."""
+    return {"ok": False, "note": "Saved in the project files only. The public site and the app take their stories from "
+            "the hosted desk now; use that desk to publish. Nothing changed on the public site."}
 
 
 def _inbox_files() -> list[Path]:
@@ -514,9 +509,8 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
 
 @mcp.tool()
 def publish_story(id: str, schedule_at: Optional[str] = None) -> dict:
-    """Publish a draft (status -> published) or schedule it (ISO time, status -> scheduled). Publishing is PUBLIC at once:
-    the story goes to the content store, and the site that reads the store shows it on its next load. Ask the editor first.
-    A scheduled story is not sent until something is published after its time has come."""
+    """Publish a draft (status -> published) or schedule it (ISO time, status -> scheduled). This changes the project files and the
+    local preview only: the public site and the app take their stories from the hosted desk."""
     s = _story(id)
     s["status"] = "scheduled" if schedule_at else "published"
     if schedule_at:

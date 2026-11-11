@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""The content store: published stories and their photos, kept in a Cloudflare R2 bucket.
+"""The content store: everything the editors own, kept in a Cloudflare R2 bucket.
 
-    python3 tools/store.py push        send what changed, then the index
-    python3 tools/store.py push --dry  say what would be sent, send nothing
+    python3 tools/store.py push            send profiles, schedule, rules, wording and photos that changed
+    python3 tools/store.py push --dry      say what would be sent, send nothing
+    python3 tools/store.py seed-desk       ONE-OFF: copy every story in content/stories into the store as the
+                                           hosted desk's records, replacing what the desk has there
+
+Stories belong to the hosted desk (hosted-desk/): it keeps them in the store and writes the list the site
+reads. So `push` leaves stories alone, and content/stories is only a copy from before the desk was hosted.
 
 What goes up, under the bucket's root:
   stories/index.json            every published story as the page lists it (no article text), newest first
@@ -92,14 +97,56 @@ def _put(npx, key, data):
     return key
 
 
+def desk_records():
+    """Every story in content/stories, drafts included, as the hosted desk keeps them: one record each,
+    Spanish inside it, photos addressed in the store."""
+    photos, out = {}, {}
+
+    def photo(path):
+        if not isinstance(path, str) or not path.startswith("img/") or not (ROOT / path).exists():
+            return path
+        photos["photos/" + path[4:]] = (ROOT / path).read_bytes()
+        return PREFIX + "photos/" + path[4:]
+
+    for p in sorted((ROOT / "content/stories").glob("*.md")):
+        if p.name.endswith(".es.md"):
+            continue
+        s = build.story(p)
+        es = p.with_name(p.name[:-3] + ".es.md")
+        if es.exists():
+            e = build.story(es)
+            for k in ("title", "dek", "body"):
+                if e.get(k):
+                    s[k + "_es"] = e[k]
+        if s.get("photo"):
+            s["photo"] = photo(s["photo"])
+        if s.get("photos"):
+            s["photos"] = [photo(x) for x in s["photos"]]
+        out[s["id"]] = s
+    return list(out.values()), photos
+
+
+def seed_desk():
+    records, photos = desk_records()
+    feed = json.loads((ROOT / "data/feed.json").read_text())
+    npx = _npx()
+    with concurrent.futures.ThreadPoolExecutor(6) as pool:
+        list(pool.map(lambda kv: _put(npx, *kv), photos.items()))
+    _put(npx, "desk/config.json", json.dumps({"now": feed["generated_at"][:16]}).encode())
+    _put(npx, "desk/stories.json", json.dumps(records, ensure_ascii=False).encode())
+    return {"records": len(records), "drafts": len([r for r in records if r.get("status", "published") != "published"]), "photos": len(photos)}
+
+
 def push(dry=False):
     objects, indexes = collect()
+    # stories are the hosted desk's: this tool no longer sends them, or it would undo what editors published there
+    objects = {k: v for k, v in objects.items() if not k.startswith("stories/")}
+    indexes = {k: v for k, v in indexes.items() if not k.startswith("stories/")}
     sent = json.loads(SENT.read_text()) if SENT.exists() else {}
     sha = lambda b: hashlib.sha1(b).hexdigest()
     todo = {k: v for k, v in objects.items() if sent.get(k) != sha(v)}
     changed = [k for k, v in indexes.items() if sent.get(k) != sha(v)]
-    stories = json.loads(indexes["stories/index.json"])
-    result = {"stories": len(stories["stories"]), "rev": stories["rev"], "site_rev": json.loads(indexes["site/index.json"])["rev"],
+    result = {"site_rev": json.loads(indexes["site/index.json"])["rev"],
               "sent": sorted(todo), "index_changed": bool(changed), "indexes": changed}
     if dry:
         return result
@@ -116,6 +163,9 @@ def push(dry=False):
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["seed-desk"]:
+        print(json.dumps(seed_desk()))
+        raise SystemExit
     if sys.argv[1:2] != ["push"]:
         raise SystemExit(__doc__)
     out = push(dry="--dry" in sys.argv)

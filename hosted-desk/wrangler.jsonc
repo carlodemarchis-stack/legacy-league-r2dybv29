@@ -1,0 +1,11 @@
+{
+  // The hosted editorial desk. It works on the content store (the same R2 bucket the site reads).
+  // Its address carries a secret, set once with: npx wrangler secret put DESK_KEY
+  "name": "legacy-league-desk",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }]
+}
