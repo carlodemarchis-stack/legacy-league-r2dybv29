@@ -38,6 +38,7 @@ a{color:var(--acc-ink);text-decoration:none}
 #film{position:fixed;inset:0;display:flex;transition:transform .55s cubic-bezier(.16,.84,.34,1)}
 .card{flex:0 0 100vw;width:100vw;height:100dvh;position:relative;overflow:hidden;
   content-visibility:auto;contain-intrinsic-size:100vw 100dvh}
+.card[data-k="slot"]::before{display:none}
 .card::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   background:radial-gradient(90% 60% at 50% 120%,var(--c,rgba(217,173,78,.25)) 0%,transparent 60%);opacity:.32}
 .inner{position:absolute;inset:0;z-index:1;padding:clamp(18px,3.2vw,54px);
@@ -843,7 +844,12 @@ function setEvTab(id, tab) {
   card.querySelectorAll(".evtabs button").forEach(b => { b.classList.toggle("on", b.dataset.tab === tab); b.setAttribute("aria-selected", b.dataset.tab === tab); });
   card.querySelector(".inner").scrollTop = 0;
 }
-function goEvent(id, tab) { if (tab) setEvTab(id, tab); go(CARDS.findIndex(c => c.k === "event" && c.id === id)); }
+/* The tournament in play has two stops (Live, and its place in the Season run): the nearer one is used. */
+function goEvent(id, tab) {
+  if (tab) setEvTab(id, tab);
+  const stops = CARDS.flatMap((c, n) => c.k === "event" && c.id === id ? [n] : []);
+  go(stops.sort((a, b) => Math.abs(a - cur) - Math.abs(b - cur))[0]);
+}
 
 /* --- stories: the editorial layer as a social flow. One CMS entry = one post,
    published once for web and app. Posts are tagged by city and player, so
@@ -1111,13 +1117,15 @@ const film = document.getElementById("film");
 const lb0 = leaderboard();
 const cityOrder = lb0.map(x => x.c);
 const playerOrder = cityOrder.flatMap(c => LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap));
-/* The tournament in play sits right after the start card, where the Live menu item opens it.
-   The other tournaments follow the Season card, in schedule order. */
-const LATER = LEAGUE.schedule.filter(e => e.id !== EVENT.id);
+/* All six tournaments follow the Season card, in schedule order. The one in play is also the second stop
+   of the film, where the Live menu item opens it: one page, two stops. The page is drawn once, in its
+   Season place (HOME); the Live stop is an empty slot, and the page is slid over it while the reader
+   is at that end of the film (see place). */
 const CARDS = [{ k: "story" }, { k: "event", id: EVENT.id }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
-               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, ...LATER.map(e => ({ k: "event", id: e.id })), { k: "mission" }, { k: "capture" }];
+               ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, ...LEAGUE.schedule.map(e => ({ k: "event", id: e.id })), { k: "mission" }, { k: "capture" }];
 const at = k => CARDS.findIndex(c => c.k === k);
 const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: at("season"), league: at("mission"), capture: at("capture") };
+const HOME = SEC.season + 1 + LEAGUE.schedule.indexOf(EVENT);
 /* Player cards are most of the page (76 of 94 cards), so only the ones near the current card are drawn.
    Every other player card is an empty slot of the same size until the reader gets close to it. */
 const playerShell = p => `<div class="card" data-k="player" data-id="${p.id}" style="--c:${CITY[p.city].color}"></div>`;
@@ -1141,8 +1149,8 @@ function warmMenu() {
   Object.entries(WARM).forEach(([sec, n]) =>
     [...film.children[SEC[sec]].querySelectorAll('img[loading="lazy"]')].slice(0, n).forEach(img => { img.loading = "eager"; }));
 }
-film.innerHTML = storyCard() + eventCard(EVENT) + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
-  playerOrder.map(playerShell).join("") + seasonCard() + LATER.map(eventCard).join("") + missionCard() + captureCard();
+film.innerHTML = storyCard() + `<div class="card" data-k="slot"></div>` + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
+  playerOrder.map(playerShell).join("") + seasonCard() + LEAGUE.schedule.map(eventCard).join("") + missionCard() + captureCard();
 const total = CARDS.length;
 let cur = 0, lastPos = {}, lastLeader = null, finalSeen = false;
 
@@ -1350,7 +1358,7 @@ function pageInfo(key) { const p = PAGES.find(x => x[0] === key); closeModal("jm
 function jumpEntries() {
   return CARDS.map((c, n) => {
     if (c.k === "story") return { n, sec: t("Start"), label: `${t("Cities.")} ${t("Legends.")} ${t("A cause.")}`, sub: t("League"), color: "var(--acc)" };
-    if (c.k === "event" && c.id === EVENT.id) return { n, sec: t("Start"), label: `${t("Live")} · ${L(EVENT, "name")}`, sub: t("Round 2"), color: "var(--live)", q: `${t("Leaderboard")} ${t("Tee times")}` };
+    if (n === SEC.live) return { n, sec: t("Start"), label: `${t("Live")} · ${L(EVENT, "name")}`, sub: t("Round 2"), color: "var(--live)", q: `${t("Leaderboard")} ${t("Tee times")}` };
     if (c.k === "event") { const e = LEAGUE.schedule.find(x => x.id === c.id); return { n, sec: t("Season"), label: L(e, "name"), sub: dateRange(e), color: "var(--acc)" }; }
     if (c.k === "stories") return { n, sec: t("Start"), label: t("Stories"), sub: `${LEAGUE.story_count || LEAGUE.stories.length} ${t("posts")}`, color: "var(--acc)" };
     if (c.k === "city") { const ci = CITY[c.id]; return { n, sec: t("City hubs"), label: ci.name, sub: ci.short, color: ci.color, q: ci.teams.join(" ") }; }
@@ -1385,7 +1393,12 @@ function closeModal(id) { document.getElementById(id).classList.remove("on"); }
 /* The film is moved in pixels and moved again whenever the window changes size. A position given in
    viewport units is not recalculated when a phone is turned or a window resized, which left the
    wrong card, or none, on screen. */
-const place = () => { film.style.transform = `translateX(${-cur * innerWidth}px)`; };
+const place = () => {
+  film.style.transform = `translateX(${-cur * innerWidth}px)`;
+  // the page of the tournament in play is slid to whichever of its two stops is nearer the reader
+  const front = Math.abs(cur - SEC.live) <= Math.abs(cur - HOME);
+  film.children[HOME].style.transform = front ? `translateX(${(SEC.live - HOME) * innerWidth}px)` : "";
+};
 addEventListener("resize", () => { film.style.transition = "none"; place(); });
 function go(n) {
   const target = Math.max(0, Math.min(total - 1, n));
@@ -1396,14 +1409,14 @@ function go(n) {
   drawNear();
   place();
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
-  const k = CARDS[cur].k, liveEv = k === "event" && CARDS[cur].id === EVENT.id;
+  const k = CARDS[cur].k, liveEv = cur === SEC.live;
   const sec = liveEv ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event"].includes(k) ? "season" : ["capture", "mission"].includes(k) ? "league" : null;
   document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => b.classList.toggle("on", b.dataset.sec === sec));
   document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : liveEv ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
     k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` :
     k === "event" ? `· ${t("Season")} · ${L(LEAGUE.schedule.find(e => e.id === CARDS[cur].id), "name")}` : k === "season" ? t("· Season") : `· ${t("League")}`;
   location.hash = cur ? "#" + (cur + 1) : "";
-  film.children[cur].querySelector(".inner").scrollTop = 0;
+  film.children[cur === SEC.live ? HOME : cur].querySelector(".inner").scrollTop = 0;
 }
 const next = () => go(cur + 1 >= total ? 0 : cur + 1), prev = () => go(cur - 1);
 /* The double arrows move a section at a time: start, live, stories, cities, players, season, league.
