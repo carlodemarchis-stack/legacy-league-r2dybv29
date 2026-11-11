@@ -1542,13 +1542,19 @@ if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
 /* Where the site is served with a content store behind it, the stories come from there: the page asks for the
    store's list when it opens and each time the reader comes back to it, so a story published in the store shows
    without a new page. Anywhere else the request finds nothing and the stories in the page stand. */
+/* Inside the app the page is a copy carried by the app, with no store behind its own address, so there it asks
+   the site that has one. Everything the store hands out is addressed from the same place. */
+const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()))
+  ? "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/" : "";
+const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
 let storeRev = null;
 function loadStore() {
-  fetch("content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
+  fetch(STORE_AT + "content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
     if (!ix || !Array.isArray(ix.stories) || ix.rev === storeRev) return;
     const name = ref => (ref || "").split("/").pop();           // an article text already fetched is kept
     const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
-    ix.stories.forEach(s => { const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; if (o.body_es) s.body_es = o.body_es; } });
+    ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
+      const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; if (o.body_es) s.body_es = o.body_es; } });
     storeRev = ix.rev; LEAGUE.stories = ix.stories; LEAGUE.story_count = ix.stories.length;
     renderFeed();
     document.getElementById("hnrow").innerHTML = newsTiles();
@@ -1558,9 +1564,9 @@ function loadStore() {
    this page is showing, the package is fetched and kept on this device. Cards are built once from that content,
    so it is applied by loading the page again: at once when the page has just opened, otherwise on the next visit. */
 function loadSite(justOpened) {
-  fetch("content/site/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
+  fetch(STORE_AT + "content/site/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
     if (!ix || !ix.rev || ix.rev === LEAGUE.site_rev) return;
-    return fetch(`content/site/site.${ix.rev}.json`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(c => {
+    return fetch(`${STORE_AT}content/site/site.${ix.rev}.json`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(c => {
       localStorage.setItem("ll.site", JSON.stringify(c));
       if (justOpened && sessionStorage.getItem("ll.site.reloaded") !== c.rev) { sessionStorage.setItem("ll.site.reloaded", c.rev); location.reload(); }
     });
