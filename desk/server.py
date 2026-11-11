@@ -449,11 +449,14 @@ def render_site() -> dict:
 
 @mcp.tool()
 def deploy_site(message: str = "Desk publish", confirm: bool = False) -> dict:
-    """Render, commit and push to the PUBLIC demo site. Requires confirm=True; ask the editor before calling it."""
+    """Render, then commit and push the content and the rebuilt page to the PUBLIC demo site. Nothing else in the
+    folder is published. Requires confirm=True; ask the editor before calling it."""
     if not confirm:
         return {"ok": False, "error": "deploy_site changes the public demo. Call again with confirm=True after the editor agrees."}
     render_site()
-    cmds = [["git", "add", "-A"], ["git", "commit", "-q", "-m", f"{message} (desk: {EDITOR})"], ["git", "push", "-q", "origin", "main"]]
+    paths = ["content", "data/league.json", "index.html"]   # what an editor can change; never code, tools or stray files
+    cmds = [["git", "add", "--"] + paths, ["git", "commit", "-q", "-m", f"{message} (desk: {EDITOR})", "--"] + paths,
+            ["git", "push", "-q", "origin", "main"]]
     out = []
     for c in cmds:
         r = subprocess.run(c, capture_output=True, text=True, cwd=ROOT)
