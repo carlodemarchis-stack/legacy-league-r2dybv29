@@ -1819,6 +1819,76 @@
  },
  "stories": [
   {
+   "id": "d003",
+   "status": "published",
+   "kind": "article",
+   "topic": "league",
+   "at": "2027-01-29T14:20",
+   "author": "Legacy League",
+   "title": "Round 2 at 14:20: Chicago lead by four, Valdez aces the 10th",
+   "dek": "Captain Isaiah Castellano's eagle at the 7th keeps Chicago clear of Atlanta and Dallas. Boston's Andre Valdez made a hole in one at the 200-yard 10th.",
+   "cities": [
+    "chi",
+    "atl",
+    "dal",
+    "bos"
+   ],
+   "players": [
+    "p1004",
+    "p1014",
+    "p1069",
+    "p1005"
+   ],
+   "likes": 0,
+   "comments": 0,
+   "size": "xl",
+   "photo": "img/course/R2026018.webp",
+   "created_by": "Carlo",
+   "created_at": "2026-11-11T05:10:04",
+   "updated_by": "Carlo",
+   "updated_at": "2026-11-11T05:12:27",
+   "published_by": "Carlo",
+   "published_at": "2026-11-11T05:13:29",
+   "body": [
+    "Chicago lead Round 2 at Mayakoba by four. At 14:20 local time they are −23 for the event, six under for the day with ten holes complete. Captain Isaiah Castellano's eagle three at the par-five 7th is the biggest single gain, and Maya Stafford has supplied five of the team's twenty counted scores. Andre Ingram already has an eagle at the 13th, a hole Chicago have not yet completed as a team.",
+    "Atlanta are the movers. Seven under through 11 holes is the best round on the course so far and has taken them from joint sixth overnight to a share of second at −19. It started with Jordan Baptiste's eagle two at the par-four 3rd, and Lamar Jarrett has counted on nine of the 11 holes.",
+    "Dallas are level with Atlanta, five under through ten, with captain Victor Ingram counting on seven of those holes. Boston, Philadelphia and San Francisco share fourth at −18. Boston got there with the shot of the day: Andre Valdez holed a tee shot at the 200-yard 10th at 13:28.",
+    "Five cities are within five shots of the lead and all have at least eight holes left. If it finished like this, Chicago would take 100 league points, Atlanta and Dallas 72.5 each, and the three cities in fourth 46 each. The last group is due in at 16:29."
+   ],
+   "title_es": "Ronda 2 a las 14:20: Chicago lidera por cuatro y Valdez hace hoyo en uno",
+   "dek_es": "El eagle del capitán Isaiah Castellano en el 7 mantiene a Chicago por delante de Atlanta y Dallas. Andre Valdez, de Boston, hizo hoyo en uno en el 10, de 200 yardas.",
+   "body_es": [
+    "Chicago lidera la Ronda 2 en Mayakoba por cuatro golpes. A las 14:20 hora local va −23 en el evento, seis bajo par en el día con diez hoyos completos. El eagle del capitán Isaiah Castellano en el 7, un par cinco, es la mayor ganancia en un solo hoyo, y Maya Stafford ha aportado cinco de los veinte resultados contados del equipo. Andre Ingram ya tiene un eagle en el 13, un hoyo que Chicago todavía no completa como equipo.",
+    "Atlanta es el equipo que más se ha movido. Siete bajo par en 11 hoyos es la mejor ronda en el campo hasta ahora y lo ha llevado del sexto lugar compartido de anoche a compartir el segundo con −19. Todo empezó con el eagle de Jordan Baptiste en el 3, un par cuatro, y Lamar Jarrett ha contado en nueve de los 11 hoyos.",
+    "Dallas está empatado con Atlanta, cinco bajo par en diez hoyos, con el capitán Victor Ingram contando en siete de ellos. Boston, Filadelfia y San Francisco comparten el cuarto lugar con −18. Boston llegó ahí con el golpe del día: Andre Valdez embocó su salida en el 10, de 200 yardas, a las 13:28.",
+    "Cinco ciudades están a cinco golpes o menos del líder y a todas les quedan al menos ocho hoyos. Si terminara así, Chicago se llevaría 100 puntos de liga, Atlanta y Dallas 72.5 cada una, y las tres ciudades del cuarto lugar 46 cada una. El último grupo debe terminar a las 16:29."
+   ],
+   "photos": []
+  },
+  {
+   "id": "d002",
+   "status": "published",
+   "kind": "article",
+   "topic": "city",
+   "at": "2027-01-29T14:20",
+   "author": "Boston desk",
+   "title": "Poulter leaves LIV at 50 for senior golf, YouTube and home",
+   "dek": "He said it himself on 23 October: no LIV 2.0, less travel, some senior events and more of The Postman on YouTube. Seven Ryder Cups and four seasons as Majesticks co-captain go with him. Oosthuizen, Rahm, Garcia and Pieters had already left, with LIV in Chapter 11 since September.",
+   "cities": [
+    "bos"
+   ],
+   "players": [],
+   "likes": 0,
+   "comments": 0,
+   "size": "l",
+   "photo": "img/people/ian-poulter-liv-exit.jpg",
+   "created_by": "Carlo",
+   "created_at": "2026-11-05T16:02:44",
+   "published_by": "Carlo",
+   "published_at": "2026-11-05T16:02:48",
+   "photos": []
+  },
+  {
    "id": "d001",
    "status": "published",
    "kind": "article",
@@ -1844,29 +1914,6 @@
     "Three weeks later in Bermuda the weather did what Bermuda weather does. The final round was cancelled in the wind, the tournament went to a playoff, and Smotherman beat Seamus Power with a par on the third extra hole. Two wins in a month, from a player who had never had one.",
     "The second win carries a reward beyond the trophy: a place in the field at Pebble Beach next June. For a league built on second acts, it is a story worth telling to every athlete who thinks the best is behind them."
    ],
-   "photos": []
-  },
-  {
-   "id": "d002",
-   "status": "published",
-   "kind": "article",
-   "topic": "city",
-   "at": "2027-01-29T14:20",
-   "author": "Boston desk",
-   "title": "Poulter leaves LIV at 50 for senior golf, YouTube and home",
-   "dek": "He said it himself on 23 October: no LIV 2.0, less travel, some senior events and more of The Postman on YouTube. Seven Ryder Cups and four seasons as Majesticks co-captain go with him. Oosthuizen, Rahm, Garcia and Pieters had already left, with LIV in Chapter 11 since September.",
-   "cities": [
-    "bos"
-   ],
-   "players": [],
-   "likes": 0,
-   "comments": 0,
-   "size": "l",
-   "photo": "img/people/ian-poulter-liv-exit.jpg",
-   "created_by": "Carlo",
-   "created_at": "2026-11-05T16:02:44",
-   "published_by": "Carlo",
-   "published_at": "2026-11-05T16:02:48",
    "photos": []
   },
   {
@@ -1943,7 +1990,9 @@
    "comments": 41,
    "photo": "img/course/R2026480.webp",
    "photos": [],
-   "size": "xl",
+   "size": "m",
+   "updated_by": "Carlo",
+   "updated_at": "2026-11-11T05:13:29",
    "body": [
     "Five cities finished round one inside four shots of each other, which is roughly what the format promised. Chicago led after a day in which all eight players contributed at least one counted ball and the team never counted worse than a par. They are three clear of Dallas and Philadelphia, who share second at −14.",
     "Philadelphia were the movers. A back nine of eleven under, with two birdies on each of the last two holes, took them from joint last at the turn to a share of second. Miami went the other way: two counted bogeys at the 9th cost them two shots, and they finished last at −5."
