@@ -289,5 +289,10 @@
  "counted on 1 hole": "contó en 1 hoyo",
  "counted on {n} holes": "contó en {n} hoyos",
  "Previous section": "Sección anterior",
- "Next section": "Sección siguiente"
+ "Next section": "Sección siguiente",
+ "Scorecard": "Tarjeta",
+ "Theme": "Tema",
+ "Dark": "Oscuro",
+ "Light": "Claro",
+ "Computer": "Sistema"
 }
