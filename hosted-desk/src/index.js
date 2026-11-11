@@ -122,7 +122,7 @@ const tool = (fn) => async (args) => {
 
 /* ------------------------------------------------------------------ the tools */
 
-function createServer(env) {
+function createServer(env, door) {
   const server = new McpServer({ name: "legacy-desk", version: "1.0.0" }, {
     instructions:
       "Editorial desk for Legacy League Golf, working on the site's content store. Draft first, publish second. " +
@@ -142,7 +142,7 @@ function createServer(env) {
   }));
 
   server.registerTool("get_story", {
-    description: "One story in full: every field, the article text, and the Spanish version if there is one.",
+    description: "One story in full: every field, the article text, the Spanish version if there is one, and its photo (with photo_credit when the editor gave one).",
     inputSchema: z.object({ id: z.string() }),
   }, tool(async ({ id }) => find((await readJson(env, RECORDS)).data || [], id)));
 
@@ -252,6 +252,19 @@ function createServer(env) {
     return res;
   }));
 
+  server.registerTool("photo_upload_link", {
+    description:
+      "The editor's own photo for a story. A picture pasted into the chat cannot reach the desk, so this returns a " +
+      "private web page for that story: give the editor the link, they open it, choose the photo and press Upload. " +
+      "The desk then stores the photo and sets it as the story's picture (public at once if the story is published). " +
+      "Afterwards read the story again with get_story to confirm the new photo. The link is for editors only.",
+    inputSchema: z.object({ id: z.string() }),
+  }, tool(async ({ id }) => {
+    const s = find((await readJson(env, RECORDS)).data || [], id);
+    return { ok: true, link: `${door}/photo/${s.id}`, story: s.title,
+             next: "Give the editor this link. When they say the photo is uploaded, call get_story to confirm it." };
+  }));
+
   server.registerTool("unpublish_story", {
     description: "Take a story back to draft. If it was published it leaves the public site at once.",
     inputSchema: z.object({ id: z.string() }),
@@ -278,6 +291,90 @@ function createServer(env) {
 }
 
 /* ------------------------------------------------------------------ the door */
+
+/* ------------------------------------------------------------------ photos */
+
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const PHOTO_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+const MAX_PHOTO = 8 * 1024 * 1024;
+
+/* The page an editor opens to give a story its photo. The browser shrinks the picture to web size before
+   sending it, so nothing on the server has to process images. */
+function photoPage(story) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Photo for ${esc(story.id)}</title>
+<style>
+body{margin:0;font:16px/1.5 -apple-system,system-ui,sans-serif;background:#0b0f11;color:#e9eef0;display:grid;place-items:start center;padding:28px 18px}
+main{width:100%;max-width:520px}h1{font-size:20px;margin:0 0 4px}p{color:#9aa7ab;margin:0 0 18px}
+label{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#9aa7ab;margin:16px 0 6px}
+input[type=text],input[type=file]{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2a3438;background:#12181b;color:inherit;font:inherit}
+button{margin-top:20px;width:100%;padding:14px;border-radius:999px;border:0;background:#d9ad4e;color:#1a1206;font:inherit;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}img{display:block;width:100%;border-radius:12px;margin-top:14px;border:1px solid #2a3438}
+#msg{margin-top:16px;padding:12px 14px;border-radius:10px;display:none}#msg.ok{display:block;background:#12301f;color:#9be0b6}#msg.bad{display:block;background:#3a1715;color:#ffc9c5}
+</style></head><body><main>
+<h1>Photo for this story</h1><p><b style="color:#e9eef0">${esc(story.title)}</b><br>${esc(story.id)} · ${esc(story.status || "published")}</p>
+<label for="f">Choose the photo</label><input id="f" type="file" accept="image/*">
+<label for="c">Photo credit (who took it)</label><input id="c" type="text" placeholder="Optional" maxlength="120">
+<img id="pv" alt="" hidden>
+<button id="go" disabled>Upload</button><div id="msg" role="status"></div>
+</main><script>
+const f = document.getElementById("f"), go = document.getElementById("go"), msg = document.getElementById("msg"), pv = document.getElementById("pv");
+let blob = null;
+const say = (kind, text) => { msg.className = kind; msg.textContent = text; };
+f.onchange = async () => {
+  blob = null; go.disabled = true; pv.hidden = true; msg.className = "";
+  const file = f.files[0]; if (!file) return;
+  try {                                                   // shrink to at most 1600 px on the long side, as a JPEG
+    const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+    blob = await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82));
+  } catch (e) {                                           // a format this browser cannot open: send it as it is, if the desk takes it
+    if (${JSON.stringify(Object.keys(PHOTO_TYPES))}.includes(file.type) && file.size <= ${MAX_PHOTO}) blob = file;
+  }
+  if (!blob) return say("bad", "This browser cannot read that picture. Save it as a JPEG and try again.");
+  pv.src = URL.createObjectURL(blob); pv.hidden = false; go.disabled = false;
+};
+go.onclick = async () => {
+  go.disabled = true; say("ok", "Uploading…");
+  try {
+    const r = await fetch(location.pathname, { method: "POST", headers: { "content-type": blob.type, "x-photo-credit": encodeURIComponent(document.getElementById("c").value.trim()) }, body: blob });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || "The upload failed.");
+    say("ok", out.public ? "Done. The photo is on the story, and the story is public, so it shows on the site now. You can close this page." : "Done. The photo is on the draft. You can close this page and tell Claude it is uploaded.");
+  } catch (e) { say("bad", e.message); go.disabled = false; }
+};
+</script></body></html>`;
+}
+
+async function photoRoute(request, env, id) {
+  const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  const stories = (await readJson(env, RECORDS)).data || [];
+  const story = /^[a-z]\d+$/.test(id) ? stories.find((s) => s.id === id) : null;
+  if (!story) return new Response("No such story.", { status: 404 });
+  if (request.method === "GET")
+    return new Response(photoPage(story), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
+  if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
+  const ext = PHOTO_TYPES[(request.headers.get("content-type") || "").split(";")[0].trim()];
+  if (!ext) return json({ error: "The photo must be a JPEG, PNG or WebP." }, 415);
+  const bytes = await request.arrayBuffer();
+  if (!bytes.byteLength || bytes.byteLength > MAX_PHOTO) return json({ error: "The photo is empty or larger than 8 MB." }, 413);
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-1", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+  const key = `photos/stories/${id}-${hash}.${ext}`;         // a new name per photo, so no browser shows a stale one
+  await env.CONTENT.put(key, bytes, { httpMetadata: { contentType: request.headers.get("content-type").split(";")[0].trim() } });
+  let credit = "";
+  try { credit = decodeURIComponent(request.headers.get("x-photo-credit") || "").slice(0, 120).trim(); } catch (e) {}
+  const { out, stories: all } = await change(env, async (list) => {
+    const s = find(list, id);
+    s.photo = "content/" + key;
+    if (credit) s.photo_credit = credit; else delete s.photo_credit;
+    s.updated_by = "desk"; s.updated_at = nowIso();
+    return s;
+  });
+  if (isLive(out)) await publishIndex(env, all);
+  return json({ ok: true, photo: out.photo, public: isLive(out), kb: Math.round(bytes.byteLength / 1024) });
+}
 
 /* Claude's connector screen signs in before it connects, and stops if the server has no sign-in service.
    This is the smallest one that satisfies it: it registers any client and hands out a token without asking
@@ -319,12 +416,14 @@ export default {
     const url = new URL(request.url);
     const handshake = signIn(request, url);
     if (handshake) return handshake;
-    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*)$/) || [];
+    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+)$/) || [];
     if (!env.DESK_KEY || !key || key.length !== env.DESK_KEY.length || !rest) return new Response("Not found", { status: 404 });
     let diff = 0;                                              // compare the whole key every time, whatever was sent
     for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.DESK_KEY.charCodeAt(i);
     if (diff) return new Response("Not found", { status: 404 });
+    if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length));
+    const door = `${url.origin}/${key}`;
     url.pathname = rest;
-    return createMcpHandler(() => createServer(env))(new Request(url, request), env, ctx);
+    return createMcpHandler(() => createServer(env, door))(new Request(url, request), env, ctx);
   },
 };
