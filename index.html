@@ -113,6 +113,9 @@ button.pill:hover{color:var(--acc);border-color:rgba(217,173,78,.5)}
 .scg > div{text-align:center;font-size:10.5px;font-variant-numeric:tabular-nums;min-height:22px;display:grid;place-items:center}
 .scg .lab{justify-items:start;text-align:left;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:22px}
 .scg .lab b{color:var(--ink);font-weight:700}
+.scg .lab .plink{all:unset;display:inline-block;min-height:24px;line-height:24px;color:var(--ink);font-weight:700;cursor:pointer;text-decoration:underline dotted rgba(255,255,255,.4);text-underline-offset:3px}
+.scg .lab .plink:hover{color:var(--acc);text-decoration-color:var(--acc)}
+.scg .lab .plink:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:3px}
 .scg .lab small{color:var(--dim2);font-size:9.5px;margin-left:5px}
 .scg .hn{color:var(--dim2);font-size:9.5px}.scg .pr{color:var(--dim);font-size:10px}
 .scg .sub{font-weight:700;color:var(--dim);background:rgba(255,255,255,.04);border-radius:5px}
@@ -632,7 +635,8 @@ function holeGrid(rows, team, label) {
     const done = r.holes.filter(x => x != null).length;
     const toPar = r.holes.reduce((a, s, h) => s == null ? a : a + s - PAR[h], 0);
     const tot = done ? `<div class="tot ${cls(toPar)}">${sgn(toPar)}</div>` : `<div class="tot">·</div>`;
-    return `<div class="lab"><b>${esc(r.label)}</b>${r.sub ? `<small>${r.sub}</small>` : ""}</div>${cells}${tp(r.holes, 9, 18)}${tot}`;
+    const name = r.link ? `<button type="button" class="plink" title="${esc(PLAYER[r.pid].name)}" onclick="goPlayer('${r.pid}')">${esc(r.label)}</button>` : `<b>${esc(r.label)}</b>`;
+    return `<div class="lab">${name}${r.sub ? `<small>${r.sub}</small>` : ""}</div>${cells}${tp(r.holes, 9, 18)}${tot}`;
   }).join("");
   let teamRow = "";
   if (team) {
@@ -1003,9 +1007,21 @@ const NEAR = 2, FAR = 4;
 function drawNear() {
   playerOrder.forEach((p, i) => {
     const n = SEC.players + i, el = film.children[n], d = Math.abs(n - cur);
-    if (d <= NEAR && !el.firstElementChild) { el.outerHTML = playerCard(p, i + 1); paintPlayer(p); paintFollow(film.children[n]); }
-    else if (d > FAR && el.firstElementChild) el.outerHTML = playerShell(p);
+    const keep = i === 0;                                   // the card the Players menu item opens stays drawn
+    if ((d <= NEAR || keep) && !el.firstElementChild) { el.outerHTML = playerCard(p, i + 1); paintPlayer(p); paintFollow(film.children[n]); }
+    else if (d > FAR && !keep && el.firstElementChild) el.outerHTML = playerShell(p);
   });
+}
+/* The first card behind each menu item is kept ready, so a tap on the menu lands on a finished card.
+   Its pictures are lazy, like every picture in the film, so once the first screen is up the ones at the top
+   of those cards are fetched ahead. A phone shows fewer on arrival, so it fetches fewer.
+   Not on a slow or data-saving connection. */
+const WARM = innerWidth < 700 ? { stories: 2, cities: 1, players: 1 } : { stories: 6, cities: 9, players: 1 };
+function warmMenu() {
+  const c = navigator.connection;
+  if (c && (c.saveData || /(^|-)2g|3g/.test(c.effectiveType || ""))) return;
+  Object.entries(WARM).forEach(([sec, n]) =>
+    [...film.children[SEC[sec]].querySelectorAll('img[loading="lazy"]')].slice(0, n).forEach(img => { img.loading = "eager"; }));
 }
 film.innerHTML = storyCard() + liveCard() + storiesCard() + cityOrder.map((c, i) => cityCard(c, i)).join("") +
   playerOrder.map(playerShell).join("") + seasonCard() + eventCard() + captureCard() + missionCard();
@@ -1031,7 +1047,10 @@ function detail() {
   const el = document.getElementById("lv-detail");
   if (!state.sel) { el.innerHTML = `<div class="legend">${t("Hole by hole")}</div><p class="lead" style="font-size:13px">${t("Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.")}</p>`; return; }
   const c = CITY[state.sel], tr = teamRound(c.id, state.round);
-  const rows = tr.rows.map(r => ({ pid: r.pid, label: lastName(PLAYER[r.pid].name), sub: PLAYER[r.pid].captain ? "C" : "", holes: r.holes }));
+  // surnames alone, unless two team-mates share one: then the initial tells them apart
+  const twice = new Set(tr.rows.map(r => lastName(PLAYER[r.pid].name)).filter((n, i, a) => a.indexOf(n) !== i));
+  const short = n => twice.has(lastName(n)) ? `${n[0]}. ${lastName(n)}` : lastName(n);
+  const rows = tr.rows.map(r => ({ pid: r.pid, label: short(PLAYER[r.pid].name), sub: PLAYER[r.pid].captain ? "C" : "", holes: r.holes, link: true }));
   el.innerHTML = `<div class="legend"><span><i class="sw" style="--c:${c.color}"></i>${esc(c.name)} · ${state.round === "r1" ? t("Round 1 · final") : tr.firm ? t("Round 2 · final") : `${t("Round 2 · thru")} ${tr.thru}`}</span>
     <span class="rt"><button class="${state.round === "r1" ? "on" : ""}" onclick="setRound('r1')">R1</button><button class="${state.round === "r2" ? "on" : ""}" onclick="setRound('r2')">R2</button></span></div>
     ${holeGrid(rows, tr, t("Player"))}${LEGEND()}`;
@@ -1262,6 +1281,7 @@ consentStatus();
 leaderboard().forEach(x => lastPos[x.c.id] = `${x.tied ? "T" : ""}${x.pos}`);
 const start = parseInt(location.hash.slice(1), 10);
 go(start ? start - 1 : 0);
+(window.requestIdleCallback || setTimeout)(warmMenu);
 /* The page carries the newest stories. Older ones arrive once the first screen is up. */
 if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
   fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { LEAGUE.stories.push(...older); renderFeed(); }).catch(() => {}));

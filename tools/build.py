@@ -22,7 +22,7 @@ data/stories/*.json  what is fetched later: one small file per article body, and
                      older stories beyond the first screen. Names carry a hash of the content, so a
                      file never changes once published and can be cached for good.
 """
-import hashlib, json, os, pathlib, shutil, datetime as dt, yaml
+import hashlib, json, os, pathlib, datetime as dt, yaml
 
 FIRST_STORIES = int(os.environ.get("FIRST_STORIES", 24))   # story tiles carried inside the page
 
@@ -71,11 +71,14 @@ def load_content():
 def split_stories(league):
     """What the page carries of the stories: the newest tiles, without bodies. Everything else goes to data/stories/."""
     out = ROOT / "data/stories"
-    shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    out.mkdir(parents=True, exist_ok=True)
+    wanted = set()
     def put(stem, obj):
         raw = json.dumps(obj, ensure_ascii=False)
         name = f"{stem}.{hashlib.sha1(raw.encode()).hexdigest()[:8]}.json"
-        (out / name).write_text(raw)
+        wanted.add(name)
+        if not (out / name).exists():                       # the name is a hash of the content: an existing file is already right
+            (out / name).write_text(raw)
         return f"data/stories/{name}"
     tiles = []
     for s in league["stories"]:
@@ -84,7 +87,10 @@ def split_stories(league):
         if body: s["body_ref"] = put(s["id"], body)
         tiles.append(s)
     first, older = tiles[:FIRST_STORIES], tiles[FIRST_STORIES:]
-    return dict(league, stories=first, story_count=len(tiles), more_stories=put("older", older) if older else None)
+    more = put("older", older) if older else None
+    for f in out.iterdir():                                 # files no story points to any more, and stray copies
+        if f.name not in wanted: f.unlink()
+    return dict(league, stories=first, story_count=len(tiles), more_stories=more)
 
 def build():
     league = load_content()
