@@ -47,7 +47,8 @@ def load_content():
     now = dt.datetime.now().isoformat(timespec="minutes")
     live = [s for s in stories.values() if s.get("status", "published") == "published"
             or (s["status"] == "scheduled" and s.get("scheduled_at", "9999") <= now)]
-    live.sort(key=lambda s: s["id"]); live.sort(key=lambda s: s.get("at", ""), reverse=True)   # newest first, ties by id
+    # newest first; stories with the same timestamp go most recently created first
+    live.sort(key=lambda s: s["id"]); live.sort(key=lambda s: (s.get("at", ""), s.get("created_at", "")), reverse=True)
     for s in live:
         s.setdefault("cities", []); s.setdefault("players", []); s.setdefault("photos", [])
     cities = [Y(p) for p in sorted((C / "cities").glob("*.yaml"))]
