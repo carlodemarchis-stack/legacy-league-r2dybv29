@@ -385,6 +385,14 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 #jlist{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;display:grid;grid-template-columns:repeat(3,1fr);gap:3px 14px;align-content:start;padding-right:4px}
 #jlist h5{grid-column:1/-1;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc-ink);font-weight:700;margin:12px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
 #jlist h5:first-child{margin-top:0;border:0;padding-top:0}
+#jlist h5 em{font-style:normal;color:var(--dim2);font-weight:400;margin-left:6px}
+#jlist.res{grid-template-columns:repeat(2,minmax(0,1fr))}
+#jlist .jrow.wide{grid-column:1/-1}
+#jlist .jrow.kb{background:rgba(217,173,78,.16);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(217,173,78,.5)}
+#jlist .jmore{grid-column:1/-1;font-size:11px;color:var(--dim2);padding:2px 8px}
+#tb-search{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(var(--veil),.06);color:var(--ink);display:grid;place-items:center;transition:.18s}
+#tb-search:hover{border-color:var(--acc);background:rgba(var(--veil),.12)}
+#tb-search svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .jrow{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:9px;text-align:left;min-width:0;transition:.15s;color:var(--dim)}
 .jrow:hover{background:rgba(var(--veil),.06);color:var(--ink)}
 .jrow.sel{background:rgba(217,173,78,.12);color:var(--ink)}
@@ -394,7 +402,7 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .jrow small{font-size:10.5px;color:var(--dim2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;padding-left:6px}
 .mhint{margin-top:10px;font-size:10.5px;color:var(--dim2);letter-spacing:.06em}
 .mhint kbd{font:inherit;padding:1px 6px;border:1px solid var(--line);border-radius:5px;color:var(--dim);margin:0 2px}
-@media(max-width:640px){#jlist{grid-template-columns:1fr}}
+@media(max-width:640px){#jlist,#jlist.res{grid-template-columns:1fr}}
 
 /* ------------------------------------------------------------- reader */
 .rbox{position:relative;width:min(840px,96vw);max-height:92dvh;display:flex;flex-direction:column;background:linear-gradient(170deg,var(--m1),var(--m2));
@@ -561,7 +569,10 @@ button.ev:hover{border-color:var(--acc)}
 /* -------------------------------------------------------- portrait/mobile */
 @media(max-aspect-ratio:1/1){
   #topbar{flex-wrap:wrap;row-gap:5px;padding:calc(9px + env(safe-area-inset-top)) clamp(14px,4vw,22px) 10px;background:rgba(var(--bg-rgb),.92)}
-  #topbar .tb-l{flex:1 1 100%;font-size:9.5px}
+  #topbar .tb-l{flex:1 1 100%;font-size:9.5px;padding-right:40px}
+  /* on a phone the magnifier sits on the title line, top right */
+  #tb-search{position:absolute;top:calc(4px + env(safe-area-inset-top));right:clamp(14px,4vw,22px);width:30px;height:30px}
+  .mhint{display:none}                                       /* keyboard hints mean nothing on a phone */
   #tb-tabs{margin-left:0;gap:3px;max-width:100%;overflow-x:auto;scrollbar-width:none}
   #tb-tabs::-webkit-scrollbar{display:none}
   #tb-tabs button{padding:6px 9px;font-size:9.5px;letter-spacing:.09em;gap:5px}
@@ -687,6 +698,7 @@ button.ev:hover{border-color:var(--acc)}
     <button data-sec="season" title="Season"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></svg><span>Season</span></button>
     <button data-sec="league" title="League"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.8v5.2c0 4.4-3 8-7 9.8-4-1.8-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span>League</span></button>
   </div>
+  <button id="tb-search" title="Search (/)" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
 </div>
 
 <div id="film"></div>
@@ -703,9 +715,9 @@ button.ev:hover{border-color:var(--acc)}
 </div>
 <div class="modal" id="jmodal" onclick="if(event.target===this)closeModal('jmodal')"><div class="mbox">
   <button class="mclose" onclick="closeModal('jmodal')">&times;</button>
-  <h3 data-t="Index">Index</h3>
+  <h3 data-t="Search">Search</h3>
   <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input id="jq" type="search" placeholder="City, player, section…" data-t="City, player, section…" autocomplete="off" oninput="renderJump(this.value)"></label>
+    <input id="jq" type="search" placeholder="Players, cities, stories, events…" data-t="Players, cities, stories, events…" autocomplete="off" oninput="renderJump(this.value)"></label>
   <div id="jlist"></div>
   <div class="mhint" id="mhint"></div>
   <div class="mfoot" id="mfoot"></div>
@@ -1632,18 +1644,68 @@ function jumpEntries() {
   });
 }
 const JUMP = jumpEntries();
-function renderJump(q) {
-  q = norm((q || "").trim());
-  const words = q.split(/\s+/).filter(Boolean);
-  const hit = e => !words.length || words.every(w => norm(`${e.label} ${e.sub} ${e.sec} ${e.q || ""}`).includes(w));
-  let sec = null, out = "";
-  JUMP.filter(hit).forEach(e => {
-    if (e.sec !== sec) { sec = e.sec; out += `<h5>${sec}</h5>`; }
-    out += `<button class="jrow ${e.n === cur ? "sel" : ""}" style="--c:${e.color}" onclick="closeModal('jmodal');go(${e.n})"><span class="jn">${e.n + 1}</span><i></i><b>${esc(e.label)}</b><small>${esc(e.sub)}</small></button>`;
+/* Search: one panel for the whole site, opened by the magnifier top right, the counter on the control bar, / or g.
+   Empty, it is the index of every card. Typed into, it finds players, cities, stories, events and pages, grouped by
+   kind, the closest matches first, and ↑ ↓ Enter pick a result. */
+const SEARCH_GROUPS = [["player", "Players"], ["city", "Cities"], ["story", "Stories"], ["event", "Events"], ["card", "Sections"], ["page", "More"]];
+function searchItems() {
+  const items = JUMP.map(e => {
+    const c = CARDS[e.n];
+    const kind = c.k === "player" ? "player" : c.k === "city" ? "city" : c.k === "event" && e.n !== SEC.live ? "event" : "card";
+    return { kind, label: e.label, sub: e.sub, more: `${e.sec} ${e.q || ""}`, color: e.color, n: e.n, act: `closeModal('jmodal');go(${e.n})` };
   });
-  const pages = PAGES.filter(p => !words.length || words.every(w => norm(`${t(p[1])} ${t("More")}`).includes(w)));
-  if (pages.length) out += `<h5>${t("More")}</h5>` + pages.map(p => `<button class="jrow" style="--c:var(--dim2)" onclick="pageInfo('${p[0]}')"><span class="jn">·</span><i></i><b>${t(p[1])}</b></button>`).join("");
-  document.getElementById("jlist").innerHTML = out || `<div class="empty" style="grid-column:1/-1">${t("Nothing matches.")}</div>`;
+  LEAGUE.stories.filter(s => s.kind !== "result").forEach(s => {
+    const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
+    const names = [...(s.cities || []).map(id => CITY[id] && CITY[id].name), ...(s.players || []).map(id => PLAYER[id] && PLAYER[id].name)].filter(Boolean).join(" ");
+    items.push({ kind: "story", label: sTitle(s), sub: `${s.author} · ${ago(s.at)}`, more: `${sDek(s)} ${names} ${kindLabel(s.kind)} ${s.topic}`,
+                 color: c ? c.color : "var(--acc)", act: `closeModal('jmodal');openStory('${s.id}')` });
+  });
+  PAGES.forEach(p => items.push({ kind: "page", label: t(p[1]), sub: "", more: t(p[2]), color: "var(--dim2)", act: `pageInfo('${p[0]}')` }));
+  return items;
+}
+function renderJump(q) {
+  const list = document.getElementById("jlist");
+  const words = norm((q || "").trim()).split(/\s+/).filter(Boolean);
+  if (!words.length) {                                       // nothing typed: the index of every card, as before
+    list.classList.remove("res");
+    let sec = null, out = "";
+    JUMP.forEach(e => {
+      if (e.sec !== sec) { sec = e.sec; out += `<h5>${sec}</h5>`; }
+      out += `<button class="jrow ${e.n === cur ? "sel" : ""}" style="--c:${e.color}" onclick="closeModal('jmodal');go(${e.n})"><span class="jn">${e.n + 1}</span><i></i><b>${esc(e.label)}</b><small>${esc(e.sub)}</small></button>`;
+    });
+    out += `<h5>${t("More")}</h5>` + PAGES.map(p => `<button class="jrow" style="--c:var(--dim2)" onclick="pageInfo('${p[0]}')"><span class="jn">·</span><i></i><b>${t(p[1])}</b></button>`).join("");
+    list.innerHTML = out;
+    return;
+  }
+  list.classList.add("res");
+  // a result must hold every word typed; it ranks higher when its name starts with them
+  const score = it => {
+    const name = norm(it.label), all = `${name} ${norm(it.sub)} ${norm(it.more)}`;
+    if (!words.every(w => all.includes(w))) return -1;
+    const q = words.join(" ");
+    return name.startsWith(q) ? 4 : name.split(/[^a-z0-9]+/).some(x => x.startsWith(words[0])) ? 3 : name.includes(words[0]) ? 2 : 1;
+  };
+  const found = searchItems().map(it => ({ it, s: score(it) })).filter(x => x.s >= 0);
+  let out = "";
+  // the group holding the best match comes first ("chicago" leads with the city, "mayakoba" with the event)
+  const best = kind => Math.max(-1, ...found.filter(x => x.it.kind === kind).map(x => x.s));
+  [...SEARCH_GROUPS].sort((a, b) => best(b[0]) - best(a[0])).forEach(([kind, title]) => {
+    const rows = found.filter(x => x.it.kind === kind).sort((a, b) => b.s - a.s);
+    if (!rows.length) return;
+    const shown = rows.slice(0, kind === "story" ? 6 : 8);
+    out += `<h5>${t(title)} <em>${rows.length}</em></h5>` + shown.map(({ it }) =>
+      `<button class="jrow${kind === "story" ? " wide" : ""}" style="--c:${it.color}" onclick="${it.act}"><i></i><b>${esc(it.label)}</b><small>${esc(it.sub)}</small></button>`).join("") +
+      (rows.length > shown.length ? `<p class="jmore">${rows.length - shown.length} ${t("more: keep typing to narrow it down")}</p>` : "");
+  });
+  list.innerHTML = out || `<div class="empty" style="grid-column:1/-1">${t("Nothing matches")} “${esc(q.trim())}”. ${t("Try a player, a city, a team or a word from a headline.")}</div>`;
+  list.querySelector(".jrow")?.classList.add("kb");
+}
+function moveKb(d) {
+  const rows = [...document.querySelectorAll("#jlist .jrow")]; if (!rows.length) return;
+  const i = rows.findIndex(r => r.classList.contains("kb"));
+  rows.forEach(r => r.classList.remove("kb"));
+  const next = rows[(i + d + rows.length) % rows.length];
+  next.classList.add("kb"); next.scrollIntoView({ block: "nearest" });
 }
 function openJump() {
   const q = document.getElementById("jq"); q.value = ""; renderJump("");
@@ -1704,11 +1766,13 @@ document.getElementById("b-full").onclick = () => document.fullscreenElement ? d
 document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.onclick = () => go(SEC[b.dataset.sec]); });
 // static chrome strings
 document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; if (el.hasAttribute("title")) el.title = t(k); else if (el.hasAttribute("placeholder")) el.placeholder = t(k); else el.textContent = t(k); });
-document.getElementById("mhint").innerHTML = `<kbd>g</kbd> ${t("opens this index")} · <kbd>←</kbd> <kbd>→</kbd> ${t("move through the film")} · <kbd>Esc</kbd> ${t("closes")}`;
+document.getElementById("mhint").innerHTML = `<kbd>/</kbd> ${t("opens search")} · <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd> ${t("pick a result")} · <kbd>Esc</kbd> ${t("closes")}`;
+document.getElementById("tb-search").onclick = openJump;
 document.getElementById("mfoot").innerHTML = PAGES.map(p => `<button onclick="pageInfo('${p[0]}')">${t(p[1])}</button>`).join("<span>·</span>");
 addEventListener("keydown", e => {
   if (e.key === "Escape") { document.querySelectorAll(".modal.on").forEach(m => m.classList.remove("on")); if (e.target.matches("input")) e.target.blur(); return; }
-  if (e.key === "Enter" && e.target.id === "jq") { document.querySelector("#jlist .jrow")?.click(); return; }
+  if (e.target.id === "jq" && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); moveKb(e.key === "ArrowDown" ? 1 : -1); return; }
+  if (e.key === "Enter" && e.target.id === "jq") { (document.querySelector("#jlist .jrow.kb") || document.querySelector("#jlist .jrow"))?.click(); return; }
   if (e.target.matches("input,select,textarea")) return;
   if (document.getElementById("smodal").classList.contains("on")) {
     if (e.key === "ArrowRight") { e.preventDefault(); stepStory(1); }
@@ -1725,7 +1789,7 @@ addEventListener("keydown", e => {
   if (e.key === "End") go(total - 1);
   if (e.key === "f") document.getElementById("b-full").click();
   if (e.key === "p" && CARDS[cur].k === "event" && CARDS[cur].id === EVENT.id) togglePlay();
-  if (e.key === "/" && CARDS[cur].k === "stories") { e.preventDefault(); document.getElementById("st-q").focus(); }
+  if (e.key === "/") { e.preventDefault(); openJump(); }
 });
 let tx = 0, ty = 0;
 addEventListener("touchstart", e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
