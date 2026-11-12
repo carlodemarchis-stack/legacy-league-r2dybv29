@@ -48,7 +48,7 @@ def collect():
     """key -> bytes for every file the store should hold, and key -> bytes for the indexes that point at them."""
     objects = {}
     content = build.load_content()
-    ui = json.loads((ROOT / "content/ui/es.json").read_text())
+    ui = {}                                                    # English only: no interface translations
     rev, pack = build.site_content(content, ui)
     objects[f"site/site.{rev}.json"] = json.dumps({"rev": rev, **pack}, ensure_ascii=False).encode()
 
@@ -65,7 +65,7 @@ def collect():
     tiles = []
     for s in content["stories"]:
         s = dict(s)
-        body = {k: s.pop(k) for k in ("body", "body_es") if k in s}
+        body = {"body": s.pop("body")} if "body" in s else {}
         if body:
             raw = json.dumps(body, ensure_ascii=False).encode()
             key = f"stories/{s['id']}.{hashlib.sha1(raw).hexdigest()[:8]}.json"
@@ -99,7 +99,7 @@ def _put(npx, key, data):
 
 def desk_records():
     """Every story in content/stories, drafts included, as the hosted desk keeps them: one record each,
-    Spanish inside it, photos addressed in the store."""
+    photos addressed in the store."""
     photos, out = {}, {}
 
     def photo(path):
@@ -109,15 +109,7 @@ def desk_records():
         return PREFIX + "photos/" + path[4:]
 
     for p in sorted((ROOT / "content/stories").glob("*.md")):
-        if p.name.endswith(".es.md"):
-            continue
-        s = build.story(p)
-        es = p.with_name(p.name[:-3] + ".es.md")
-        if es.exists():
-            e = build.story(es)
-            for k in ("title", "dek", "body"):
-                if e.get(k):
-                    s[k + "_es"] = e[k]
+        s = build.english_only(build.story(p))
         if s.get("photo"):
             s["photo"] = photo(s["photo"])
         if s.get("photos"):

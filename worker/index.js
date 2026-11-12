@@ -12,8 +12,7 @@ async function storyPage(request, env, url, name) {
   const s = stories.find((x) => x.slug === name || x.id === name);
   if (!s) return Response.redirect(url.origin + "/#3", 302);
   const page = await env.ASSETS.fetch(new Request(url.origin + "/", request));
-  const es = /^es\b/i.test(request.headers.get("accept-language") || "") && s.title_es;
-  const title = es ? s.title_es : s.title, dek = (es && s.dek_es) || s.dek || "";
+  const title = s.title, dek = s.dek || "";
   const abs = (p) => (/^https?:/.test(p || "") ? p : url.origin + "/" + (p || "img/og.jpg"));
   const head = `<base href="/">
 <title>${esc(title)} · Legacy League Golf</title>

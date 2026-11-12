@@ -453,8 +453,6 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .placement .pl-logo{flex:0 0 auto;display:inline-grid;place-items:center;height:28px;padding:0 14px;border-radius:7px;background:var(--acc);color:var(--on-acc);font-style:normal;letter-spacing:.06em;font-size:12px}
 .placement .pl-sched{margin-left:auto;font-weight:300;letter-spacing:.04em;text-transform:none;color:var(--dim)}
 .placement .pl-sched b{color:var(--green);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:9px;margin-right:4px}
-#tb-lang{margin-left:8px;border:1px solid var(--line)!important;color:var(--acc-ink)!important;font-weight:700}
-#tb-lang:hover{border-color:var(--acc)!important}
 u.cc{text-decoration:none;display:inline-block;padding:0 4px;border:1px solid currentColor;border-radius:3px;font-size:8.5px;line-height:1.5;letter-spacing:.06em;vertical-align:1px;margin-left:2px}
 .rhero.video{background:#000}
 .rhero.video video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
@@ -483,9 +481,6 @@ button.ev:hover{border-color:var(--acc)}
 .ok .pill{color:var(--dim)}
 @media(max-aspect-ratio:1/1){
   .placement .pl-sched{margin-left:0;flex:1 1 100%}
-  /* six sections fill the row on a phone, so the language button sits on the title line instead */
-  #tb-lang{position:absolute;top:calc(3px + env(safe-area-inset-top));right:clamp(14px,4vw,22px);margin-left:0;padding:4px 9px}
-  #topbar .tb-l{padding-right:48px}
 }
 
 /* -------------------------------------------------------- portrait/mobile */
@@ -591,7 +586,6 @@ button.ev:hover{border-color:var(--acc)}
     <button data-sec="players">Players</button>
     <button data-sec="season">Season</button>
     <button data-sec="league">League</button>
-    <button id="tb-lang" class="lang" title="English / Español">ES</button>
   </div>
 </div>
 
@@ -646,17 +640,13 @@ const PREF = {
   get(k, d) { try { const v = localStorage.getItem("ll." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("ll." + k, JSON.stringify(v)); } catch (e) {} },
 };
-/* ------------------------------------------------------------- i18n
-   Interface strings are a dictionary keyed by the English text; content
-   fields come localised from the CMS (title_es, bio_es…) with English as
-   the fallback, which is the field-level model the brief asks for. */
-const LANG = PREF.get("lang", null) || ((navigator.language || "en").toLowerCase().startsWith("es") ? "es" : "en");
+/* The website and the apps are in English only. */
+const LANG = "en";
 document.documentElement.lang = LANG;
 /*UI*/
 if (STORE_UI) { Object.keys(T).forEach(k => delete T[k]); Object.assign(T, STORE_UI); }
-const t = s => LANG === "es" ? (T[s] ?? s) : s;
-const L = (o, k) => (LANG === "es" && o && o[k + "_es"]) ? o[k + "_es"] : (o ? o[k] : "");
-function setLang(l) { PREF.set("lang", l); location.reload(); }
+const t = s => s;
+const L = (o, k) => (o ? o[k] : "");
 
 const CITY = Object.fromEntries(LEAGUE.cities.map(c => [c.id, c]));
 const PLAYER = Object.fromEntries(LEAGUE.players.map(p => [p.id, p]));
@@ -687,7 +677,7 @@ const hubScore = new Set(PREF.get("hubscore", []));   // cities whose hub shows 
 const fmt = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 const sgn = n => n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`;
 const cls = n => n === 0 ? "e" : n > 0 ? "o" : "u";
-const ord = n => LANG === "es" ? `${n}º` : n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]);
+const ord = n => n + (["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]);
 const ini = n => n.split(" ").map(w => w[0]).join("").slice(0, 2);
 const lastName = n => n.split(" ").slice(-1)[0];
 
@@ -820,7 +810,7 @@ function storyCard() {
 const EVTABS = [["board", "Leaderboard"], ["tee", "Tee times"], ["info", "Info"]];
 const evTab = PREF.get("evtab", {});                    // event id -> the tab last opened there
 const tabOf = e => evTab[e.id] || (e.id === EVENT.id ? "board" : "info");
-const dateRange = e => new Intl.DateTimeFormat(LANG === "es" ? "es-MX" : "en-US", { day: "numeric", month: "long", year: "numeric" })
+const dateRange = e => new Intl.DateTimeFormat("en-US", { day: "numeric", month: "long", year: "numeric" })
   .formatRange(new Date(e.start + "T12:00:00"), new Date(e.end + "T12:00:00"));
 const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
@@ -874,13 +864,13 @@ function eventCard(e) {
   const clips = live ? LEAGUE.stories.filter(s => s.kind === "video" && ["s02", "s07", "s16"].includes(s.id)) : [];
   const info = `<div class="col l">
       <div class="box grow"><div class="legend"><span>${t("Programme")}</span><span>${e.programme ? t("The four-day experience") : t("Standard programme · to be confirmed")}</span></div>
-        <div class="sched">${programme.map(d => { const on = live && d.date === RDATE.r2; return `<div class="ev ${d.core ? "core" : ""} ${on ? "live" : ""}"><span class="n">${dateShort(d.date).replace(",", "")}</span><span><b>${esc(LANG === "es" ? d.es : d.en)}</b></span><span class="st">${on ? `<span class="dot"></span>${t("Live")}` : d.core ? "●" : ""}</span></div>`; }).join("")}</div></div>
+        <div class="sched">${programme.map(d => { const on = live && d.date === RDATE.r2; return `<div class="ev ${d.core ? "core" : ""} ${on ? "live" : ""}"><span class="n">${dateShort(d.date).replace(",", "")}</span><span><b>${esc(d.en)}</b></span><span class="st">${on ? `<span class="dot"></span>${t("Live")}` : d.core ? "●" : ""}</span></div>`; }).join("")}</div></div>
     </div>
     <div class="col r">
       <div class="grid c2">
         <div class="box"><div class="legend">${t("Venue")}</div><p class="bio">${live ? `<b style="color:var(--ink)">${esc(FEED.event.course.name)}</b><br>${esc(L(e, "city"))}<br>${t("Par 71 · 7,034 yards · tournament tees")}`
           : `<b style="color:var(--ink)">${venue || t("To be announced")}</b><br>${e.city === "TBA" ? dateRange(e) : esc(L(e, "city"))}`}</p></div>
-        <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc((e.watch || EVENT.watch)[LANG === "es" ? "es" : "en"])}</p></div>
+        <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc((e.watch || EVENT.watch).en)}</p></div>
       </div>
       ${clips.length ? `<div class="box"><div class="legend">${t("Highlights")}</div>
         <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${s.photo}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>` : ""}
@@ -927,7 +917,7 @@ function storiesCard() {
   </div></div>`;
 }
 const ago = iso => { const h = Math.round((Date.parse(FEED.generated_at.slice(0, 16)) - Date.parse(iso)) / 36e5);
-  return h < 1 ? t("just now") : h < 24 ? `${h}h` : h < 48 ? t("yesterday") : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric" }); };
+  return h < 1 ? t("just now") : h < 24 ? `${h}h` : h < 48 ? t("yesterday") : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
 const kindLabel = k => ({ video: t("Video"), gallery: t("Gallery"), article: t("News"), quote: t("Mission"), result: t("Live result") }[k]);
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : n;
 function renderFilters() {
@@ -976,8 +966,8 @@ function tile(s) {
 }
 /* the reader: a story opened from the collage, with previous/next inside the current filter */
 let rList = [], rIdx = -1;
-const fill = (txt, s) => String(txt || "").replace(/\{p0\}/g, s.players && s.players[0] && PLAYER[s.players[0]] ? PLAYER[s.players[0]].name : (LANG === "es" ? "el capitán" : "the captain"))
-  .replace(/\{c0\}/g, s.cities && s.cities[0] ? CITY[s.cities[0]].name : (LANG === "es" ? "la liga" : "the league")).replace(/\{author\}/g, "Legacy League Golf");
+const fill = (txt, s) => String(txt || "").replace(/\{p0\}/g, s.players && s.players[0] && PLAYER[s.players[0]] ? PLAYER[s.players[0]].name : "the captain")
+  .replace(/\{c0\}/g, s.cities && s.cities[0] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
 /* Article bodies are not in the page. Each lives in its own small file and is fetched when the story is opened. */
 function loadBody(s) {
   if (!s || !s.body_ref || s.body || s._loading) return;
@@ -1049,9 +1039,8 @@ function renderStory() {
   else if (s.kind === "quote") hero = `<div class="rhero quote" style="--c:${col}"><p>${esc(sTitle(s))}</p><small>${s.players && s.players[0] && PLAYER[s.players[0]] ? esc(PLAYER[s.players[0]].name) + " · " : ""}${esc(s.author)}</small></div>`;
   else if (s.kind === "video" && s.video) hero = `<div class="rhero video"><video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
       <source src="${s.video}" type="video/webm">
-      <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt"${LANG !== "es" ? " default" : ""}>
-      <track kind="captions" srclang="es" label="Español" src="img/video/swing.es.vtt"${LANG === "es" ? " default" : ""}></video>
-      <span class="cap">${t("Video · hosted, adaptive, captioned")} · <u class="cc">CC</u> EN · ES</span></div>`;
+      <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt" default></video>
+      <span class="cap">${t("Video · hosted, adaptive, captioned")} · <u class="cc">CC</u></span></div>`;
   else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">${t("Video · hosted, adaptive, captioned")}</span>` : `<span class="cap">${s.kind === "article" ? t("Picture · supplied by Legacy") : ""}</span>`}</div>`;
   const tags = (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
                (s.players || []).filter(id => PLAYER[id]).map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
@@ -1131,7 +1120,7 @@ function playerCard(p, n) {
   </div></div>`;
 }
 
-const dateShort = iso => new Date(iso + "T12:00:00").toLocaleDateString(LANG === "es" ? "es-MX" : "en-US", { weekday: "short", day: "numeric", month: "short" });
+const dateShort = iso => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
 const schedRows = () => LEAGUE.schedule.map(e => `<div class="ev ${e.status}" onclick="goEvent('${e.id}')" style="cursor:pointer"><span class="n">${String(e.n).padStart(2, "0")}</span>
         <span><b>${esc(L(e, "name"))}</b><small>${esc(e.venue === "TBA" ? t("TBA") : e.venue)} · ${esc(e.city === "TBA" ? t("TBA") : L(e, "city"))} · ${e.start.slice(5).replace("-", "/")}–${e.end.slice(8)}</small></span>
         <span class="st">${e.status === "live" ? `<span class="dot"></span>${t("Live")}` : t("Upcoming")}</span></div>`).join("");
@@ -1369,7 +1358,7 @@ function refresh() {
   // city cards
   lb.forEach((x, i) => {
     const st = document.querySelector(`[data-standing="${x.c.id}"]`);
-    st.innerHTML = `<b>${x.tied ? "T" : ""}${x.pos}<span style="font-size:.5em;letter-spacing:0">${x.tied || LANG === "es" ? (LANG === "es" ? "º" : "") : ord(x.pos).slice(-2)}</span></b><span><b style="color:var(--acc-ink)">${x.pts}</b> ${t("league points")}${final ? "" : " " + t("projected")} · ${t("after")} ${final ? t("1 of 6 events") : t("0 of 6 events")}</span>`;
+    st.innerHTML = `<b>${x.tied ? "T" : ""}${x.pos}<span style="font-size:.5em;letter-spacing:0">${x.tied ? "" : ord(x.pos).slice(-2)}</span></b><span><b style="color:var(--acc-ink)">${x.pts}</b> ${t("league points")}${final ? "" : " " + t("projected")} · ${t("after")} ${final ? t("1 of 6 events") : t("0 of 6 events")}</span>`;
     const cl = document.querySelector(`[data-citylive="${x.c.id}"]`);
     cl.innerHTML = `<div class="cell"><small>${t("Position")}</small><b>${x.tied ? "T" : ""}${x.pos}</b></div><div class="cell"><small>${t("Total")}</small><b class="${cls(x.total)}">${sgn(x.total)}</b></div><div class="cell"><small>${t("Round 1")}</small><b class="${cls(x.r1.toPar)}">${sgn(x.r1.toPar)}</b></div><div class="cell"><small>${t("Round 2")}</small><b class="${cls(x.today)}">${x.thru ? sgn(x.today) + (x.thru < 18 ? `<span style="font-size:.55em;color:var(--dim2);margin-left:4px">${t("thru")} ${x.thru}</span>` : "") : "–"}</b></div>`;
   });
@@ -1424,7 +1413,7 @@ function consentStatus() {
   const d = PREF.get("consent", null), ok = document.getElementById("consent-ok"); if (!ok) return;
   if (!d) { ok.hidden = true; return; }
   ok.hidden = false;
-  ok.innerHTML = `${t("Consent recorded (demo, this device only)")}: ${esc(d.email)} · ${CITY[d.city] ? esc(CITY[d.city].name) : ""} · ${t("email")} ${d.c_email ? t("yes") : t("no")} · ${t("SMS")} ${d.c_sms ? t("yes") : t("no")} · ${t("mission")} ${d.c_mission ? t("yes") : t("no")} · ${new Date(d.at).toLocaleString(LANG === "es" ? "es-MX" : "en-US")}
+  ok.innerHTML = `${t("Consent recorded (demo, this device only)")}: ${esc(d.email)} · ${CITY[d.city] ? esc(CITY[d.city].name) : ""} · ${t("email")} ${d.c_email ? t("yes") : t("no")} · ${t("SMS")} ${d.c_sms ? t("yes") : t("no")} · ${t("mission")} ${d.c_mission ? t("yes") : t("no")} · ${new Date(d.at).toLocaleString("en-US")}
     <br><button class="pill" style="margin-top:8px" onclick="withdrawConsent()">${t("Withdraw consent")}</button>`;
 }
 function saveConsent(f) {
@@ -1532,8 +1521,6 @@ document.getElementById("b-theme").onclick = () => { PREF.set("theme", PREF.get(
 applyTheme();
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
 document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.textContent = t(b.textContent.trim()); b.onclick = () => go(SEC[b.dataset.sec]); });
-document.getElementById("tb-lang").onclick = () => setLang(LANG === "es" ? "en" : "es");
-document.getElementById("tb-lang").textContent = LANG === "es" ? "EN" : "ES";
 // static chrome strings
 document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; if (el.hasAttribute("title")) el.title = t(k); else if (el.hasAttribute("placeholder")) el.placeholder = t(k); else el.textContent = t(k); });
 document.getElementById("mhint").innerHTML = `<kbd>g</kbd> ${t("opens this index")} · <kbd>←</kbd> <kbd>→</kbd> ${t("move through the film")} · <kbd>Esc</kbd> ${t("closes")}`;
@@ -1588,7 +1575,7 @@ function loadStore() {
     const name = ref => (ref || "").split("/").pop();           // an article text already fetched is kept
     const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
     ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
-      const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; if (o.body_es) s.body_es = o.body_es; } });
+      const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; } });
     storeRev = ix.rev; LEAGUE.stories = ix.stories; LEAGUE.story_count = ix.stories.length;
     renderFeed();
     document.getElementById("hnrow").innerHTML = newsTiles();

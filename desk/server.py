@@ -127,8 +127,8 @@ _Dumper.add_representer(str, _str)
 
 
 def _all() -> list[dict]:
-    """Every story in content/stories (the English file; <id>.es.md is its Spanish sibling)."""
-    return [_parse(p) for p in sorted(STORIES.glob("*.md")) if not p.name.endswith(".es.md")]
+    """Every story in content/stories, one file each."""
+    return [_parse(p) for p in sorted(STORIES.glob("*.md"))]
 
 
 def _write(s: dict, name: Optional[str] = None) -> None:
@@ -140,18 +140,6 @@ def _write(s: dict, name: Optional[str] = None) -> None:
 
 def _paras(text: str) -> list[str]:
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
-
-
-def _write_es(sid: str, title_es: Optional[str], dek_es: Optional[str], body_es: Optional[str]) -> None:
-    """Create or update the Spanish sibling <id>.es.md. Only the fields given change."""
-    if not (title_es or dek_es or body_es):
-        return
-    p = STORIES / f"{sid}.es.md"
-    es = _parse(p) if p.exists() else {"id": sid, "lang": "es"}
-    if title_es: es["title"] = title_es.strip()
-    if dek_es: es["dek"] = dek_es.strip()
-    if body_es: es["body"] = _paras(body_es)
-    _write(es, p.name)
 
 
 def _live(s: dict) -> bool:
@@ -193,8 +181,7 @@ def _story(sid: str) -> dict:
 
 def _public(s: dict) -> dict:
     keep = ("id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count")
-    return {"status": "published", **{k: s.get(k) for k in keep if s.get(k) not in (None, [], "")},
-            "spanish": (STORIES / f"{s['id']}.es.md").exists()}
+    return {"status": "published", **{k: s.get(k) for k in keep if s.get(k) not in (None, [], "")}}
 
 
 # ----------------------------------------------------------------- scoring
@@ -371,28 +358,22 @@ def list_stories(status: str = "all", limit: int = 30) -> list[dict]:
 
 @mcp.tool()
 def get_story(id: str) -> dict:
-    """One story in full: every field, the body paragraphs, and the Spanish version if there is one.
-    Read this before correcting a story, so the change reaches every place the fact appears, in both languages.
+    """One story in full: every field and the body paragraphs.
+    Read this before correcting a story, so the change reaches every place the fact appears.
     {p0} and {c0} in the text stand for the first tagged player and city; leave them as they are."""
     s = _story(id)
-    p = STORIES / f"{id}.es.md"
-    es = _parse(p) if p.exists() else None
-    return {"story": {"status": "published", **s},
-            "spanish": {k: es[k] for k in ("title", "dek", "body") if k in es} if es else None}
+    return {"story": {"status": "published", **s}}
 
 
 @mcp.tool()
 def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = None, players: Optional[list[str]] = None,
                 topic: str = "league", author: Optional[str] = None, dur: Optional[str] = None, count: Optional[int] = None,
                 photo_url: Optional[str] = None, size: Optional[str] = None, at: Optional[str] = None,
-                body: Optional[str] = None, title_es: Optional[str] = None, dek_es: Optional[str] = None,
-                body_es: Optional[str] = None) -> dict:
+                body: Optional[str] = None) -> dict:
     """Create a DRAFT story for the Stories collage. body = the article text, paragraphs separated by blank lines
     (2–4 short paragraphs; the collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and players may be names or ids.
     video needs dur ("2:14"); gallery needs count. Without photo_url a golf photo from the library is picked.
-    at = ISO time in the demo's event timeline (default: the feed's current time, shows as "just now").
-    title_es, dek_es, body_es = the Spanish version (Mexican Spanish), saved as the story's Spanish file. The site is
-    bilingual: without them Spanish readers see the English text."""
+    at = ISO time in the demo's event timeline (default: the feed's current time, shows as "just now")."""
     kind = kind.strip().lower()
     if kind not in KINDS or kind == "result":
         raise ValueError("kind must be video, gallery, article or quote")
@@ -428,7 +409,6 @@ def draft_story(kind: str, title: str, dek: str, cities: Optional[list[str]] = N
     if kind == "gallery":
         story["photos"] = [story["photo"], _pick_photo(sid + "b"), _pick_photo(sid + "c")]
     _write(story)
-    _write_es(sid, title_es, dek_es, body_es)
     _log("draft_story", {"id": sid, "kind": kind, "title": title}, "draft")
     return {"ok": True, "story": _public(story), "next": "publish_story(id) to show it in the collage, then render_site() to preview."}
 
@@ -480,11 +460,8 @@ def add_photo(id: str, file: str, credit: Optional[str] = None) -> dict:
 @mcp.tool()
 def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None, cities: Optional[list[str]] = None,
                  players: Optional[list[str]] = None, size: Optional[str] = None, photo_url: Optional[str] = None,
-                 author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None,
-                 title_es: Optional[str] = None, dek_es: Optional[str] = None, body_es: Optional[str] = None) -> dict:
-    """Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank lines).
-    title_es, dek_es, body_es change the Spanish version (created if missing). English and Spanish are separate texts:
-    when you change one, pass the matching change for the other, or they drift apart."""
+                 author: Optional[str] = None, at: Optional[str] = None, body: Optional[str] = None) -> dict:
+    """Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank lines)."""
     s = _story(id)
     if title: s["title"] = title.strip()
     if dek: s["dek"] = dek.strip()
@@ -499,7 +476,6 @@ def update_story(id: str, title: Optional[str] = None, dek: Optional[str] = None
     if body: s["body"] = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
     s["updated_by"], s["updated_at"] = EDITOR, dt.datetime.now().isoformat(timespec="seconds")
     _write(s)
-    _write_es(id, title_es, dek_es, body_es)
     _log("update_story", {"id": id}, "updated")
     out = {"ok": True, "story": _public(s)}
     if _live(s):
@@ -542,10 +518,9 @@ def unpublish_story(id: str) -> dict:
 
 @mcp.tool()
 def delete_story(id: str) -> dict:
-    """Delete a story permanently (its Spanish file too). If it was published, it leaves the public site at once."""
+    """Delete a story permanently. If it was published, it leaves the public site at once."""
     s = _story(id)
-    for p in (STORIES / f"{id}.md", STORIES / f"{id}.es.md"):
-        p.unlink(missing_ok=True)
+    (STORIES / f"{id}.md").unlink(missing_ok=True)
     _log("delete_story", {"id": id, "title": s["title"]}, "deleted")
     out = {"ok": True, "deleted": id}
     if _live(s):

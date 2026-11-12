@@ -5,7 +5,7 @@
 //   desk/stories.json            every story, drafts included: the desk's own records (the source of truth)
 //   desk/config.json             {"now": "<the demo's current time>"}
 //   stories/index.json           what the site lists: the published stories, without article text
-//   stories/<id>.<hash>.json     one article text each, English and Spanish
+//   stories/<id>.<hash>.json     one article text each
 //   site/…                       profiles and wording (read here only to resolve city and player names)
 //   photos/…                     pictures (a new story is given one from photos/course/)
 //
@@ -82,7 +82,7 @@ async function publishIndex(env, stories) {
   const tiles = await Promise.all(live.map(async (full) => {            // all at once: one slow file does not hold up the rest
     const s = { cities: [], players: [], photos: [], ...full };
     const body = {};
-    for (const k of ["body", "body_es"]) if (s[k]) { body[k] = s[k]; delete s[k]; }
+    if (s.body) { body.body = s.body; delete s.body; }
     if (Object.keys(body).length) {
       const raw = JSON.stringify(body);
       const key = `stories/${s.id}.${(await sha1(raw)).slice(0, 8)}.json`;
@@ -131,7 +131,6 @@ const summary = (s) => {
   const keep = ["id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count", "scheduled_at"];
   const out = { status: "published" };
   for (const k of keep) if (s[k] != null && s[k] !== "" && !(Array.isArray(s[k]) && !s[k].length)) out[k] = s[k];
-  out.spanish = Boolean(s.title_es || s.dek_es || s.body_es);
   if (s.slug && isLive(s)) out.url = `${SITE_ROOT}/stories/${s.slug}`;   // the story's own public address
   return out;
 };
@@ -149,8 +148,7 @@ function createServer(env, door) {
       "Publishing is public at once: the site and the app show the story on their next load. So ask the editor " +
       "before publish_story, and before changing, unpublishing or deleting a story that is already published. " +
       "Every published story has its own public address (url in its summary): give it to the editor after publishing. " +
-      "Read a story with get_story before changing it. The site is bilingual: give the Spanish version " +
-      "(Mexican Spanish) with every story, and change both languages together.",
+      "Read a story with get_story before changing it. The site and the apps are in English only.",
   });
 
   server.registerTool("list_stories", {
@@ -163,7 +161,7 @@ function createServer(env, door) {
   }));
 
   server.registerTool("get_story", {
-    description: "One story in full: every field, the article text, the Spanish version if there is one, and its photo (with photo_credit when the editor gave one).",
+    description: "One story in full: every field, the article text, and its photo (with photo_credit when the editor gave one).",
     inputSchema: z.object({ id: z.string() }),
   }, tool(async ({ id }) => find((await readJson(env, RECORDS)).data || [], id)));
 
@@ -173,15 +171,13 @@ function createServer(env, door) {
       "collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and " +
       "players may be names or ids. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
       "from the library is picked. at = ISO time in the demo's event timeline (default: the demo's current time, " +
-      "shows as \"just now\"). title_es, dek_es, body_es = the Spanish version (Mexican Spanish); without them " +
-      "Spanish readers see the English text. A draft is not public until publish_story.",
+      "shows as \"just now\"). A draft is not public until publish_story.",
     inputSchema: z.object({
       kind: z.string(), title: z.string(), dek: z.string(),
       cities: z.array(z.string()).optional(), players: z.array(z.string()).optional(),
       topic: z.string().default("league"), author: z.string().optional(), dur: z.string().optional(),
       count: z.number().int().optional(), photo_url: z.string().optional(), size: z.string().optional(),
       at: z.string().optional(), body: z.string().optional(),
-      title_es: z.string().optional(), dek_es: z.string().optional(), body_es: z.string().optional(),
     }),
   }, tool(async (a) => {
     const kind = a.kind.trim().toLowerCase();
@@ -208,9 +204,6 @@ function createServer(env, door) {
       if (a.dur) story.dur = a.dur;
       if (a.count) story.count = a.count;
       if (kind === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
-      if (a.title_es) story.title_es = a.title_es.trim();
-      if (a.dek_es) story.dek_es = a.dek_es.trim();
-      if (a.body_es) story.body_es = paras(a.body_es);
       stories.push(story);
       return story;
     });
@@ -220,13 +213,11 @@ function createServer(env, door) {
   server.registerTool("update_story", {
     description:
       "Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank " +
-      "lines). title_es, dek_es, body_es change the Spanish version. English and Spanish are separate texts: when you " +
-      "change one, pass the matching change for the other. A change to a published story is public at once.",
+      "lines). A change to a published story is public at once.",
     inputSchema: z.object({
       id: z.string(), title: z.string().optional(), dek: z.string().optional(),
       cities: z.array(z.string()).optional(), players: z.array(z.string()).optional(), size: z.string().optional(),
       photo_url: z.string().optional(), author: z.string().optional(), at: z.string().optional(), body: z.string().optional(),
-      title_es: z.string().optional(), dek_es: z.string().optional(), body_es: z.string().optional(),
     }),
   }, tool(async (a) => {
     if (a.size && !SIZES.includes(a.size)) fail(`size must be one of ${SIZES.join(", ")}`);
@@ -242,9 +233,6 @@ function createServer(env, door) {
       if (a.author) s.author = a.author;
       if (a.at) s.at = a.at;
       if (a.body) s.body = paras(a.body);
-      if (a.title_es) s.title_es = a.title_es.trim();
-      if (a.dek_es) s.dek_es = a.dek_es.trim();
-      if (a.body_es) s.body_es = paras(a.body_es);
       s.updated_by = "desk"; s.updated_at = nowIso();
       return s;
     });

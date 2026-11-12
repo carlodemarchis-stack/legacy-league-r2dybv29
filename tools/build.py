@@ -6,12 +6,11 @@ content/            what the editors own, one record per file (the CMS, as files
   rules.yaml        best balls per hole, points table, tie rule
   course.yaml       the venue's holes
   schedule.yaml     the season's events, with programme and where-to-watch text
-  cities/*.yaml     one city hub each (story, story_es, charity, sponsors, photos)
-  players/*.yaml    one player each (bio, bio_es, role, role_es, headshots)
-  stories/*.md      one story each: front matter + Markdown body; <id>.es.md = Spanish.
+  cities/*.yaml     one city hub each (story, charity, sponsors, photos)
+  players/*.yaml    one player each (bio, role, headshots)
+  stories/*.md      one story each: front matter + Markdown body.
                     Written by hand or by the editorial desk (desk/server.py), same format.
                     status: draft | scheduled | published; no status means published.
-  ui/es.json        interface strings, keyed by the English text
 data/feed.json      the scoring provider's payload (fixture from tools/gen.py)
 template.html       markup, styles, behaviour. No copy.
 
@@ -44,13 +43,7 @@ def load_content():
     league = Y(C / "league.yaml")
     stories = {}
     for p in sorted((C / "stories").glob("*.md")):
-        if p.name.endswith(".es.md"): continue
         s = story(p); stories[s["id"]] = s
-    for p in sorted((C / "stories").glob("*.es.md")):
-        es = story(p); s = stories.get(es["id"])
-        if not s: continue
-        for k in ("title", "dek", "body"):
-            if es.get(k): s[k + "_es"] = es[k]
     now = dt.datetime.now().isoformat(timespec="minutes")
     live = [s for s in stories.values() if s.get("status", "published") == "published"
             or (s["status"] == "scheduled" and s.get("scheduled_at", "9999") <= now)]
@@ -62,11 +55,20 @@ def load_content():
     order = {c["id"]: i for i, c in enumerate(cities)}
     players = [Y(p) for p in sorted((C / "players").glob("*.yaml"))]
     players.sort(key=lambda p: (order.get(p["city"], 99), p["id"]))
-    return dict(
+    return english_only(dict(
         league=dict(name=league["name"], season=league["season"], tagline=league["tagline"], mission=league["mission"],
                     leaderboard_sponsor=league.get("leaderboard_sponsor")),
         cities=cities, players=players, schedule=Y(C / "schedule.yaml")["events"], rules=Y(C / "rules.yaml"),
-        stories=live, hero=league["hero"], resources=league["resources"])
+        stories=live, hero=league["hero"], resources=league["resources"]))
+
+def english_only(x):
+    """The website and the apps are in English only. Spanish fields still in the content files
+    (bio_es, story_es, a programme's "es" line…) are left out of everything that is published."""
+    if isinstance(x, list):
+        return [english_only(v) for v in x]
+    if isinstance(x, dict):
+        return {k: english_only(v) for k, v in x.items() if not k.endswith("_es") and not (k == "es" and "en" in x)}
+    return x
 
 SITE_KEYS = ("league", "cities", "players", "schedule", "rules", "hero", "resources")
 
@@ -93,7 +95,7 @@ def split_stories(league):
     tiles = []
     for s in league["stories"]:
         s = dict(s)
-        body = {k: s.pop(k) for k in ("body", "body_es") if k in s}
+        body = {"body": s.pop("body")} if "body" in s else {}
         if body: s["body_ref"] = put(s["id"], body)
         tiles.append(s)
     first, older = tiles[:FIRST_STORIES], tiles[FIRST_STORIES:]
@@ -105,7 +107,7 @@ def split_stories(league):
 def build():
     league = load_content()
     feed = json.loads((ROOT / "data/feed.json").read_text())
-    ui = json.loads((C / "ui/es.json").read_text())
+    ui = {}                                                   # English only: no interface translations
     page = split_stories(league)
     page["site_rev"] = site_content(league, ui)[0]
     data = f"const LEAGUE={json.dumps(page, ensure_ascii=False)};\nconst FEED={json.dumps(feed, ensure_ascii=False)};"
