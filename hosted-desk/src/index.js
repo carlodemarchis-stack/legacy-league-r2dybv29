@@ -18,11 +18,29 @@ import { z } from "zod";
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
 const SIZES = ["s", "m", "l", "xl", "p", "r"];
-const SITE = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/#3";
+const SITE_ROOT = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev";
+const SITE = SITE_ROOT + "/#3";
 const RECORDS = "desk/stories.json";
 
 const sha1 = async (text) => [...new Uint8Array(await crypto.subtle.digest("SHA-1", new TextEncoder().encode(text)))]
   .map((b) => b.toString(16).padStart(2, "0")).join("");
+/* The name a story has in its address: its English headline in plain lower-case words. It is set once and kept,
+   so a link that has been shared keeps working when the headline is edited. */
+const slugify = (title) => {
+  const words = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/['’‘]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").split("-");
+  let out = "";
+  for (const w of words) { if ((out + "-" + w).length > 64 && out) break; out = out ? out + "-" + w : w; }
+  return out || "story";
+};
+function nameStories(stories) {
+  const taken = new Set(stories.map((s) => s.slug).filter(Boolean));
+  for (const s of stories) {
+    if (s.slug) continue;
+    let slug = slugify(s.title || s.id), n = 1;
+    while (taken.has(slug)) slug = `${slugify(s.title || s.id)}-${++n}`;
+    s.slug = slug; taken.add(slug);
+  }
+}
 const paras = (text) => text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 const nowIso = () => new Date().toISOString().slice(0, 19);
 const isLive = (s) => (s.status || "published") === "published";
@@ -42,6 +60,7 @@ async function change(env, fn) {
     const { data, etag } = await readJson(env, RECORDS);
     const stories = data || [];
     const out = await fn(stories);
+    nameStories(stories);                                     // a story without a name for its address gets one here
     const saved = await env.CONTENT.put(RECORDS, JSON.stringify(stories), {
       httpMetadata: { contentType: "application/json" },
       onlyIf: etag ? { etagMatches: etag } : undefined,
@@ -113,6 +132,7 @@ const summary = (s) => {
   const out = { status: "published" };
   for (const k of keep) if (s[k] != null && s[k] !== "" && !(Array.isArray(s[k]) && !s[k].length)) out[k] = s[k];
   out.spanish = Boolean(s.title_es || s.dek_es || s.body_es);
+  if (s.slug && isLive(s)) out.url = `${SITE_ROOT}/stories/${s.slug}`;   // the story's own public address
   return out;
 };
 const reply = (obj) => ({ content: [{ type: "text", text: JSON.stringify(obj, null, 1) }] });
@@ -128,6 +148,7 @@ function createServer(env, door) {
       "Editorial desk for Legacy League Golf, working on the site's content store. Draft first, publish second. " +
       "Publishing is public at once: the site and the app show the story on their next load. So ask the editor " +
       "before publish_story, and before changing, unpublishing or deleting a story that is already published. " +
+      "Every published story has its own public address (url in its summary): give it to the editor after publishing. " +
       "Read a story with get_story before changing it. The site is bilingual: give the Spanish version " +
       "(Mexican Spanish) with every story, and change both languages together.",
   });

@@ -992,6 +992,41 @@ function paintBody(s) {
   const paras = L(s, "body");
   el.innerHTML = (paras && paras.length ? paras : [L(s, "dek")]).map(p => `<p>${esc(fill(p, s))}</p>`).join("");
 }
+/* Inside the app the page is a copy carried by the app, with no store behind its own address, so there it asks
+   the site that has one. Everything the store hands out is addressed from the same place. */
+const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()))
+  ? "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/" : "";
+const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
+let storeRev = null;
+/* Every story has an address of its own, built from its headline. Where the site can answer such an address
+   (the store-backed site) it is a real path, /stories/<name>; anywhere else it is kept after the #.
+   Opening a story puts its address in the address bar; closing it puts the card's address back. */
+const storyKey = s => s.slug || s.id;
+const findStory = key => LEAGUE.stories.find(x => x.slug === key || x.id === key);
+const pretty = () => storeRev !== null && !STORE_AT;      // this site answers /stories/<name>
+const onStoryPath = () => /\/stories\/[^/]+\/?$/.test(location.pathname);
+const storyUrl = s => pretty() || STORE_AT ? `${STORE_AT || location.origin + "/"}stories/${storyKey(s)}`
+  : `${location.origin}${location.pathname}#story/${storyKey(s)}`;
+const PAGE_TITLE = "Legacy League Golf — Season Film (demo)";
+function showStoryAddress(s) {
+  document.title = `${sTitle(s)} · Legacy League Golf`;
+  try { history.replaceState(null, "", pretty() ? `/stories/${storyKey(s)}` : `#story/${storyKey(s)}`); } catch (e) {}
+}
+function showCardAddress() {
+  document.title = PAGE_TITLE;
+  try { history.replaceState(null, "", (onStoryPath() ? "/" : location.pathname + location.search) + (cur ? "#" + (cur + 1) : "")); } catch (e) {}
+}
+function shareStory(id) {
+  const s = LEAGUE.stories.find(x => x.id === id), url = storyUrl(s);
+  if (navigator.share) return navigator.share({ title: sTitle(s), url }).catch(() => {});
+  const done = () => toast(t("Link copied"), url, t("League"));
+  navigator.clipboard ? navigator.clipboard.writeText(url).then(done, () => toast(t("Story link"), url, t("League"))) : toast(t("Story link"), url, t("League"));
+}
+let wantStory = null;                                     // a story asked for by address that the page does not hold yet
+function openStoryByKey(key) {
+  const s = findStory(key);
+  if (s) { wantStory = null; openStory(s.id); } else wantStory = key;   // it may still arrive with the store's list
+}
 function openStory(id) {
   const s = LEAGUE.stories.find(x => x.id === id);
   if (!s) return;
@@ -1005,6 +1040,7 @@ function openStory(id) {
 function stepStory(d) { if (!rList.length) return; rIdx = (rIdx + d + rList.length) % rList.length; renderStory(); }
 function renderStory() {
   const s = rList[rIdx]; if (!s) return;
+  showStoryAddress(s);
   const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
   const col = c ? c.color : "var(--acc)";
   const liked = state.likes.has(s.id);
@@ -1030,7 +1066,7 @@ function renderStory() {
     ${s.credit ? `<div class="lbfoot">${esc(s.credit)}</div>` : ""}
     <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
       <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} ${t("comments")}</button>
-      <button onclick="toast(t('Link copied (demo)'),t('Every story has its own URL with a social preview card.'))"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
+      <button onclick="shareStory('${s.id}')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
       ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
     ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kind)}</small></span></button>`).join("")}</div>` : ""}
   </div>`;
@@ -1444,7 +1480,7 @@ function openJump() {
   document.getElementById("jmodal").classList.add("on");
   setTimeout(() => { q.focus(); document.querySelector("#jlist .jrow.sel")?.scrollIntoView({ block: "center" }); }, 30);
 }
-function closeModal(id) { document.getElementById(id).classList.remove("on"); }
+function closeModal(id) { const el = document.getElementById(id), was = el.classList.contains("on"); el.classList.remove("on"); if (id === "smodal" && was) showCardAddress(); }
 
 /* --------------------------------------------------------- navigation */
 /* The film is moved in pixels and moved again whenever the window changes size. A position given in
@@ -1527,13 +1563,18 @@ let tx = 0, ty = 0;
 addEventListener("touchstart", e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
 addEventListener("touchend", e => { const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
   if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) dx < 0 ? next() : prev(); }, { passive: true });
-addEventListener("hashchange", () => { const n = parseInt(location.hash.slice(1), 10); if (n && n - 1 !== cur) go(n - 1); });
+const storyInAddress = () => { const m = location.pathname.match(/\/stories\/([^/]+)\/?$/) || location.hash.match(/^#story\/(.+)$/); return m ? decodeURIComponent(m[1]) : null; };
+addEventListener("hashchange", () => {
+  if (location.hash.startsWith("#story/")) return openStoryByKey(storyInAddress());
+  const n = parseInt(location.hash.slice(1), 10); if (n && n - 1 !== cur) go(n - 1);
+});
 
 refresh();
 consentStatus();
 leaderboard().forEach(x => lastPos[x.c.id] = `${x.tied ? "T" : ""}${x.pos}`);
-const start = parseInt(location.hash.slice(1), 10);
-go(start ? start - 1 : 0);
+const start = parseInt(location.hash.slice(1), 10), startStory = storyInAddress();
+go(startStory ? SEC.stories : start ? start - 1 : 0);
+if (startStory) openStoryByKey(startStory);
 (window.requestIdleCallback || setTimeout)(warmMenu);
 /* The page carries the newest stories. Older ones arrive once the first screen is up. */
 if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
@@ -1541,12 +1582,6 @@ if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
 /* Where the site is served with a content store behind it, the stories come from there: the page asks for the
    store's list when it opens and each time the reader comes back to it, so a story published in the store shows
    without a new page. Anywhere else the request finds nothing and the stories in the page stand. */
-/* Inside the app the page is a copy carried by the app, with no store behind its own address, so there it asks
-   the site that has one. Everything the store hands out is addressed from the same place. */
-const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()))
-  ? "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/" : "";
-const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
-let storeRev = null;
 function loadStore() {
   fetch(STORE_AT + "content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
     if (!ix || !Array.isArray(ix.stories) || ix.rev === storeRev) return;
@@ -1557,6 +1592,8 @@ function loadStore() {
     storeRev = ix.rev; LEAGUE.stories = ix.stories; LEAGUE.story_count = ix.stories.length;
     renderFeed();
     document.getElementById("hnrow").innerHTML = newsTiles();
+    if (wantStory) openStoryByKey(wantStory);                  // the story asked for by address has arrived
+    else if (document.getElementById("smodal").classList.contains("on") && rList[rIdx]) showStoryAddress(rList[rIdx]);
   }).catch(() => {});
 }
 /* The same for everything that is not a story. The store says which package is current; when it is not the one

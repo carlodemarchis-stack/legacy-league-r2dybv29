@@ -101,8 +101,6 @@
  "Pick a city": "Elige una ciudad",
  "comments": "comentarios",
  "Share": "Compartir",
- "Link copied (demo)": "Enlace copiado (demo)",
- "Every story has its own URL with a social preview card.": "Cada historia tiene su propia URL con tarjeta de previsualización social.",
  "Presented by · sponsor slot": "Presentado por · espacio patrocinado",
  "More like this": "Más como esta",
  "Video · hosted, adaptive, captioned": "Vídeo · alojado, adaptativo, subtitulado",
@@ -302,5 +300,7 @@
  "To be announced": "Por anunciar",
  "Full leaderboard": "Clasificación completa",
  "cities": "ciudades",
- "Latest stories": "Últimas historias"
+ "Latest stories": "Últimas historias",
+ "Link copied": "Enlace copiado",
+ "Story link": "Enlace de la historia"
 }
