@@ -1,3 +1,4 @@
 node_modules/
 .wrangler/
 CONNECTOR_URL.txt
+EDITOR_URL.txt

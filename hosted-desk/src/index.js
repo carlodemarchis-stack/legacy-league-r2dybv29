@@ -14,6 +14,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
+import { editorPage } from "./editor.js";
 
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
@@ -139,6 +140,27 @@ async function pickPhoto(env, seed) {
   return "content/" + pool[n];
 }
 
+/* A new draft, the same whether Claude (draft_story) or an editor (the editor page) makes it.
+   cids and pids are already ids; by says who made it. */
+async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
+  const n = Math.max(0, ...stories.filter((s) => /^d\d+$/.test(s.id)).map((s) => parseInt(s.id.slice(1), 10))) + 1;
+  const id = "d" + String(n).padStart(3, "0");
+  const kind = a.kind;
+  const story = {
+    id, status: "draft", kind, topic: a.topic, at: a.at || now,
+    author: a.author || (cids.length === 1 ? `${ref.city[cids[0]].name} desk` : a.topic === "mission" ? "Legacy League · Mission" : "Legacy League"),
+    title: a.title.trim(), dek: (a.dek || "").trim(), cities: cids, players: pids, likes: 0, comments: 0,
+    size: a.size || KINDS[kind], photo: a.photo_url || (await pickPhoto(env, id + a.title)),
+    created_by: by, created_at: nowIso(),
+  };
+  if (a.body) story.body = paras(a.body);
+  if (a.dur) story.dur = a.dur;
+  if (a.count) story.count = a.count;
+  if (kind === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
+  stories.push(story);
+  return story;
+}
+
 const find = (stories, id) => stories.find((s) => s.id === id) || fail(`No story '${id}'. Use list_stories.`);
 const summary = (s) => {
   const keep = ["id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count", "scheduled_at"];
@@ -203,23 +225,7 @@ function createServer(env, door) {
     const cids = (a.cities || []).map(ref.cityId), pids = (a.players || []).map(ref.playerId);
     for (const pid of pids) if (!cids.includes(ref.player[pid].city)) cids.push(ref.player[pid].city);
     const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
-    const { out } = await change(env, async (stories) => {
-      const n = Math.max(0, ...stories.filter((s) => /^d\d+$/.test(s.id)).map((s) => parseInt(s.id.slice(1), 10))) + 1;
-      const id = "d" + String(n).padStart(3, "0");
-      const story = {
-        id, status: "draft", kind, topic: a.topic, at: a.at || now,
-        author: a.author || (cids.length === 1 ? `${ref.city[cids[0]].name} desk` : a.topic === "mission" ? "Legacy League · Mission" : "Legacy League"),
-        title: a.title.trim(), dek: a.dek.trim(), cities: cids, players: pids, likes: 0, comments: 0,
-        size: a.size || KINDS[kind], photo: a.photo_url || (await pickPhoto(env, id + a.title)),
-        created_by: "desk", created_at: nowIso(),
-      };
-      if (a.body) story.body = paras(a.body);
-      if (a.dur) story.dur = a.dur;
-      if (a.count) story.count = a.count;
-      if (kind === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
-      stories.push(story);
-      return story;
-    });
+    const { out } = await change(env, (stories) => makeDraft(env, stories, { ...a, kind }, cids, pids, ref, now, "desk"));
     return { ok: true, story: summary(out), next: "Show the editor the draft. publish_story(id) makes it public." };
   }));
 
@@ -401,6 +407,94 @@ async function photoRoute(request, env, id) {
   return json({ ok: true, photo: out.photo, public: isLive(out), kb: Math.round(bytes.byteLength / 1024) });
 }
 
+/* ------------------------------------------------------------------ the stories editor */
+
+/* A plain editing page for people, next to Claude. It changes the same records through the same steps
+   (change, makeDraft, publishIndex), so a story edited here and one edited through Claude behave alike.
+   Every save carries the stamp of the version the editor started from: if Claude or another editor changed
+   the story in between, the save is refused and the editor reloads, so nobody's work is silently lost. */
+const stampOf = async (s) => (await sha1(JSON.stringify(s))).slice(0, 12);
+class Conflict extends Error {}
+async function editorApi(request, env, path) {
+  const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  const withStamp = async (s) => ({ ...s, stamp: await stampOf(s), url: s.slug && isLive(s) ? `${SITE_ROOT}/stories/${s.slug}` : null });
+  try {
+    if (request.method === "GET" && path === "stories") {
+      const stories = (await readJson(env, RECORDS)).data || [];
+      stories.sort((a, b) => ((a.at || "") < (b.at || "") ? 1 : -1));
+      return json({ site: SITE_ROOT, stories: await Promise.all(stories.map(withStamp)) });
+    }
+    if (request.method === "GET" && path === "ref") {
+      const ref = await reference(env);
+      return json({
+        cities: Object.values(ref.city).map((c) => ({ id: c.id, name: c.name, short: c.short, color: c.color })),
+        players: Object.values(ref.player).map((p) => ({ id: p.id, name: p.name, city: p.city })),
+      });
+    }
+    if (request.method !== "POST") return json({ error: "Not found." }, 404);
+    const b = await request.json();
+    const check = async (s) => { if (b.stamp !== await stampOf(s)) throw new Conflict("This story was changed by someone else (Claude or another editor) since you opened it. Reload it to see their version."); };
+    let wasLive = false;
+    if (path === "save") {
+      const f = b.fields || {};
+      const ref = await reference(env);
+      const kind = String(f.kind || "").trim();
+      if (!f.title || !f.title.trim()) fail("A story needs a headline.");
+      if (!b.id && (!KINDS[kind] || kind === "result")) fail("Kind must be article, video, gallery or quote.");
+      if (f.topic && !TOPICS.includes(f.topic)) fail(`Topic must be one of ${TOPICS.join(", ")}.`);
+      if (kind === "video" && !f.dur) fail("A video needs its length, e.g. 2:14.");
+      if (kind === "gallery" && !f.count) fail("A gallery needs its number of pictures.");
+      const cids = (f.cities || []).filter((id) => ref.city[id]), pids = (f.players || []).filter((id) => ref.player[id]);
+      const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
+      const { out, stories } = await change(env, async (list) => {
+        if (!b.id) return makeDraft(env, list, { ...f, kind, topic: f.topic || "league" }, cids, pids, ref, now, "editor");
+        const s = find(list, b.id);
+        await check(s);
+        if (KINDS[kind] && kind !== "result" && s.kind !== "result") s.kind = kind;
+        if (f.topic) s.topic = f.topic;
+        s.title = f.title.trim();
+        s.dek = (f.dek || "").trim();
+        s.cities = cids; s.players = pids;
+        if (f.author && f.author.trim()) s.author = f.author.trim();
+        if (f.at) s.at = f.at;
+        const body = paras(f.body || "");
+        if (body.length) s.body = body; else delete s.body;
+        if (s.kind === "video") s.dur = f.dur; else delete s.dur;
+        if (s.kind === "gallery") s.count = +f.count; else delete s.count;
+        s.updated_by = "editor"; s.updated_at = nowIso();
+        return s;
+      });
+      if (isLive(out)) await publishIndex(env, stories);
+      return json({ ok: true, story: await withStamp(out) });
+    }
+    if (path === "publish" || path === "unpublish") {
+      const { out, stories } = await change(env, async (list) => {
+        const s = find(list, b.id);
+        await check(s);
+        wasLive = isLive(s);
+        if (path === "publish") { s.status = "published"; delete s.scheduled_at; s.published_by = "editor"; s.published_at = nowIso(); }
+        else s.status = "draft";
+        return s;
+      });
+      if (isLive(out) || wasLive) await publishIndex(env, stories);
+      return json({ ok: true, story: await withStamp(out) });
+    }
+    if (path === "delete") {
+      const { stories } = await change(env, async (list) => {
+        const s = find(list, b.id);
+        await check(s);
+        wasLive = isLive(s);
+        list.splice(list.indexOf(s), 1);
+      });
+      if (wasLive) await publishIndex(env, stories);
+      return json({ ok: true, deleted: b.id });
+    }
+    return json({ error: "Not found." }, 404);
+  } catch (e) {
+    return json({ error: String(e.message || e) }, e instanceof Conflict ? 409 : 400);
+  }
+}
+
 /* Claude's connector screen signs in before it connects, and stops if the server has no sign-in service.
    This is the smallest one that satisfies it: it registers any client and hands out a token without asking
    anything. It protects nothing and is not meant to: the lock on this desk is the secret in the address,
@@ -441,12 +535,14 @@ export default {
     const url = new URL(request.url);
     const handshake = signIn(request, url);
     if (handshake) return handshake;
-    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+)$/) || [];
+    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+|\/editor(?:\/api\/[a-z]+)?)$/) || [];
     if (!env.DESK_KEY || !key || key.length !== env.DESK_KEY.length || !rest) return new Response("Not found", { status: 404 });
     let diff = 0;                                              // compare the whole key every time, whatever was sent
     for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.DESK_KEY.charCodeAt(i);
     if (diff) return new Response("Not found", { status: 404 });
     if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length));
+    if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length));
+    if (rest === "/editor") return new Response(editorPage(SITE_ROOT), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
     const door = `${url.origin}/${key}`;
     url.pathname = rest;
     return createMcpHandler(() => createServer(env, door))(new Request(url, request), env, ctx);
