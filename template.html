@@ -273,6 +273,13 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .filters button:hover{color:var(--ink);border-color:rgba(var(--veil),.3)}
 .filters button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .filters button small{font-size:10.5px;color:inherit;opacity:.7;font-variant-numeric:tabular-nums}
+.st-pick{display:flex;gap:6px}
+.stsel{position:relative;display:flex;align-items:center;gap:8px;height:34px;padding:0 30px 0 13px;border-radius:999px;border:1px solid var(--line);cursor:pointer}
+.stsel::after{content:"";position:absolute;right:13px;top:13px;width:6px;height:6px;border-right:1.5px solid var(--dim);border-bottom:1.5px solid var(--dim);transform:rotate(45deg);pointer-events:none}
+.stsel i{width:9px;height:9px;border-radius:50%;background:var(--c);display:none}
+.stsel.on{border-color:var(--c,var(--acc))}.stsel.on i{display:block}
+.stsel select{appearance:none;-webkit-appearance:none;background:none;border:0;outline:none;font:inherit;font-size:12px;letter-spacing:.04em;color:var(--ink);cursor:pointer;max-width:200px}
+.stsel select option{background:var(--bg,#111);color:var(--ink)}
 .st-count{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2);margin-left:auto;white-space:nowrap}
 /* the collage: a dense 8-column grid, every story a photo tile sized by its weight */
 .feed{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;display:grid;
@@ -627,6 +634,7 @@ button.ev:hover{border-color:var(--acc)}
   /* stories: filter row scrolls sideways, the collage drops to two columns */
   .st-head{gap:8px}
   .search{flex:1 1 100%;height:42px}
+  .st-pick{flex:1 1 100%}.stsel{flex:1 1 0;min-width:0}.stsel select{max-width:none;width:100%}
   .filters{flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding-bottom:2px}
   .filters button{flex:0 0 auto;height:32px;padding:0 11px;font-size:11px;text-transform:uppercase}
   .filters button small{display:none}
@@ -1024,15 +1032,14 @@ function goEvent(id, tab) {
    "Following" is the same follow set the push alerts use. --- */
 const FILTERS = [["all", "All stories"], ["following", "Following"], ["video", "Video"], ["gallery", "Galleries"], ["article", "News"], ["mission", "Mission"]];
 state.filter = PREF.get("filter", "all");
-state.q = "";
+state.city = PREF.get("scity", "all");                 // a city, or "all"
+state.sevent = "all";                                  // stories: an event of the schedule, or "all"
 state.likes = new Set(PREF.get("likes", []));
 function storiesCard() {
   return `<div class="card" data-k="stories" style="--c:rgba(217,173,78,.4)"><div class="inner">
     <div class="col st-col">
       <div class="st-head">
-        <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="st-q" type="search" placeholder="${t("Search stories, cities, players…")}" autocomplete="off" oninput="setQuery(this.value)">
-          <button type="button" id="st-clear" title="${t("Clear")}" onclick="setQuery('');document.getElementById('st-q').value=''">×</button></label>
+        <div class="st-pick" id="st-pick"></div>
         <div class="filters" id="st-filters"></div>
       </div>
       <div class="feed" id="feed"></div>
@@ -1043,23 +1050,32 @@ const ago = iso => { const h = Math.round((Date.parse(FEED.generated_at.slice(0,
   return h < 1 ? t("just now") : h < 24 ? `${h}h` : h < 48 ? t("yesterday") : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
 const kindLabel = k => ({ video: t("Video"), gallery: t("Gallery"), article: t("News"), quote: t("Mission"), result: t("Live result") }[k]);
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : n;
+/* A story belongs to a city when it is tagged with the city or one of its players; to an event by its date: from the
+   event's first day until the next event starts. The event picker shows only once stories span two events. */
+const cityOf = (s, id) => (s.cities || []).includes(id) || (s.players || []).some(p => PLAYER[p] && PLAYER[p].city === id);
+function eventOf(s) { const d = (s.at || "").slice(0, 10); let e = LEAGUE.schedule[0]; LEAGUE.schedule.forEach(x => { if (x.start <= d) e = x; }); return e.id; }
 function renderFilters() {
+  if (state.city !== "all" && !CITY[state.city]) state.city = "all";
+  const evs = LEAGUE.schedule.filter(e => LEAGUE.stories.some(s => eventOf(s) === e.id));
+  if (evs.length < 2 || !evs.some(e => e.id === state.sevent)) state.sevent = "all";
   const n = f => LEAGUE.stories.filter(s => matchFilter(s, f)).length;
   const shown = n(state.filter);
+  const cityN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, id)).length;
+  const evN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, state.city, id)).length;
+  const sc = CITY[state.city];
+  document.getElementById("st-pick").innerHTML =
+    `<label class="stsel ${sc ? "on" : ""}" style="--c:${sc ? sc.color : "var(--line)"}"><i></i><select aria-label="${t("City")}" onchange="setCity(this.value)">
+      <option value="all">${t("All cities")}</option>${LEAGUE.cities.map(c => `<option value="${c.id}"${c.id === state.city ? " selected" : ""}>${esc(c.name)} · ${cityN(c.id)}</option>`).join("")}</select></label>` +
+    (evs.length > 1 ? `<label class="stsel ${state.sevent !== "all" ? "on" : ""}"><select aria-label="${t("Event")}" onchange="setStoryEvent(this.value)">
+      <option value="all">${t("All events")}</option>${evs.map(e => `<option value="${e.id}"${e.id === state.sevent ? " selected" : ""}>${esc(L(e, "name"))} · ${evN(e.id)}</option>`).join("")}</select></label>` : "");
   document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter('${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
-    `<span class="st-count">${shown} ${shown === 1 ? t("story") : t("stories")}${state.q ? ` ${t("for")} “${esc(state.q)}”` : ""}</span>`;
-  document.querySelector(".search").classList.toggle("has", !!state.q);
+    `<span class="st-count">${shown} ${shown === 1 ? t("story") : t("stories")}</span>`;
 }
 const norm = x => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const sTitle = s => fill(L(s, "title"), s), sDek = s => fill(L(s, "dek"), s);
-function matchQuery(s) {
-  if (!state.q) return true;
-  const hay = norm([sTitle(s), sDek(s), s.author, kindLabel(s.kind), ...(s.cities || []).map(c => CITY[c].name + " " + CITY[c].short),
-    ...(s.players || []).map(p => PLAYER[p] ? PLAYER[p].name : "")].join(" "));
-  return norm(state.q).split(/\s+/).filter(Boolean).every(w => hay.includes(w));
-}
-function matchFilter(s, f) {
-  if (!matchQuery(s)) return false;
+function matchFilter(s, f, city = state.city, ev = state.sevent) {
+  if (city !== "all" && !cityOf(s, city)) return false;
+  if (ev !== "all" && eventOf(s) !== ev) return false;
   if (f === "all") return true;
   if (f === "following") return (s.cities || []).some(c => state.follow.has(c)) || (s.players || []).some(p => state.follow.has(p));
   if (f === "mission") return s.topic === "mission";
@@ -1273,11 +1289,13 @@ function renderFeed() {
   document.querySelectorAll("[data-cstories]").forEach(el => el.innerHTML = cityStories(CITY[el.dataset.cstories]));
   const list = LEAGUE.stories.filter(s => matchFilter(s, state.filter));
   const el = document.getElementById("feed");
-  if (!list.length) { el.innerHTML = state.q ? `<div class="empty">${t("No story matches")} “${esc(state.q)}”. ${t("Try a city, a player or a word from a headline.")}</div>` :
+  if (!list.length) { el.innerHTML = state.city !== "all" || state.sevent !== "all" ? `<div class="empty">${t("No stories here yet for")} ${CITY[state.city] ? esc(CITY[state.city].name) : t("this event")}.<br><br><button class="pill" onclick="setStoryEvent('all');setCity('all')">${t("Show all stories")}</button></div>` :
     `<div class="empty">${t("Nothing here yet. Follow a city or a player and their stories, results and alerts fill this view.")}<br><br><button class="pill" onclick="go(SEC.cities)">${t("Pick a city")}</button></div>`; return; }
   el.innerHTML = list.map(tile).join("");
 }
-function setQuery(q) { state.q = q.trim(); renderFeed(); }
+function setCity(id) { state.city = id; PREF.set("scity", id); renderFeed(); document.getElementById("feed").scrollTop = 0; }
+function setStoryEvent(id) { state.sevent = id; renderFeed(); document.getElementById("feed").scrollTop = 0; }
+function storiesFor(id) { setCity(id); go(SEC.stories); }
 function setFilter(f) { state.filter = f; PREF.set("filter", f); renderFeed(); document.getElementById("feed").scrollTop = 0; }
 function toggleLike(id) { state.likes.has(id) ? state.likes.delete(id) : state.likes.add(id); PREF.set("likes", [...state.likes]); renderFeed();
   if (document.getElementById("smodal").classList.contains("on")) renderStory(); }
@@ -1307,7 +1325,7 @@ function cityCard(c, i) {
     </div>
     <div class="col r">
       <div class="box hubbox" data-hub="${c.id}">${hubBox(c)}</div>
-      <div class="box"><div class="legend"><span>${t("Stories")}</span><button type="button" class="plink" onclick="go(SEC.stories)">${t("All stories")}</button></div>
+      <div class="box"><div class="legend"><span>${t("Stories")}</span><button type="button" class="plink" onclick="storiesFor('${c.id}')">${t("All")} ${esc(c.name)} ${t("stories")}</button></div>
         <div class="ctiles" data-cstories="${c.id}">${cityStories(c)}</div></div>
     </div>
   </div></div>`;
