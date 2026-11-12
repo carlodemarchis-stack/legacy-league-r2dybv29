@@ -502,18 +502,15 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 /* gallery: a strip of the pictures at their own shapes, scrolled sideways */
 .K-gallery .rfig{display:flex;flex-direction:column;height:var(--figh);background:#000}
 .gmain{position:relative;flex:1 1 auto;min-height:0}
-.gmain img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.gstrip{display:flex;gap:6px;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
+.gstrip::-webkit-scrollbar{display:none}
+.gstrip img{flex:0 0 auto;width:auto;height:100%;object-fit:cover;scroll-snap-align:start}
 .gctl{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;
   background:rgba(0,0,0,.62);backdrop-filter:blur(8px);color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
 .gctl span{min-width:52px;text-align:center}
 .gctl button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff}
 .gctl button:hover{background:rgba(255,255,255,.14)}
 .gctl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.gthumbs{flex:0 0 auto;display:flex;justify-content:center;gap:6px;padding:8px;overflow-x:auto;scrollbar-width:none}
-.gthumbs button{flex:0 0 auto;width:96px;height:60px;padding:0;border-radius:6px;overflow:hidden;border:2px solid transparent;opacity:.5;transition:.18s}
-.gthumbs button:hover{opacity:.85}
-.gthumbs button.on{opacity:1;border-color:var(--acc)}
-.gthumbs img{display:block;width:100%;height:100%;object-fit:cover}
 /* quote: the words set large over the darkened picture */
 .L-quote .rfig,.L-stack.K-quote .rfig{display:grid;place-items:center;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#000),#0b0f11)}
 .L-quote .rfig{height:var(--figh);padding:clamp(30px,6vh,80px) clamp(24px,10vw,180px)}
@@ -523,7 +520,6 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 /* stack: a phone, or a narrow window: picture, story, context, one under the other */
 .L-stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"fig" "main" "aside";padding-bottom:96px}
 .L-stack .rfig{height:var(--figh)}
-.L-stack .gthumbs button{width:64px;height:40px}
 .L-stack.K-quote .rfig{height:auto;min-height:46dvh;padding:56px 22px 30px}
 .L-stack.K-quote .rfig blockquote{font-size:26px}
 .L-stack .rmain,.L-stack .raside{padding:0 clamp(18px,5vw,28px);max-width:none}
@@ -1181,14 +1177,19 @@ function applyLayout(s) {
   page.className = cls;
   Object.entries(vars).forEach(([k, v]) => page.style.setProperty(k, v));
 }
-/* The gallery viewer: one picture at a time, with arrows, a count and the thumbnails to jump to any of them. */
+/* The gallery: a filmstrip of its pictures in sequence, each at its own shape. The arrows move it one picture;
+   swiping or scrolling moves it too, and the count follows whichever picture leads the strip. */
 let galIdx = 0;
 function galShow(i) {
-  const s = rList[rIdx], n = (s.photos || []).length; if (!n) return;
-  galIdx = (i + n) % n;
-  document.getElementById("gimg").src = s.photos[galIdx];
-  document.getElementById("gcount").textContent = `${galIdx + 1} / ${n}`;
-  document.querySelectorAll("#rbody .gthumbs button").forEach((b, j) => b.classList.toggle("on", j === galIdx));
+  const strip = document.getElementById("gstrip"); if (!strip) return;
+  const n = strip.children.length;
+  strip.scrollTo({ left: strip.children[(i + n) % n].offsetLeft - strip.offsetLeft });
+}
+function galSeen() {
+  const strip = document.getElementById("gstrip"); if (!strip) return;
+  const pics = [...strip.children], end = strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 2;
+  galIdx = end ? pics.length - 1 : pics.reduce((best, el, k) => Math.abs(el.offsetLeft - strip.offsetLeft - strip.scrollLeft) < Math.abs(pics[best].offsetLeft - strip.offsetLeft - strip.scrollLeft) ? k : best, 0);
+  document.getElementById("gcount").textContent = `${galIdx + 1} / ${pics.length}`;
 }
 const galStep = d => galShow(galIdx + d);
 function renderStory() {
@@ -1202,9 +1203,9 @@ function renderStory() {
   let fig;
   galIdx = 0;
   const arrow = d => `<svg viewBox="0 0 24 24"><path d="${d}"/></svg>`;
-  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = `<div class="gmain"><img id="gimg" src="${s.photos[0]}" alt="">
+  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = `<div class="gmain"><div class="gstrip" id="gstrip" onscroll="galSeen()">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>
       <div class="gctl"><button onclick="galStep(-1)" title="${t("Previous picture")}">${arrow("M15 5l-7 7 7 7")}</button><span id="gcount">1 / ${s.photos.length}</span><button onclick="galStep(1)" title="${t("Next picture")}">${arrow("M9 5l7 7-7 7")}</button></div></div>
-    <div class="gthumbs">${s.photos.map((p, i) => `<button class="${i ? "" : "on"}" onclick="galShow(${i})"><img src="${p}" alt=""></button>`).join("")}</div>`;
+`;
   else if (s.kind === "quote") fig = `<img src="${s.photo}" alt=""${focus}><blockquote>${esc(sTitle(s))}<cite>${speaker}${esc(s.author)}</cite></blockquote>`;
   else if (s.kind === "video" && s.video) fig = `<video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
       <source src="${s.video}" type="video/webm">
