@@ -273,13 +273,11 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .filters button:hover{color:var(--ink);border-color:rgba(var(--veil),.3)}
 .filters button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .filters button small{font-size:10.5px;color:inherit;opacity:.7;font-variant-numeric:tabular-nums}
-.st-pick{display:flex;gap:6px}
-.stsel{position:relative;display:flex;align-items:center;gap:8px;height:34px;padding:0 30px 0 13px;border-radius:999px;border:1px solid var(--line);cursor:pointer}
-.stsel::after{content:"";position:absolute;right:13px;top:13px;width:6px;height:6px;border-right:1.5px solid var(--dim);border-bottom:1.5px solid var(--dim);transform:rotate(45deg);pointer-events:none}
-.stsel i{width:9px;height:9px;border-radius:50%;background:var(--c);display:none}
-.stsel.on{border-color:var(--c,var(--acc))}.stsel.on i{display:block}
-.stsel select{appearance:none;-webkit-appearance:none;background:none;border:0;outline:none;font:inherit;font-size:12px;letter-spacing:.04em;color:var(--ink);cursor:pointer;max-width:200px}
-.stsel select option{background:var(--bg,#111);color:var(--ink)}
+.fsep{flex:0 0 1px;align-self:stretch;margin:6px 4px;background:var(--line)}
+.filters button.cf{padding:0 11px;font-weight:700;letter-spacing:.08em;color:var(--c);border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+.filters button.cf:hover{border-color:var(--c)}
+.filters button.cf.on{background:var(--c);border-color:var(--c);color:#fff}
+.filters button.cf.none{opacity:.4}
 .st-count{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2);margin-left:auto;white-space:nowrap}
 /* the collage: a dense 8-column grid, every story a photo tile sized by its weight */
 .feed{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;display:grid;
@@ -634,7 +632,6 @@ button.ev:hover{border-color:var(--acc)}
   /* stories: filter row scrolls sideways, the collage drops to two columns */
   .st-head{gap:8px}
   .search{flex:1 1 100%;height:42px}
-  .st-pick{flex:1 1 100%}.stsel{flex:1 1 0;min-width:0}.stsel select{max-width:none;width:100%}
   .filters{flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding-bottom:2px}
   .filters button{flex:0 0 auto;height:32px;padding:0 11px;font-size:11px;text-transform:uppercase}
   .filters button small{display:none}
@@ -1040,7 +1037,6 @@ function storiesCard() {
   return `<div class="card" data-k="stories" style="--c:rgba(217,173,78,.4)"><div class="inner">
     <div class="col st-col">
       <div class="st-head">
-        <div class="st-pick" id="st-pick"></div>
         <div class="filters" id="st-filters"></div>
       </div>
       <div class="feed" id="feed"></div>
@@ -1063,13 +1059,10 @@ function renderFilters() {
   const shown = n(state.filter);
   const cityN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, id)).length;
   const evN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, state.city, id)).length;
-  const sc = CITY[state.city];
-  document.getElementById("st-pick").innerHTML =
-    `<label class="stsel ${sc ? "on" : ""}" style="--c:${sc ? sc.color : "var(--line)"}"><i></i><select aria-label="${t("City")}" onchange="setCity(this.value)">
-      <option value="all">${t("All cities")}</option>${LEAGUE.cities.map(c => `<option value="${c.id}"${c.id === state.city ? " selected" : ""}>${esc(c.name)} · ${cityN(c.id)}</option>`).join("")}</select></label>` +
-    (evs.length > 1 ? `<label class="stsel ${state.sevent !== "all" ? "on" : ""}"><select aria-label="${t("Event")}" onchange="setStoryEvent(this.value)">
-      <option value="all">${t("All events")}</option>${evs.map(e => `<option value="${e.id}"${e.id === state.sevent ? " selected" : ""}>${esc(L(e, "name"))} · ${evN(e.id)}</option>`).join("")}</select></label>` : "");
   document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter('${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
+    `<span class="fsep"></span>` + LEAGUE.cities.map(c => { const k = cityN(c.id);
+      return `<button class="cf ${state.city === c.id ? "on" : ""} ${k ? "" : "none"}" style="--c:${c.color}" title="${esc(c.name)} · ${k}" onclick="setCity(state.city === '${c.id}' ? 'all' : '${c.id}')">${c.short}</button>`; }).join("") +
+    (evs.length > 1 ? `<span class="fsep"></span>` + evs.map(e => `<button class="${state.sevent === e.id ? "on" : ""}" onclick="setStoryEvent(state.sevent === '${e.id}' ? 'all' : '${e.id}')">${esc(L(e, "name"))}<small>${evN(e.id)}</small></button>`).join("") : "") +
     `<span class="st-count">${shown} ${shown === 1 ? t("story") : t("stories")}</span>`;
 }
 const norm = x => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
