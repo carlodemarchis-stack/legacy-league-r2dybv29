@@ -208,6 +208,15 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rtile .sc small{display:block;font-size:9px;color:var(--dim2);font-weight:300;letter-spacing:.1em}
 .cap{display:inline-block;font-size:8.5px;letter-spacing:.12em;padding:1px 5px;border-radius:4px;background:var(--acc);color:var(--on-acc);font-weight:700;vertical-align:1px;margin-left:5px}
 .vids{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+/* city hub: the scorecard at its own height, two rows of the city's stories under it */
+.box.hubbox{flex:0 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
+.ctiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.ctile{position:relative;aspect-ratio:16/9;padding:0;border-radius:10px;border:1px solid var(--line);overflow:hidden;cursor:pointer;background:#0b0f11;font:inherit;text-align:left;color:#fff}
+.ctile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ctile::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.82))}
+.ctile em{position:absolute;left:8px;top:7px;z-index:2;font-style:normal;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:rgba(0,0,0,.55)}
+.ctile b{position:absolute;left:9px;right:9px;bottom:7px;z-index:2;font-size:12px;line-height:1.25;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ctile:hover{border-color:var(--c)}
 .vid{aspect-ratio:16/9;border-radius:10px;border:1px solid var(--line);position:relative;overflow:hidden;
   background:linear-gradient(160deg,color-mix(in srgb,var(--c) 35%,#000),#0b0f11)}
 .vid::after{content:"";position:absolute;left:50%;top:50%;width:0;height:0;transform:translate(-40%,-50%);
@@ -605,6 +614,8 @@ button.ev:hover{border-color:var(--acc)}
   .grid.c3{grid-template-columns:repeat(3,1fr)}
   .roster{grid-template-columns:1fr}
   .vids{grid-template-columns:repeat(3,1fr)}
+  .ctiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .box.hubbox{overflow:visible;flex:0 0 auto}
   .lbr{grid-template-columns:28px minmax(0,1fr) 40px 34px 44px 40px;font-size:13px;padding:8px 6px;gap:4px}
   .lbr .nm{gap:7px}
   .lbr .nm em{display:none}   /* the three-letter code gives its room to the city name */
@@ -1259,6 +1270,7 @@ function renderStory() {
 addEventListener("resize", () => { if (document.getElementById("smodal").classList.contains("on")) applyLayout(rList[rIdx]); });
 function renderFeed() {
   renderFilters();
+  document.querySelectorAll("[data-cstories]").forEach(el => el.innerHTML = cityStories(CITY[el.dataset.cstories]));
   const list = LEAGUE.stories.filter(s => matchFilter(s, state.filter));
   const el = document.getElementById("feed");
   if (!list.length) { el.innerHTML = state.q ? `<div class="empty">${t("No story matches")} “${esc(state.q)}”. ${t("Try a city, a player or a word from a headline.")}</div>` :
@@ -1270,6 +1282,15 @@ function setFilter(f) { state.filter = f; PREF.set("filter", f); renderFeed(); d
 function toggleLike(id) { state.likes.has(id) ? state.likes.delete(id) : state.likes.add(id); PREF.set("likes", [...state.likes]); renderFeed();
   if (document.getElementById("smodal").classList.contains("on")) renderStory(); }
 
+/* The city's own stories first (tagged with the city or one of its players), then the league's latest, two rows of four */
+function cityStories(c) {
+  const mine = s => (s.cities || []).includes(c.id) || (s.players || []).some(id => PLAYER[id] && PLAYER[id].city === c.id);
+  const all = LEAGUE.stories.filter(s => s.kind !== "result");
+  return [...all.filter(mine), ...all.filter(s => !mine(s))].slice(0, 8).map(s => {
+    const sc = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
+    return `<button type="button" class="ctile" style="--c:${sc ? sc.color : "var(--acc)"}" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
+      <em>${s.kind === "video" ? `▶ ${s.dur || ""}` : s.kind === "gallery" ? `${s.count} ${t("photos")}` : kindLabel(s.kind)}</em><b>${esc(sTitle(s))}</b></button>`; }).join("");
+}
 function cityCard(c, i) {
   return `<div class="card" data-k="city" data-id="${c.id}" style="--c:${c.color}"><img class="bg" src="${c.photos[0]}" alt="" loading="lazy"><div class="inner">
     <div class="col l">
@@ -1285,9 +1306,9 @@ function cityCard(c, i) {
       <div class="sponsor">${t("City partners")} ${c.sponsors.map(s => `<i>${esc(s)}</i>`).join("")}</div>
     </div>
     <div class="col r">
-      <div class="box grow" data-hub="${c.id}">${hubBox(c)}</div>
-      <div class="box"><div class="legend"><span>${t("Video")}</span><span>${t("Supplied by Legacy · hosted, captioned, adaptive")}</span></div>
-        <div class="vids"><div class="vid"><img src="${c.photos[0]}" alt="" loading="lazy"><span>${c.short} ${t("at Del Mar · highlights 2:14")}</span></div><div class="vid"><img src="${c.photos[1]}" alt="" loading="lazy"><span>${t("City documentary · trailer")}</span></div><div class="vid"><img src="${c.photos[2]}" alt="" loading="lazy"><span>${t("Captain's round · ep. 1")}</span></div></div></div>
+      <div class="box hubbox" data-hub="${c.id}">${hubBox(c)}</div>
+      <div class="box"><div class="legend"><span>${t("Stories")}</span><button type="button" class="plink" onclick="go(SEC.stories)">${t("All stories")}</button></div>
+        <div class="ctiles" data-cstories="${c.id}">${cityStories(c)}</div></div>
     </div>
   </div></div>`;
 }
