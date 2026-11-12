@@ -573,6 +573,27 @@ button.ev:hover{border-color:var(--acc)}
 :root[data-theme="light"] .sq.dbl{color:#a3261e}
 :root[data-theme="light"] :is(#bar,#toast){box-shadow:0 10px 30px rgba(30,40,44,.16)}
 
+/* Stories: every tile is the same landscape card, 16:9, in publishing order. Golf is a wide sport and most of its
+   pictures are wide, so no tile is cropped to a tall or a square shape. The tile sizes a story still carries
+   (s, m, l, xl, r, p) no longer change anything here. */
+.feed{grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));grid-auto-rows:max-content;grid-auto-flow:row;gap:10px}
+.tile,.tile.s,.tile.m,.tile.l,.tile.xl,.tile.r,.tile.p{grid-column:auto;grid-row:auto}
+.tile::before{content:"";display:block;padding-top:56.25%}   /* 16:9; gives the grid a height to measure, as the tile's own content is all laid on top */
+.tile h3,.tile.s h3,.tile.l h3,.tile.xl h3,.tile.p h3{font-size:clamp(13.5px,1.05vw,16px);-webkit-line-clamp:2}
+.tile p,.tile.p p{display:none}
+.tile.s .meta{display:flex}
+.tile.s .play,.tile.xl .play{display:grid;width:44px;height:44px}
+.tile.p .shade{background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 28%,rgba(0,0,0,0) 45%,rgba(5,8,10,.92) 100%)}
+.tile.quote .q{padding:38px 14px 40px;font-size:clamp(12.5px,1vw,15.5px);overflow:hidden}
+.tile.result .board{top:36px}
+.tile.result .board .lbr{font-size:11.5px;padding:3px 6px}
+.tile.result .board .lbr:nth-child(n+5){display:none}   /* the three leading cities fit the card; Live has the rest */
+@media(max-aspect-ratio:1/1){
+  .feed{grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:10px}
+  .tile,.tile.s,.tile.m,.tile.l,.tile.xl,.tile.r,.tile.p{grid-column:auto;grid-row:auto}
+  .tile.m h3{font-size:15px}
+  .tile.m .meta .tag{display:inline-flex}
+}
 </style>
 </head>
 <body>
