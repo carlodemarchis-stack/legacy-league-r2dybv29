@@ -1059,7 +1059,7 @@ function renderFilters() {
   const shown = n(state.filter);
   const cityN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, id)).length;
   const evN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, state.city, id)).length;
-  document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter('${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
+  document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter(state.filter === '${k}' ? 'all' : '${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
     `<span class="fsep"></span>` + LEAGUE.cities.map(c => { const k = cityN(c.id);
       return `<button class="cf ${state.city === c.id ? "on" : ""} ${k ? "" : "none"}" style="--c:${c.color}" title="${esc(c.name)} · ${k}" onclick="setCity(state.city === '${c.id}' ? 'all' : '${c.id}')">${c.short}</button>`; }).join("") +
     (evs.length > 1 ? `<span class="fsep"></span>` + evs.map(e => `<button class="${state.sevent === e.id ? "on" : ""}" onclick="setStoryEvent(state.sevent === '${e.id}' ? 'all' : '${e.id}')">${esc(L(e, "name"))}<small>${evN(e.id)}</small></button>`).join("") : "") +
