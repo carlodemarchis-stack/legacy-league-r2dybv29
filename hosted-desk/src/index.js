@@ -32,12 +32,20 @@ const slugify = (title) => {
   for (const w of words) { if ((out + "-" + w).length > 64 && out) break; out = out ? out + "-" + w : w; }
   return out || "story";
 };
-function nameStories(stories) {
+async function nameStories(env, stories) {
+  const unnamed = stories.filter((s) => !s.slug);
+  if (!unnamed.length) return;
+  // a headline can stand for names ({p0} = the first tagged player, {c0} = the first city), as the site shows it
+  const ref = unnamed.some((s) => /\{(p0|c0|author)\}/.test(s.title || "")) ? await reference(env) : null;
+  const shown = (s) => (s.title || s.id)
+    .replace(/\{p0\}/g, ref && (s.players || [])[0] && ref.player[s.players[0]] ? ref.player[s.players[0]].name : "")
+    .replace(/\{c0\}/g, ref && (s.cities || [])[0] && ref.city[s.cities[0]] ? ref.city[s.cities[0]].name : "the league")
+    .replace(/\{author\}/g, "Legacy League Golf");
   const taken = new Set(stories.map((s) => s.slug).filter(Boolean));
-  for (const s of stories) {
-    if (s.slug) continue;
-    let slug = slugify(s.title || s.id), n = 1;
-    while (taken.has(slug)) slug = `${slugify(s.title || s.id)}-${++n}`;
+  for (const s of unnamed) {
+    const base = slugify(shown(s));
+    let slug = base, n = 1;
+    while (taken.has(slug)) slug = `${base}-${++n}`;
     s.slug = slug; taken.add(slug);
   }
 }
@@ -60,7 +68,7 @@ async function change(env, fn) {
     const { data, etag } = await readJson(env, RECORDS);
     const stories = data || [];
     const out = await fn(stories);
-    nameStories(stories);                                     // a story without a name for its address gets one here
+    await nameStories(env, stories);                          // a story without a name for its address gets one here
     const saved = await env.CONTENT.put(RECORDS, JSON.stringify(stories), {
       httpMetadata: { contentType: "application/json" },
       onlyIf: etag ? { etagMatches: etag } : undefined,

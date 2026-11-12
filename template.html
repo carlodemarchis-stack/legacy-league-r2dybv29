@@ -463,11 +463,34 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .L-band .rfig,.L-video .rfig,.L-gallery .rfig,.L-quote .rfig{margin-bottom:clamp(22px,3vh,36px)}
 .L-band .raside,.L-video .raside,.L-gallery .raside,.L-quote .raside{padding-top:clamp(40px,6vh,64px)}
 .L-band .rfig{height:var(--figh)}
+/* C2: any picture-on-top layout with the text in two columns across the full width, so the whole story is on one screen */
+.C2{grid-template-columns:minmax(0,1fr) minmax(0,1180px) minmax(0,1fr);grid-template-areas:"fig fig fig" ". main ." ". aside .";
+  column-gap:clamp(48px,6vw,96px);padding-bottom:40px}
+.C2 .rfig{height:var(--figh);margin-bottom:clamp(18px,2.6vh,30px)}
+.C2 .rmain{max-width:none}
+.C2 .rtitle{max-width:28ch}
+.C2 .rlead{max-width:80ch}
+.C2 .rtext{column-count:2;column-gap:48px}
+.L-band .rfig img{object-position:50% 30%}   /* a shortened picture keeps its upper part, where faces usually are; a story's own focus point wins */
+.C2 .raside{display:grid;grid-template-columns:auto auto 1fr;align-items:start;gap:14px 28px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.C2 .raside .rtags{margin:0}
+.C2 .raside .rfoot{margin:0;padding:0;border:0}
+.C2 .rmore{grid-column:1/-1;margin-top:4px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.C2 .rmore .legend{grid-column:1/-1;margin-bottom:0}
+.C2 .rmore .row{padding:4px;border:0}
 /* spread: a short story beside its landscape picture, the whole story on one screen */
-.L-spread{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"fig main" "fig aside";align-content:center;
-  column-gap:clamp(28px,4vw,64px);padding:clamp(56px,8vh,90px) clamp(60px,6vw,110px);min-height:100dvh}
-.L-spread .rfig{align-self:center;aspect-ratio:var(--ar);border-radius:14px}
+.L-spread{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"fig main" "fig aside";align-content:start;align-items:start;
+  column-gap:clamp(28px,4vw,64px);padding:clamp(56px,8vh,90px) clamp(60px,6vw,110px) 60px}
+.L-spread .rfig{aspect-ratio:var(--ar);border-radius:14px;position:sticky;top:clamp(56px,8vh,90px)}   /* top-aligned with the headline, held while the page scrolls */
 .L-spread .raside{margin-top:6px}
+/* where the story column is wide, the related stories sit in a row of three, picture over headline */
+.L-spread .rmore,.L-split .rmore{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.L-spread .rmore .legend,.L-split .rmore .legend{grid-column:1/-1;margin-bottom:0}
+.L-spread .rmore .row,.L-split .rmore .row{flex-direction:column;align-items:stretch;gap:8px;padding:0;border:0}
+.L-spread .rmore .row:hover,.L-split .rmore .row:hover{background:none}
+.L-spread .rmore .row img,.L-split .rmore .row img{flex:none;width:100%;height:auto;aspect-ratio:16/9;border-radius:10px}
+.L-spread .rmore .row:hover img,.L-split .rmore .row:hover img{outline:2px solid var(--acc);outline-offset:-2px}
+.L-spread .rmore .row b,.L-split .rmore .row b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 /* split: a portrait or square picture full height on the left, held while the story scrolls on the right */
 .L-split{grid-template-columns:var(--figw) minmax(0,1fr);grid-template-areas:"fig main" "fig aside";column-gap:clamp(28px,4vw,64px)}
 .L-split .rfig{position:sticky;top:0;height:100dvh;align-self:start;grid-row:1/3}
@@ -475,21 +498,32 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .L-split .raside{padding:0 clamp(20px,4vw,60px) 60px 0;max-width:66ch}
 .L-split .rmain{padding-right:clamp(20px,4vw,60px)}
 /* video: the player across the top at its own shape */
-.L-video .rfig{background:#000;height:min(62dvh,calc(100vw * 9 / 16))}
+.L-video .rfig{background:#000;height:var(--figh)}
 /* gallery: a strip of the pictures at their own shapes, scrolled sideways */
-.L-gallery .rfig{display:flex;gap:4px;height:min(52dvh,560px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;background:#000}
-.L-gallery .rfig img{width:auto;height:100%;flex:0 0 auto;scroll-snap-align:start}
+.K-gallery .rfig{display:flex;flex-direction:column;height:var(--figh);background:#000}
+.gmain{position:relative;flex:1 1 auto;min-height:0}
+.gmain img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.gctl{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:2;display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(8px);color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
+.gctl span{min-width:52px;text-align:center}
+.gctl button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.gctl button:hover{background:rgba(255,255,255,.14)}
+.gctl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.gthumbs{flex:0 0 auto;display:flex;justify-content:center;gap:6px;padding:8px;overflow-x:auto;scrollbar-width:none}
+.gthumbs button{flex:0 0 auto;width:96px;height:60px;padding:0;border-radius:6px;overflow:hidden;border:2px solid transparent;opacity:.5;transition:.18s}
+.gthumbs button:hover{opacity:.85}
+.gthumbs button.on{opacity:1;border-color:var(--acc)}
+.gthumbs img{display:block;width:100%;height:100%;object-fit:cover}
 /* quote: the words set large over the darkened picture */
 .L-quote .rfig,.L-stack.K-quote .rfig{display:grid;place-items:center;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#000),#0b0f11)}
-.L-quote .rfig{min-height:min(58dvh,620px);padding:clamp(40px,8vh,90px) clamp(24px,10vw,180px)}
+.L-quote .rfig{height:var(--figh);padding:clamp(30px,6vh,80px) clamp(24px,10vw,180px)}
 .L-quote .rfig img,.L-stack.K-quote .rfig img{position:absolute;inset:0;opacity:.18;filter:grayscale(1)}
 .rfig blockquote{position:relative;margin:0;max-width:30ch;font-size:clamp(26px,3.4vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1.12;color:#fff}
 .rfig cite{display:block;margin-top:18px;font-style:normal;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.7)}
 /* stack: a phone, or a narrow window: picture, story, context, one under the other */
 .L-stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"fig" "main" "aside";padding-bottom:96px}
 .L-stack .rfig{height:var(--figh)}
-.L-stack.K-gallery .rfig{display:flex;gap:3px;overflow-x:auto;scroll-snap-type:x mandatory}
-.L-stack.K-gallery .rfig img{width:auto;height:100%;flex:0 0 auto;scroll-snap-align:start}
+.L-stack .gthumbs button{width:64px;height:40px}
 .L-stack.K-quote .rfig{height:auto;min-height:46dvh;padding:56px 22px 30px}
 .L-stack.K-quote .rfig blockquote{font-size:26px}
 .L-stack .rmain,.L-stack .raside{padding:0 clamp(18px,5vw,28px);max-width:none}
@@ -1106,14 +1140,29 @@ function storyLayout(s) {
   const shape = r < 0.95 ? "portrait" : r < 1.25 ? "square" : r >= 1.9 ? "wide" : "landscape";
   const kind = s.kind === "video" && s.video ? "video" : s.kind === "gallery" && (s.photos || []).length > 1 ? "gallery" : s.kind === "quote" ? "quote" : "photo";
   const words = s.words || 0, vw = innerWidth, vh = innerHeight;
-  let layout;
+  let layout, two = false;
   const vars = { "--ar": r.toFixed(3) };
+  // Two text columns across the whole width below the picture, when that puts the entire story on one screen.
+  // The text's height is estimated from the word count: about 6 characters a word, 8.3 px a character, 27 px a
+  // line. The picture gives up height, down to `floor` of the screen, before the text goes back to one column.
+  const fit2 = (figh, floor) => {
+    const width = Math.min(vw - 2 * Math.max(48, vw * 0.06), 1180), colW = (width - 48) / 2;
+    const textH = Math.ceil(words * 6 / (colW / 8.3) / 2) * 27 + 60;
+    const room = h => vh - h - (kind === "quote" ? 160 : 240);         // the byline, headline, summary and margins
+    if (vw >= 1100 && textH <= room(vh * floor)) {
+      two = true;
+      while (textH > room(figh) && figh > vh * floor) figh -= 10;
+    }
+    return Math.round(figh);
+  };
   if (PHONE()) {
     layout = "stack";
     // a wide picture at its own shape; a tall one cropped to 4:5 at most, so the headline is on the first screen
-    vars["--figh"] = kind === "video" ? `${Math.round(vw * 9 / 16)}px` : kind === "gallery" ? "42dvh" : `${Math.round(Math.min(vw / Math.max(r, 0.8), vh * 0.62))}px`;
+    vars["--figh"] = kind === "video" ? `${Math.round(vw * 9 / 16)}px` : kind === "gallery" ? "54dvh" : `${Math.round(Math.min(vw / Math.max(r, 0.8), vh * 0.62))}px`;
   } else if (kind !== "photo") {
-    layout = kind;
+    layout = kind;                                                     // video, gallery or quote across the top
+    const start = kind === "video" ? Math.min(vh * 0.62, vw * 9 / 16) : kind === "gallery" ? Math.min(vh * 0.62, 700) : Math.min(vh * 0.56, 620);
+    vars["--figh"] = `${fit2(start, kind === "gallery" ? 0.42 : 0.36)}px`;
   } else if (shape === "portrait" || shape === "square") {
     layout = "split";                                                  // the picture keeps its height; the story scrolls beside it
     vars["--figw"] = `${Math.round(Math.min(vw * (shape === "square" ? 0.46 : 0.42), vh * r))}px`;
@@ -1122,9 +1171,9 @@ function storyLayout(s) {
   } else {
     layout = "band";                                                   // a longer story: the picture across the top, the text below
     const cap = words > 300 ? 0.36 : 0.46;                             // the longer the text, the sooner it starts
-    vars["--figh"] = `${Math.round(Math.min(vw / (shape === "wide" ? r : Math.max(r, 2.2)), vh * cap))}px`;
+    vars["--figh"] = `${fit2(Math.min(vw / (shape === "wide" ? r : Math.max(r, 2.2)), vh * cap), 0.26)}px`;
   }
-  return { layout, kind, shape, cls: `rpage L-${layout} K-${kind} S-${shape}`, vars };
+  return { layout, kind, shape, two, cls: `rpage L-${layout} K-${kind} S-${shape}${two ? " C2" : ""}`, vars };
 }
 function applyLayout(s) {
   const page = document.querySelector("#rbody .rpage"); if (!page || !s) return;
@@ -1132,6 +1181,16 @@ function applyLayout(s) {
   page.className = cls;
   Object.entries(vars).forEach(([k, v]) => page.style.setProperty(k, v));
 }
+/* The gallery viewer: one picture at a time, with arrows, a count and the thumbnails to jump to any of them. */
+let galIdx = 0;
+function galShow(i) {
+  const s = rList[rIdx], n = (s.photos || []).length; if (!n) return;
+  galIdx = (i + n) % n;
+  document.getElementById("gimg").src = s.photos[galIdx];
+  document.getElementById("gcount").textContent = `${galIdx + 1} / ${n}`;
+  document.querySelectorAll("#rbody .gthumbs button").forEach((b, j) => b.classList.toggle("on", j === galIdx));
+}
+const galStep = d => galShow(galIdx + d);
 function renderStory() {
   const s = rList[rIdx]; if (!s) return;
   showStoryAddress(s);
@@ -1141,7 +1200,11 @@ function renderStory() {
   const speaker = s.players && s.players[0] && PLAYER[s.players[0]] ? esc(PLAYER[s.players[0]].name) + " · " : "";
   const focus = s.focus ? ` style="object-position:${s.focus}"` : "";
   let fig;
-  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = s.photos.map(p => `<img src="${p}" alt="">`).join("");
+  galIdx = 0;
+  const arrow = d => `<svg viewBox="0 0 24 24"><path d="${d}"/></svg>`;
+  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = `<div class="gmain"><img id="gimg" src="${s.photos[0]}" alt="">
+      <div class="gctl"><button onclick="galStep(-1)" title="${t("Previous picture")}">${arrow("M15 5l-7 7 7 7")}</button><span id="gcount">1 / ${s.photos.length}</span><button onclick="galStep(1)" title="${t("Next picture")}">${arrow("M9 5l7 7-7 7")}</button></div></div>
+    <div class="gthumbs">${s.photos.map((p, i) => `<button class="${i ? "" : "on"}" onclick="galShow(${i})"><img src="${p}" alt=""></button>`).join("")}</div>`;
   else if (s.kind === "quote") fig = `<img src="${s.photo}" alt=""${focus}><blockquote>${esc(sTitle(s))}<cite>${speaker}${esc(s.author)}</cite></blockquote>`;
   else if (s.kind === "video" && s.video) fig = `<video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
       <source src="${s.video}" type="video/webm">
