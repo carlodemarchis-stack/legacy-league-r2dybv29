@@ -21,7 +21,7 @@ data/stories/*.json  what is fetched later: one small file per article body, and
                      older stories beyond the first screen. Names carry a hash of the content, so a
                      file never changes once published and can be cached for good.
 """
-import hashlib, json, os, pathlib, datetime as dt, yaml
+import hashlib, json, os, pathlib, re, subprocess, datetime as dt, yaml
 
 FIRST_STORIES = int(os.environ.get("FIRST_STORIES", 24))   # story tiles carried inside the page
 
@@ -51,6 +51,7 @@ def load_content():
     live.sort(key=lambda s: s["id"]); live.sort(key=lambda s: (s.get("at", ""), s.get("created_at", "")), reverse=True)
     for s in live:
         s.setdefault("cities", []); s.setdefault("players", []); s.setdefault("photos", [])
+        measure(s)
     cities = [Y(p) for p in sorted((C / "cities").glob("*.yaml"))]
     order = {c["id"]: i for i, c in enumerate(cities)}
     players = [Y(p) for p in sorted((C / "players").glob("*.yaml"))]
@@ -60,6 +61,39 @@ def load_content():
                     leaderboard_sponsor=league.get("leaderboard_sponsor")),
         cities=cities, players=players, schedule=Y(C / "schedule.yaml")["events"], rules=Y(C / "rules.yaml"),
         stories=live, hero=league["hero"], resources=league["resources"]))
+
+SIZES_FILE = ROOT / "data/photo-sizes.json"
+_sizes = None
+
+def photo_size(path):
+    """Width and height of a picture in the project, or None. Read once with macOS sips and remembered in
+    data/photo-sizes.json, so a build does not open every picture again."""
+    global _sizes
+    if _sizes is None:
+        _sizes = json.loads(SIZES_FILE.read_text()) if SIZES_FILE.exists() else {}
+    if not isinstance(path, str) or not path.startswith("img/") or not (ROOT / path).exists():
+        return None
+    f = ROOT / path
+    stamp = int(f.stat().st_mtime)
+    hit = _sizes.get(path)
+    if not hit or hit[2] != stamp:
+        out = subprocess.run(["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(f)], capture_output=True, text=True).stdout
+        nums = re.findall(r"pixel(?:Width|Height): (\d+)", out)
+        if len(nums) != 2:
+            return None
+        _sizes[path] = hit = [int(nums[0]), int(nums[1]), stamp]
+        SIZES_FILE.write_text(json.dumps(_sizes, indent=0, sort_keys=True))
+    return hit[0], hit[1]
+
+def measure(s):
+    """What the story reader needs to choose a layout before anything loads: the lead picture's width and
+    height, and how many words the story has."""
+    lead = s.get("photo") or (s.get("photos") or [None])[0]
+    size = photo_size(lead)
+    if size:
+        s["photo_w"], s["photo_h"] = size
+    s["words"] = len(" ".join([s.get("dek") or ""] + list(s.get("body") or [])).split())
+    return s
 
 def english_only(x):
     """The website and the apps are in English only. Spanish fields still in the content files

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>/* Every picture and file is addressed from the site's own folder. A story's address (/stories/<name>) is put in
+   the address bar while it is open; without this, pictures drawn after that would be looked for under /stories/. */
+(function(){if(document.querySelector("base"))return;var p=location.pathname.replace(/stories\/[^\/]*\/?$/,"").replace(/[^\/]*$/,"");
+var b=document.createElement("base");b.href=location.origin+p;document.head.appendChild(b)})()</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Legacy League Golf — Season Film (demo)</title>
@@ -347,7 +351,8 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 #topbar .home:hover b{color:var(--acc-ink)}
 #topbar .tb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tb-tabs{display:flex;gap:4px;margin-left:auto}
-#tb-tabs button{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(var(--veil),.06);letter-spacing:.14em;color:var(--ink);font-weight:700;transition:.18s;white-space:nowrap}
+#tb-tabs button{display:inline-flex;align-items:center;gap:7px;padding:6px 14px 6px 11px;border-radius:999px;border:1px solid var(--line);background:rgba(var(--veil),.06);letter-spacing:.14em;color:var(--ink);font-weight:700;transition:.18s;white-space:nowrap}
+#tb-tabs button svg{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #tb-tabs button:hover{border-color:var(--acc);background:rgba(var(--veil),.12)}
 #tb-tabs button.on{color:var(--on-acc);border-color:var(--acc);background:var(--acc)}
 #bar{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:4px;
@@ -401,24 +406,6 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rnav:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rnav.l{left:-50px}.rnav.r{right:-50px}
 .rnav svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.rhero{position:relative;aspect-ratio:16/9;background:#0b0f11;overflow:hidden;border-bottom:1px solid var(--line)}
-.rhero img{width:100%;height:100%;object-fit:cover;display:block}
-.rhero.portrait img{object-fit:contain;background:#0b0f11}
-.rhero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 30%,rgba(0,0,0,0) 70%,rgba(10,14,16,.9))}
-.rhero .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:72px;height:72px;border-radius:50%;background:rgba(var(--veil),.16);
-  border:1px solid rgba(var(--veil),.45);backdrop-filter:blur(8px);display:grid;place-items:center}
-.rhero .play::after{content:"";margin-left:5px;border-left:22px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent}
-.rhero .dur{position:absolute;right:14px;bottom:12px;z-index:2;padding:4px 9px;border-radius:7px;background:rgba(0,0,0,.65);font-size:12px;font-variant-numeric:tabular-nums}
-.rhero .cap{position:absolute;left:16px;bottom:12px;z-index:2;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(var(--veil),.6)}
-.rhero.gallery{aspect-ratio:auto;display:grid;grid-template-columns:3fr 2fr;grid-template-rows:1fr 1fr;gap:2px;background:#000}
-.rhero.gallery img{min-height:0}
-.rhero.gallery img:first-child{grid-row:1/3;aspect-ratio:4/3}
-.rhero.gallery::after{display:none}
-.rhero.quote{aspect-ratio:auto;padding:clamp(28px,5vw,56px) clamp(20px,4vw,48px);display:block;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#000),#0b0f11)}
-.rhero.quote::after{display:none}
-.rhero.quote p{font-size:clamp(22px,3vw,38px);font-weight:700;letter-spacing:-.03em;line-height:1.15;position:relative;z-index:1}
-.rhero.quote small{display:block;margin-top:14px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(var(--veil),.7)}
-.rart{padding:clamp(16px,2.6vw,30px) clamp(18px,3.4vw,44px) clamp(18px,3vw,34px);max-width:720px;margin:0 auto}
 .rmeta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--dim);flex-wrap:wrap}
 .rmeta .ava{width:30px;height:30px;font-size:10px}
 .rmeta b{color:var(--ink);font-weight:700}
@@ -447,6 +434,68 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rmore .row small{display:block;font-size:10.5px;color:var(--dim2);margin-top:2px}
 .rcount{position:absolute;left:14px;top:14px;z-index:3;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);font-size:10.5px;letter-spacing:.1em;color:rgba(var(--veil),.8);font-variant-numeric:tabular-nums}
 
+/* ------------------------------------------------------------- story reader: a full page, laid out from what is known
+   before anything loads: the kind of story, the lead picture's width and height, the number of words, the screen */
+#smodal{padding:0}
+#smodal .rbox{width:100vw;height:100dvh;max-height:none;border-radius:0;border:0}
+#smodal .rnav{position:fixed}
+#smodal .mclose{top:calc(10px + env(safe-area-inset-top))}
+#smodal .rcount{top:calc(14px + env(safe-area-inset-top))}
+#smodal .rnav.l{left:14px}#smodal .rnav.r{right:14px}
+.rpage{display:grid;min-height:100%;align-content:start}
+.rfig{grid-area:fig;position:relative;margin:0;overflow:hidden;background:#0b0f11;color:var(--ink)}
+.rfig img{display:block;width:100%;height:100%;object-fit:cover}
+.rfig .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:72px;height:72px;border-radius:50%;
+  background:rgba(var(--veil),.16);border:1px solid rgba(var(--veil),.4);backdrop-filter:blur(8px);display:grid;place-items:center}
+.rfig .play::after{content:"";margin-left:5px;border-left:22px solid #fff;border-top:13px solid transparent;border-bottom:13px solid transparent}
+.rfig .dur{position:absolute;right:14px;bottom:12px;z-index:2;padding:4px 9px;border-radius:7px;background:rgba(0,0,0,.65);font-size:12px;font-variant-numeric:tabular-nums}
+.rfig .cap{position:absolute;left:14px;bottom:12px;z-index:2;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.55);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(255,255,255,.75);pointer-events:none}
+.rfig video{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.rmain{grid-area:main;min-width:0;max-width:66ch}
+.raside{grid-area:aside;min-width:0}
+.raside .rtags{margin-top:0}
+.rcredit{font-size:11px;color:var(--dim2);margin:0 0 12px}
+
+/* band: a landscape picture across the top, the story below in one column, its context beside it */
+.L-band,.L-video,.L-gallery,.L-quote{grid-template-columns:minmax(0,1fr) minmax(0,66ch) minmax(220px,280px) minmax(0,1fr);
+  grid-template-areas:"fig fig fig fig" ". main aside .";column-gap:clamp(28px,4vw,64px);padding-bottom:60px}
+.L-band .rfig,.L-video .rfig,.L-gallery .rfig,.L-quote .rfig{margin-bottom:clamp(22px,3vh,36px)}
+.L-band .raside,.L-video .raside,.L-gallery .raside,.L-quote .raside{padding-top:clamp(40px,6vh,64px)}
+.L-band .rfig{height:var(--figh)}
+/* spread: a short story beside its landscape picture, the whole story on one screen */
+.L-spread{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-areas:"fig main" "fig aside";align-content:center;
+  column-gap:clamp(28px,4vw,64px);padding:clamp(56px,8vh,90px) clamp(60px,6vw,110px);min-height:100dvh}
+.L-spread .rfig{align-self:center;aspect-ratio:var(--ar);border-radius:14px}
+.L-spread .raside{margin-top:6px}
+/* split: a portrait or square picture full height on the left, held while the story scrolls on the right */
+.L-split{grid-template-columns:var(--figw) minmax(0,1fr);grid-template-areas:"fig main" "fig aside";column-gap:clamp(28px,4vw,64px)}
+.L-split .rfig{position:sticky;top:0;height:100dvh;align-self:start;grid-row:1/3}
+.L-split .rmain{padding-top:clamp(56px,9vh,110px)}
+.L-split .raside{padding:0 clamp(20px,4vw,60px) 60px 0;max-width:66ch}
+.L-split .rmain{padding-right:clamp(20px,4vw,60px)}
+/* video: the player across the top at its own shape */
+.L-video .rfig{background:#000;height:min(62dvh,calc(100vw * 9 / 16))}
+/* gallery: a strip of the pictures at their own shapes, scrolled sideways */
+.L-gallery .rfig{display:flex;gap:4px;height:min(52dvh,560px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;background:#000}
+.L-gallery .rfig img{width:auto;height:100%;flex:0 0 auto;scroll-snap-align:start}
+/* quote: the words set large over the darkened picture */
+.L-quote .rfig,.L-stack.K-quote .rfig{display:grid;place-items:center;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 70%,#000),#0b0f11)}
+.L-quote .rfig{min-height:min(58dvh,620px);padding:clamp(40px,8vh,90px) clamp(24px,10vw,180px)}
+.L-quote .rfig img,.L-stack.K-quote .rfig img{position:absolute;inset:0;opacity:.18;filter:grayscale(1)}
+.rfig blockquote{position:relative;margin:0;max-width:30ch;font-size:clamp(26px,3.4vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1.12;color:#fff}
+.rfig cite{display:block;margin-top:18px;font-style:normal;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+/* stack: a phone, or a narrow window: picture, story, context, one under the other */
+.L-stack{grid-template-columns:minmax(0,1fr);grid-template-areas:"fig" "main" "aside";padding-bottom:96px}
+.L-stack .rfig{height:var(--figh)}
+.L-stack.K-gallery .rfig{display:flex;gap:3px;overflow-x:auto;scroll-snap-type:x mandatory}
+.L-stack.K-gallery .rfig img{width:auto;height:100%;flex:0 0 auto;scroll-snap-align:start}
+.L-stack.K-quote .rfig{height:auto;min-height:46dvh;padding:56px 22px 30px}
+.L-stack.K-quote .rfig blockquote{font-size:26px}
+.L-stack .rmain,.L-stack .raside{padding:0 clamp(18px,5vw,28px);max-width:none}
+.L-stack .rmain{padding-top:20px}
+@media(max-aspect-ratio:1/1){#smodal .rnav{bottom:max(14px,env(safe-area-inset-bottom));top:auto;transform:none;width:48px;height:40px}}
+
 /* ------------------------------------------------------------- additions: placements, language, captions, pages */
 .placement{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 12px;border-radius:12px;border:1px solid rgba(217,173,78,.35);
   background:linear-gradient(90deg,rgba(217,173,78,.08),rgba(217,173,78,.02));font-size:clamp(9px,.82vw,11px);letter-spacing:.14em;text-transform:uppercase;color:var(--dim2);font-weight:700}
@@ -454,10 +503,6 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .placement .pl-sched{margin-left:auto;font-weight:300;letter-spacing:.04em;text-transform:none;color:var(--dim)}
 .placement .pl-sched b{color:var(--green);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:9px;margin-right:4px}
 u.cc{text-decoration:none;display:inline-block;padding:0 4px;border:1px solid currentColor;border-radius:3px;font-size:8.5px;line-height:1.5;letter-spacing:.06em;vertical-align:1px;margin-left:2px}
-.rhero.video{background:#000}
-.rhero.video video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
-.rhero.video::after{display:none}
-.rhero.video .cap{pointer-events:none;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:6px}
 .mfoot{margin-top:8px;padding-top:10px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim2)}
 .mfoot button{color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-size:11px}
 .mfoot button:hover{color:var(--acc-ink)}
@@ -489,7 +534,11 @@ button.ev:hover{border-color:var(--acc)}
   #topbar .tb-l{flex:1 1 100%;font-size:9.5px}
   #tb-tabs{margin-left:0;gap:3px;max-width:100%;overflow-x:auto;scrollbar-width:none}
   #tb-tabs::-webkit-scrollbar{display:none}
-  #tb-tabs button{padding:5px 9px;font-size:9.5px;letter-spacing:.09em}
+  #tb-tabs button{padding:6px 9px;font-size:9.5px;letter-spacing:.09em;gap:5px}
+  /* a phone shows the icons, and the name of the section you are in */
+  #tb-tabs button span{display:none}
+  #tb-tabs button.on span{display:inline}
+  #tb-tabs button svg{width:16px;height:16px}
   .inner{flex-direction:column;overflow-y:auto;padding:clamp(14px,4vw,22px);padding-top:calc(92px + env(safe-area-inset-top));padding-bottom:96px;gap:12px}
   /* the film stacks: a % flex-basis would now be a height, so every column sizes to its content */
   .col,.col.l,.col.r{flex:0 0 auto!important}
@@ -535,7 +584,6 @@ button.ev:hover{border-color:var(--acc)}
   .rbox{width:100vw;max-height:100dvh;height:100dvh;border-radius:0;border:0}
   .rnav{top:auto;bottom:max(14px,env(safe-area-inset-bottom));transform:none;width:48px;height:40px}
   .rnav.l{left:14px}.rnav.r{right:14px}
-  .rart{padding-bottom:84px}
   .feed{overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:112px;gap:6px;padding:0 0 10px}
   .tile,.tile.l,.tile.xl,.tile.r{grid-column:span 2;grid-row:span 2}
   .tile.xl,.tile.r{grid-row:span 3}
@@ -561,7 +609,7 @@ button.ev:hover{border-color:var(--acc)}
   --veil:12,28,24; --bg-rgb:250,252,251; --m1:#ffffff; --m2:#f1f4f3;
   color-scheme:light;
 }
-:root[data-theme="light"] :is(.tile,.rhero,.vid,.pphoto,.rcount,.rbox>.mclose){
+:root[data-theme="light"] :is(.tile,.rfig,.vid,.pphoto,.rcount,.rbox>.mclose){
   --ink:#eef3f2; --dim:#b7c3c5; --dim2:#93a1a4; --line:rgba(160,180,190,.14); --acc:#d9ad4e; --acc-ink:#d9ad4e; --veil:255,255,255;
   color:var(--ink)}
 :root[data-theme="light"] .box{box-shadow:0 1px 2px rgba(30,40,44,.05),0 8px 24px rgba(30,40,44,.05)}
@@ -601,19 +649,20 @@ button.ev:hover{border-color:var(--acc)}
 <div id="topbar">
   <div class="tb-l"><a class="home" href="#1" onclick="go(0);return false" title="Home"><b>Legacy League Golf</b></a> <span id="tb-ctx">· 2027 season</span></div>
   <div id="tb-tabs">
-    <button data-sec="live">Live</button>
-    <button data-sec="stories">Stories</button>
-    <button data-sec="cities">Cities</button>
-    <button data-sec="players">Players</button>
-    <button data-sec="season">Season</button>
-    <button data-sec="league">League</button>
+    <button data-sec="home" title="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home</span></button>
+    <button data-sec="live" title="Live"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M7.4 7.4a6.5 6.5 0 000 9.2M16.6 7.4a6.5 6.5 0 010 9.2M4.6 4.6a10.4 10.4 0 000 14.8M19.4 4.6a10.4 10.4 0 010 14.8"/></svg><span>Live</span></button>
+    <button data-sec="stories" title="Stories"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 9h8M8 12.5h8M8 16h5"/></svg><span>Stories</span></button>
+    <button data-sec="cities" title="Cities"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Cities</span></button>
+    <button data-sec="players" title="Players"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20.5a7.2 7.2 0 0114.4 0"/></svg><span>Players</span></button>
+    <button data-sec="season" title="Season"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></svg><span>Season</span></button>
+    <button data-sec="league" title="League"><svg viewBox="0 0 24 24"><path d="M12 3.2l7 2.8v5.2c0 4.4-3 8-7 9.8-4-1.8-7-5.4-7-9.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><span>League</span></button>
   </div>
 </div>
 
 <div id="film"></div>
 
 <div id="bar">
-  <button id="b-first" title="Restart" data-t="Restart"><svg viewBox="0 0 24 24"><path d="M19 5v14L8 12z"/><path d="M5 5v14"/></svg></button>
+  <button id="b-first" title="Home" data-t="Home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></button>
   <button id="b-psec" title="Previous section" data-t="Previous section"><svg viewBox="0 0 24 24"><path d="M12 5l-7 7 7 7"/><path d="M19 5l-7 7 7 7"/></svg></button>
   <button id="b-prev" title="Previous" data-t="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
   <button id="count" title="Index: jump to a card (g)" data-t="Index: jump to a card (g)"><b>1</b> / 1</button>
@@ -1049,42 +1098,89 @@ function openStory(id) {
   document.getElementById("smodal").classList.add("on");
 }
 function stepStory(d) { if (!rList.length) return; rIdx = (rIdx + d + rList.length) % rList.length; renderStory(); }
+/* The reader's layout, chosen before anything loads from what the story carries: its kind, the lead picture's width
+   and height (photo_w, photo_h) and its number of words; and from the screen. */
+const PHONE = () => innerWidth < 760 || innerHeight > innerWidth;
+function storyLayout(s) {
+  const r = s.photo_w && s.photo_h ? s.photo_w / s.photo_h : 1.5;      // a picture whose shape is not known is taken as 3:2
+  const shape = r < 0.95 ? "portrait" : r < 1.25 ? "square" : r >= 1.9 ? "wide" : "landscape";
+  const kind = s.kind === "video" && s.video ? "video" : s.kind === "gallery" && (s.photos || []).length > 1 ? "gallery" : s.kind === "quote" ? "quote" : "photo";
+  const words = s.words || 0, vw = innerWidth, vh = innerHeight;
+  let layout;
+  const vars = { "--ar": r.toFixed(3) };
+  if (PHONE()) {
+    layout = "stack";
+    // a wide picture at its own shape; a tall one cropped to 4:5 at most, so the headline is on the first screen
+    vars["--figh"] = kind === "video" ? `${Math.round(vw * 9 / 16)}px` : kind === "gallery" ? "42dvh" : `${Math.round(Math.min(vw / Math.max(r, 0.8), vh * 0.62))}px`;
+  } else if (kind !== "photo") {
+    layout = kind;
+  } else if (shape === "portrait" || shape === "square") {
+    layout = "split";                                                  // the picture keeps its height; the story scrolls beside it
+    vars["--figw"] = `${Math.round(Math.min(vw * (shape === "square" ? 0.46 : 0.42), vh * r))}px`;
+  } else if (words <= 140) {
+    layout = "spread";                                                 // a short story fits beside its picture on one screen
+  } else {
+    layout = "band";                                                   // a longer story: the picture across the top, the text below
+    const cap = words > 300 ? 0.36 : 0.46;                             // the longer the text, the sooner it starts
+    vars["--figh"] = `${Math.round(Math.min(vw / (shape === "wide" ? r : Math.max(r, 2.2)), vh * cap))}px`;
+  }
+  return { layout, kind, shape, cls: `rpage L-${layout} K-${kind} S-${shape}`, vars };
+}
+function applyLayout(s) {
+  const page = document.querySelector("#rbody .rpage"); if (!page || !s) return;
+  const { cls, vars } = storyLayout(s);
+  page.className = cls;
+  Object.entries(vars).forEach(([k, v]) => page.style.setProperty(k, v));
+}
 function renderStory() {
   const s = rList[rIdx]; if (!s) return;
   showStoryAddress(s);
   const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
   const col = c ? c.color : "var(--acc)";
   const liked = state.likes.has(s.id);
-  let hero;
-  if (s.kind === "gallery" && s.photos) hero = `<div class="rhero gallery">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>`;
-  else if (s.kind === "quote") hero = `<div class="rhero quote" style="--c:${col}"><p>${esc(sTitle(s))}</p><small>${s.players && s.players[0] && PLAYER[s.players[0]] ? esc(PLAYER[s.players[0]].name) + " · " : ""}${esc(s.author)}</small></div>`;
-  else if (s.kind === "video" && s.video) hero = `<div class="rhero video"><video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
+  const speaker = s.players && s.players[0] && PLAYER[s.players[0]] ? esc(PLAYER[s.players[0]].name) + " · " : "";
+  const focus = s.focus ? ` style="object-position:${s.focus}"` : "";
+  let fig;
+  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = s.photos.map(p => `<img src="${p}" alt="">`).join("");
+  else if (s.kind === "quote") fig = `<img src="${s.photo}" alt=""${focus}><blockquote>${esc(sTitle(s))}<cite>${speaker}${esc(s.author)}</cite></blockquote>`;
+  else if (s.kind === "video" && s.video) fig = `<video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
       <source src="${s.video}" type="video/webm">
-      <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt" default></video>
-      <span class="cap">${t("Video · hosted, adaptive, captioned")} · <u class="cc">CC</u></span></div>`;
-  else hero = `<div class="rhero ${s.size === "p" ? "portrait" : ""}"><img src="${s.photo}" alt="" ${s.focus ? `style="object-position:${s.focus}"` : ""}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span><span class="cap">${t("Video · hosted, adaptive, captioned")}</span>` : `<span class="cap">${s.kind === "article" ? t("Picture · supplied by Legacy") : ""}</span>`}</div>`;
+      <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt" default></video>`;
+  else fig = `<img src="${s.photo}" alt=""${focus}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span>` : ""}<span class="cap">${s.kind === "video" ? t("Video · hosted, adaptive, captioned") : t("Picture · supplied by Legacy")}</span>`;
   const tags = (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
                (s.players || []).filter(id => PLAYER[id]).map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
   const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && ((x.cities || []).some(id => (s.cities || []).includes(id)) || x.topic === s.topic)).slice(0, 3);
-  document.getElementById("rbody").innerHTML = `${hero}<div class="rart">
-    <div class="rmeta"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b><span>${ago(s.at)}</span>
-      <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}${s.kind === "gallery" ? ` · ${s.count} ${t("pictures")}` : ""}</span></div>
-    ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(sTitle(s))}</h2>`}
-    <p class="rlead">${esc(sDek(s))}</p>
-    <div class="rtags">${tags}</div>
-    <div class="rtext" id="rtext"></div>
-    ${s.credit ? `<div class="lbfoot">${esc(s.credit)}</div>` : ""}
-    <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
-      <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0} ${t("comments")}</button>
-      <button onclick="shareStory('${s.id}')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
-      ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
-    ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kind)}</small></span></button>`).join("")}</div>` : ""}
-  </div>`;
+  document.getElementById("rbody").innerHTML = `<article class="rpage" style="--c:${col}">
+    <figure class="rfig">${fig}</figure>
+    <div class="rmain">
+      <div class="rmeta"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b><span>${ago(s.at)}</span>
+        <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}${s.kind === "gallery" ? ` · ${s.count} ${t("pictures")}` : ""}</span></div>
+      ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(sTitle(s))}</h2>`}
+      <p class="rlead">${esc(sDek(s))}</p>
+      <div class="rtext" id="rtext"></div>
+    </div>
+    <aside class="raside">
+      <div class="rtags">${tags}</div>
+      ${s.photo_credit || s.credit ? `<p class="rcredit">${t("Photo")}: ${esc(s.photo_credit || s.credit)}</p>` : ""}
+      <div class="rfoot"><button class="${liked ? "on" : ""}" onclick="toggleLike('${s.id}')"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${fmtK((s.likes || 0) + (liked ? 1 : 0))}</button>
+        <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0}</button>
+        <button onclick="shareStory('${s.id}')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
+        ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
+      ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kind)}</small></span></button>`).join("")}</div>` : ""}
+    </aside>
+  </article>`;
+  applyLayout(s);
+  // a picture whose shape the story does not carry (an outside address) is measured once it loads, and laid out again
+  if (!(s.photo_w && s.photo_h)) {
+    const img = document.querySelector("#rbody .rfig img");
+    if (img) img.addEventListener("load", () => { s.photo_w = img.naturalWidth; s.photo_h = img.naturalHeight; if (rList[rIdx] === s) applyLayout(s); }, { once: true });
+  }
   document.getElementById("rcount").textContent = `${rIdx + 1} / ${rList.length}`;
   document.getElementById("rbody").scrollTop = 0;
   paintBody(s);
   loadBody(rList[rIdx + 1]); loadBody(rList[rIdx - 1]);     // so stepping to the next story is instant
 }
+addEventListener("resize", () => { if (document.getElementById("smodal").classList.contains("on")) applyLayout(rList[rIdx]); });
 function renderFeed() {
   renderFilters();
   const list = LEAGUE.stories.filter(s => matchFilter(s, state.filter));
@@ -1225,7 +1321,7 @@ const playerOrder = cityOrder.flatMap(c => LEAGUE.players.filter(p => p.city ===
 const CARDS = [{ k: "story" }, { k: "event", id: EVENT.id }, { k: "stories" }, ...cityOrder.map(c => ({ k: "city", id: c.id })),
                ...playerOrder.map(p => ({ k: "player", id: p.id })), { k: "season" }, ...LEAGUE.schedule.map(e => ({ k: "event", id: e.id })), { k: "mission" }, { k: "capture" }];
 const at = k => CARDS.findIndex(c => c.k === k);
-const SEC = { live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: at("season"), league: at("mission"), capture: at("capture") };
+const SEC = { home: 0, live: 1, stories: 2, cities: 3, players: 3 + cityOrder.length, season: at("season"), league: at("mission"), capture: at("capture") };
 const HOME = SEC.season + 1 + LEAGUE.schedule.indexOf(EVENT);
 /* Player cards are most of the page (76 of 94 cards), so only the ones near the current card are drawn.
    Every other player card is an empty slot of the same size until the reader gets close to it. */
@@ -1513,7 +1609,7 @@ function go(n) {
   place();
   document.getElementById("count").innerHTML = `<b>${cur + 1}</b> / ${total}`;
   const k = CARDS[cur].k, liveEv = cur === SEC.live;
-  const sec = liveEv ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event"].includes(k) ? "season" : ["capture", "mission"].includes(k) ? "league" : null;
+  const sec = liveEv ? "live" : k === "stories" ? "stories" : k === "city" ? "cities" : k === "player" ? "players" : ["season", "event"].includes(k) ? "season" : ["capture", "mission"].includes(k) ? "league" : "home";
   document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => b.classList.toggle("on", b.dataset.sec === sec));
   document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : liveEv ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
     k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` :
@@ -1541,7 +1637,7 @@ function applyTheme() {
 document.getElementById("b-theme").onclick = () => { PREF.set("theme", PREF.get("theme", "dark") === "light" ? "dark" : "light"); applyTheme(); };
 applyTheme();
 document.getElementById("b-full").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
-document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.textContent = t(b.textContent.trim()); b.onclick = () => go(SEC[b.dataset.sec]); });
+document.querySelectorAll("#tb-tabs button[data-sec]").forEach(b => { b.onclick = () => go(SEC[b.dataset.sec]); });
 // static chrome strings
 document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; if (el.hasAttribute("title")) el.title = t(k); else if (el.hasAttribute("placeholder")) el.placeholder = t(k); else el.textContent = t(k); });
 document.getElementById("mhint").innerHTML = `<kbd>g</kbd> ${t("opens this index")} · <kbd>←</kbd> <kbd>→</kbd> ${t("move through the film")} · <kbd>Esc</kbd> ${t("closes")}`;

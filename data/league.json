@@ -1602,7 +1602,10 @@
     "Dallas are level with Atlanta, five under through ten, with captain Victor Ingram counting on seven of those holes. Boston, Philadelphia and San Francisco share fourth at −18. Boston got there with the shot of the day: Andre Valdez holed a tee shot at the 200-yard 10th at 13:28.",
     "Five cities are within five shots of the lead and all have at least eight holes left. If it finished like this, Chicago would take 100 league points, Atlanta and Dallas 72.5 each, and the three cities in fourth 46 each. The last group is due in at 16:29."
    ],
-   "photos": []
+   "photos": [],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 251
   },
   {
    "id": "d002",
@@ -1625,7 +1628,10 @@
    "created_at": "2026-11-05T16:02:44",
    "published_by": "Carlo",
    "published_at": "2026-11-05T16:02:48",
-   "photos": []
+   "photos": [],
+   "photo_w": 1500,
+   "photo_h": 1000,
+   "words": 49
   },
   {
    "id": "d001",
@@ -1653,7 +1659,10 @@
     "Three weeks later in Bermuda the weather did what Bermuda weather does. The final round was cancelled in the wind, the tournament went to a playoff, and Smotherman beat Seamus Power with a par on the third extra hole. Two wins in a month, from a player who had never had one.",
     "The second win carries a reward beyond the trophy: a place in the field at Pebble Beach next June. For a league built on second acts, it is a story worth telling to every athlete who thinks the best is behind them."
    ],
-   "photos": []
+   "photos": [],
+   "photo_w": 1500,
+   "photo_h": 1000,
+   "words": 194
   },
   {
    "id": "s01",
@@ -1671,7 +1680,10 @@
    "body": [
     "This board updates with every hole the scoring provider posts. A hole counts for a city only when all of its players have finished it; holes where two balls are in but team-mates are still on the course show as provisional in the detail view and never on the board.",
     "League points shown here are the points each city would receive at its current position. They are shared on ties and become final when the last group signs."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 933,
+   "words": 92
   },
   {
    "id": "s02",
@@ -1696,7 +1708,10 @@
    "body": [
     "The 13th at El Camaleón is the par five everyone circles: 532 yards, reachable with a good drive, water left of the green. {p0} found the fairway, then hit a 5-wood that never left the flag and stopped six feet past.",
     "The putt went in dead centre and the team line for {c0} dropped two shots in one hole. It was the first eagle by a captain this season and, by the captain's own count, the first since the Del Mar exhibition."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 932,
+   "words": 99
   },
   {
    "id": "s03",
@@ -1723,7 +1738,10 @@
    "body": [
     "Five cities finished round one inside four shots of each other, which is roughly what the format promised. Chicago led after a day in which all eight players contributed at least one counted ball and the team never counted worse than a par. They are three clear of Dallas and Philadelphia, who share second at −14.",
     "Philadelphia were the movers. A back nine of eleven under, with two birdies on each of the last two holes, took them from joint last at the turn to a share of second. Miami went the other way: two counted bogeys at the 9th cost them two shots, and they finished last at −5."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 136
   },
   {
    "id": "s05",
@@ -1747,7 +1765,10 @@
    "body": [
     "Second Half is the league's series on what happens to athletes after the last game. Episode one follows {p0} through the two years after retirement, the silence after the locker room and the morning he first asked for help.",
     "The series is produced by the league and will stay free to watch. If any of this is close to home, the 988 Suicide & Crisis Lifeline answers calls and texts in the United States at any hour."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 93
   },
   {
    "id": "s06",
@@ -1772,7 +1793,10 @@
    "body": [
     "Twenty-two minutes with the {c0} captain, filmed over three days at home and on the range. He talks about the schedule that disappeared, the identity that went with it, and the friend who made him pick up a golf club again.",
     "Watch with captions in English and Spanish. The next episode follows a player from another city and will be published after the next event."
-   ]
+   ],
+   "photo_w": 1180,
+   "photo_h": 1400,
+   "words": 79
   },
   {
    "id": "s07",
@@ -1798,7 +1822,10 @@
    "body": [
     "Nine holes, eleven under. This cut shows every counted ball on Chicago's front nine on Thursday: who hit it, from where, and which of the two scores it replaced on the team card.",
     "The run started with two birdies at the 1st and ended with two more at the 9th, one of them the captain's. In between, the 6th and the 7th were each played in two under."
-   ]
+   ],
+   "photo_w": 1050,
+   "photo_h": 1400,
+   "words": 79
   },
   {
    "id": "s08",
@@ -1818,7 +1845,10 @@
    "body": [
     "Groups of three, each player from a different city, off the first tee from 08:00 local time at eleven-minute intervals. There are twenty-six tee times and the last is at 12:35.",
     "Follow your city and tee times will be pushed to you the evening before each round, together with the round leaders and the final result."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 932,
+   "words": 78
   },
   {
    "id": "s04",
@@ -1850,7 +1880,10 @@
    "body": [
     "The Celebrity-Am is the one day of the week with no points on the line and the only one where the crowd is allowed inside the ropes. Twenty-four pictures from an evening that started with the pairings draw on the beach and ended with a very long putt from a very famous comedian.",
     "Every picture in this gallery is tagged by city and player, so it also appears on the hubs and the player cards of everyone in it."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 102
   },
   {
    "id": "s09",
@@ -1880,7 +1913,10 @@
    "body": [
     "Boston arrived on Tuesday evening with eight players and a kit bag that produced a green jacket of uncertain provenance. The welcome at the resort included a mariachi version of a song the Celtics crowd would recognise.",
     "Twelve pictures from the arrival evening and the first practice round."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 60
   },
   {
    "id": "s10",
@@ -1903,7 +1939,10 @@
    "body": [
     "The first of eleven city films, one per market, each telling the story of a city through the athletes who played for it and the charity its team supports. New York goes first because New York insisted.",
     "The full film premieres on this platform in March. The trailer is ninety seconds and ends on a shot of the 7 train."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 76
   },
   {
    "id": "s11",
@@ -1923,7 +1962,10 @@
    "body": [
     "Every city fields six to eight players. On each hole, the best two scores among them count toward the team total; the others are discarded. Two rounds make an event, and the event finishing positions convert to league points on a fixed table.",
     "Ties share the points on offer. The season champion is the city with the most points after five events; the Team Championship in October is played for a separate purse."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 95
   },
   {
    "id": "s12",
@@ -1948,7 +1990,10 @@
    "body": [
     "A practice round with the {c0} captain and a microphone, filmed the day before the Celebrity-Am. He explains how he picks his playing order, why the par threes at El Camaleón scare him more than the par fives, and what he says to a team-mate who has just made a double.",
     "Language mostly clean. Episode two is filmed at the next event."
-   ]
+   ],
+   "photo_w": 907,
+   "photo_h": 1400,
+   "words": 78
   },
   {
    "id": "s13",
@@ -1972,7 +2017,10 @@
    "body": [
     "{p0} played eleven seasons in Detroit and never considered playing for anyone else, in any sport. Asked why a golf league got a yes, the answer took four seconds.",
     "The full interview runs on the Detroit hub, together with the roster and the city's charity partner."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 51
   },
   {
    "id": "s14",
@@ -1997,7 +2045,10 @@
    "body": [
     "Eighteen frames, one per hole, taken on Monday before the first practice ball. Mangroves on the front nine, a cenote beside the seventh fairway, and the fifteenth, a par three played over the beach with the wind doing whatever it likes.",
     "Yardages shown are from the tournament tees used this week: 7,034 yards, par 71."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 1387,
+   "words": 75
   },
   {
    "id": "s15",
@@ -2017,7 +2068,10 @@
    "body": [
     "Each city's team plays for one charity, named by the players, working on mental health in that city. A fixed share of the league points a team scores converts into funding at the end of the season, and every event adds a city-specific grant on top.",
     "The eleven partners are listed on the Mission page with what the money does. Donations from fans open later in the season."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 1050,
+   "words": 87
   },
   {
    "id": "s16",
@@ -2044,7 +2098,10 @@
    "body": [
     "Del Mar in November was the dress rehearsal: two rounds, eleven cities, the format tested in front of a real crowd for the first time. The eight minutes here cover the shots that mattered and the moment the cities were announced.",
     "Everything learned at Del Mar, from the pace of play to how scores reach this app, went into the way Mayakoba is run."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 83
   },
   {
    "id": "s17",
@@ -2069,7 +2126,10 @@
    "body": [
     "{p0} had played a lot of golf, none of it in front of people. The 18th at Del Mar fixed that: a crowd three deep around the green and a chip that stopped a foot from the hole.",
     "The clip, and his reaction, became the most shared piece of the exhibition."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 735,
+   "words": 66
   },
   {
    "id": "s18",
@@ -2100,7 +2160,10 @@
    "body": [
     "Dolphins and Marlins. Five players and one actor who claims to be the best putter on the team. Miami's roster was the last of the eleven to be announced and the first to sell out its Celebrity-Am places.",
     "Six portraits from the announcement day, tagged to each player's card."
-   ]
+   ],
+   "photo_w": 1400,
+   "photo_h": 931,
+   "words": 60
   }
  ],
  "hero": [

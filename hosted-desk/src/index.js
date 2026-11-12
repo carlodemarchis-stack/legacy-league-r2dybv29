@@ -79,8 +79,13 @@ async function publishIndex(env, stories) {
     const ka = [a.at || "", a.created_at || ""], kb = [b.at || "", b.created_at || ""];
     return ka[0] !== kb[0] ? (ka[0] < kb[0] ? 1 : -1) : ka[1] !== kb[1] ? (ka[1] < kb[1] ? 1 : -1) : 0;
   });
+  // the shape of every library picture, so the story reader can lay a story out before its picture loads
+  const sizes = (await readJson(env, "photos/sizes.json")).data || {};
   const tiles = await Promise.all(live.map(async (full) => {            // all at once: one slow file does not hold up the rest
     const s = { cities: [], players: [], photos: [], ...full };
+    const lead = s.photo || s.photos[0];
+    if (!(s.photo_w && s.photo_h) && sizes[lead]) [s.photo_w, s.photo_h] = sizes[lead];
+    s.words = [s.dek || "", ...(s.body || [])].join(" ").split(/\s+/).filter(Boolean).length;
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
     if (Object.keys(body).length) {
@@ -229,7 +234,7 @@ function createServer(env, door) {
       if (a.cities) s.cities = a.cities.map(ref.cityId);
       if (a.players) s.players = a.players.map(ref.playerId);
       if (a.size) s.size = a.size;
-      if (a.photo_url) s.photo = a.photo_url;
+      if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; }   // the new picture's shape is looked up on publish
       if (a.author) s.author = a.author;
       if (a.at) s.at = a.at;
       if (a.body) s.body = paras(a.body);
@@ -328,10 +333,10 @@ button:disabled{opacity:.5;cursor:default}img{display:block;width:100%;border-ra
 <button id="go" disabled>Upload</button><div id="msg" role="status"></div>
 </main><script>
 const f = document.getElementById("f"), go = document.getElementById("go"), msg = document.getElementById("msg"), pv = document.getElementById("pv");
-let blob = null;
+let blob = null, size = "";
 const say = (kind, text) => { msg.className = kind; msg.textContent = text; };
 f.onchange = async () => {
-  blob = null; go.disabled = true; pv.hidden = true; msg.className = "";
+  blob = null; size = ""; go.disabled = true; pv.hidden = true; msg.className = "";
   const file = f.files[0]; if (!file) return;
   try {                                                   // shrink to at most 1600 px on the long side, as a JPEG
     const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -339,6 +344,7 @@ f.onchange = async () => {
     const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
     cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
     blob = await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82));
+    size = cv.width + "x" + cv.height;
   } catch (e) {                                           // a format this browser cannot open: send it as it is, if the desk takes it
     if (${JSON.stringify(Object.keys(PHOTO_TYPES))}.includes(file.type) && file.size <= ${MAX_PHOTO}) blob = file;
   }
@@ -348,7 +354,7 @@ f.onchange = async () => {
 go.onclick = async () => {
   go.disabled = true; say("ok", "Uploading…");
   try {
-    const r = await fetch(location.pathname, { method: "POST", headers: { "content-type": blob.type, "x-photo-credit": encodeURIComponent(document.getElementById("c").value.trim()) }, body: blob });
+    const r = await fetch(location.pathname, { method: "POST", headers: { "content-type": blob.type, "x-photo-credit": encodeURIComponent(document.getElementById("c").value.trim()), "x-photo-size": size }, body: blob });
     const out = await r.json();
     if (!r.ok) throw new Error(out.error || "The upload failed.");
     say("ok", out.public ? "Done. The photo is on the story, and the story is public, so it shows on the site now. You can close this page." : "Done. The photo is on the draft. You can close this page and tell Claude it is uploaded.");
@@ -377,6 +383,8 @@ async function photoRoute(request, env, id) {
   const { out, stories: all } = await change(env, async (list) => {
     const s = find(list, id);
     s.photo = "content/" + key;
+    const wh = (request.headers.get("x-photo-size") || "").match(/^(\d{1,5})x(\d{1,5})$/);
+    if (wh) { s.photo_w = +wh[1]; s.photo_h = +wh[2]; } else { delete s.photo_w; delete s.photo_h; }
     if (credit) s.photo_credit = credit; else delete s.photo_credit;
     s.updated_by = "desk"; s.updated_at = nowIso();
     return s;

@@ -78,8 +78,18 @@ def collect():
         tiles.append(s)
     raw = json.dumps(tiles, ensure_ascii=False)
     index = {"rev": hashlib.sha1(raw.encode()).hexdigest()[:12], "stories": tiles}
+    # the width and height of every library picture, as the store addresses it: the hosted desk reads this to
+    # tell the story reader a picture's shape before the picture loads
+    sizes = {}
+    for f in sorted((ROOT / "img").glob("*/*")):
+        rel = str(f.relative_to(ROOT))
+        if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and rel.split("/")[1] in ("action", "course", "people", "stories"):
+            wh = build.photo_size(rel)
+            if wh:
+                sizes[PREFIX + "photos/" + rel[4:]] = list(wh)
     return objects, {"stories/index.json": json.dumps(index, ensure_ascii=False).encode(),
-                     "site/index.json": json.dumps({"rev": rev}).encode()}
+                     "site/index.json": json.dumps({"rev": rev}).encode(),
+                     "photos/sizes.json": json.dumps(sizes, sort_keys=True).encode()}
 
 
 def _put(npx, key, data):
