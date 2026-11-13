@@ -67,20 +67,94 @@ async function readJson(env, key) {
 }
 
 /* Read every record, change them, write them back. If someone else wrote in between, start again
-   from what they wrote, so two editors never silently overwrite each other. */
-async function change(env, fn) {
+   from what they wrote, so two editors never silently overwrite each other. by = who is making the change. */
+async function change(env, fn, by = "Claude") {
   for (let attempt = 0; attempt < 4; attempt++) {
     const { data, etag } = await readJson(env, RECORDS);
     const stories = data || [];
+    const before = new Map(stories.map((s) => [s.id, JSON.stringify(s)]));
     const out = await fn(stories);
     await nameStories(env, stories);                          // a story without a name for its address gets one here
     const saved = await env.CONTENT.put(RECORDS, JSON.stringify(stories), {
       httpMetadata: { contentType: "application/json" },
       onlyIf: etag ? { etagMatches: etag } : undefined,
     });
-    if (saved) return { out, stories };
+    if (saved) { await keepHistory(env, stories, before, by); return { out, stories }; }
   }
   fail("The stories were being changed by someone else at the same moment. Try again.");
+}
+
+/* ------------------------------------------------------------------ history */
+
+/* Every version a change replaces is kept, one file each: desk/history/<story id>/<time>.json, with who made it,
+   who replaced it and how (changed or deleted) in the file's metadata, so a list needs no file to be read.
+   Nothing is ever removed from here: a deleted story can be brought back from its last version. */
+const HISTORY = "desk/history/";
+const whoName = (by) => (by === "desk" ? "Claude" : by || "");
+async function keepHistory(env, stories, before, by) {
+  const after = new Map(stories.map((s) => [s.id, JSON.stringify(s)]));
+  const at = new Date().toISOString();
+  await Promise.all([...before].filter(([id, raw]) => after.get(id) !== raw).map(([id, raw]) => {
+    const v = JSON.parse(raw);
+    return env.CONTENT.put(`${HISTORY}${id}/${at.replace(/[:.]/g, "-")}.json`, raw, {
+      httpMetadata: { contentType: "application/json" },
+      customMetadata: {
+        saved_at: v.updated_at || v.published_at || v.created_at || "", saved_by: whoName(v.updated_by || v.published_by || v.created_by),
+        replaced_at: at.slice(0, 19), replaced_by: whoName(by), change: after.has(id) ? "changed" : "deleted",
+        status: v.status || "published", title: String(v.title || "").slice(0, 180),
+      },
+    });
+  }));
+}
+/* The earlier versions of one story, newest first. */
+async function versions(env, id) {
+  const out = [];
+  let cursor;
+  do {
+    const page = await env.CONTENT.list({ prefix: `${HISTORY}${id}/`, include: ["customMetadata"], cursor });
+    for (const o of page.objects) out.push({ version: o.key.slice(HISTORY.length + id.length + 1, -5), ...(o.customMetadata || {}) });
+    cursor = page.truncated ? page.cursor : null;
+  } while (cursor);
+  return out.sort((a, b) => (a.version < b.version ? 1 : -1));
+}
+/* Stories that were deleted, with the version they had when they went. */
+async function deletedStories(env) {
+  const live = new Set(((await readJson(env, RECORDS)).data || []).map((s) => s.id));
+  const ids = [];
+  let cursor;
+  do {
+    const page = await env.CONTENT.list({ prefix: HISTORY, delimiter: "/", cursor });
+    ids.push(...page.delimitedPrefixes.map((p) => p.slice(HISTORY.length, -1)));
+    cursor = page.truncated ? page.cursor : null;
+  } while (cursor);
+  const gone = [];
+  for (const id of ids.filter((x) => !live.has(x))) {
+    const last = (await versions(env, id))[0];
+    if (last) gone.push({ id, ...last });
+  }
+  return gone.sort((a, b) => (a.replaced_at < b.replaced_at ? 1 : -1));
+}
+/* Make an earlier version the story again. The story keeps its status, address, counts and publishing record;
+   everything it says and shows comes back. A deleted story comes back as a draft. */
+const KEEP_ON_RESTORE = ["id", "status", "slug", "likes", "comments", "created_at", "created_by", "published_at", "published_by", "scheduled_at"];
+async function restoreVersion(env, id, version, by, check) {
+  if (!/^[\w-]+$/.test(version)) fail("No such version.");
+  const old = (await readJson(env, `${HISTORY}${id}/${version}.json`)).data || fail(`No version '${version}' of story '${id}'. Use story_history.`);
+  const { out, stories } = await change(env, async (list) => {
+    let s = list.find((x) => x.id === id);
+    if (!s) { s = { ...old, status: "draft" }; list.push(s); }
+    else {
+      if (check) await check(s);
+      const keep = Object.fromEntries(KEEP_ON_RESTORE.filter((k) => k in s).map((k) => [k, s[k]]));
+      for (const k of Object.keys(s)) delete s[k];
+      Object.assign(s, old);
+      for (const k of KEEP_ON_RESTORE) { if (k in keep) s[k] = keep[k]; else delete s[k]; }
+    }
+    s.updated_by = by; s.updated_at = nowIso(); s.restored_from = version;
+    return s;
+  }, by);
+  if (isLive(out)) await publishIndex(env, stories);
+  return out;
 }
 
 /* What the site reads: the published stories, newest first, article texts in files of their own. */
@@ -134,7 +208,14 @@ async function reference(env) {
     if (!hits.length) fail(`No player matches '${x}'.`);
     fail(`'${x}' is ambiguous: ` + hits.slice(0, 6).map((p) => `${p.name} (${p.id}, ${city[p.city].short})`).join(", "));
   };
-  return { city, player, cityId, playerId };
+  const events = site.schedule || [];
+  const event = Object.fromEntries(events.map((e) => [e.id, e]));
+  const eventId = (x) => {
+    x = x.trim().toLowerCase();
+    const e = events.find((e) => e.id === x || e.name.toLowerCase() === x) || events.filter((e) => e.name.toLowerCase().includes(x)).find((e, i, all) => all.length === 1);
+    return e ? e.id : fail(`Unknown event '${x}'. Events: ` + events.map((e) => `${e.name} (${e.id})`).join(", "));
+  };
+  return { city, player, cityId, playerId, event, eventId };
 }
 
 async function pickPhoto(env, seed) {
@@ -153,7 +234,7 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
   const story = {
     id, status: "draft", kind, topic: a.topic, at: a.at || now,
     author: a.author || (cids.length === 1 ? `${ref.city[cids[0]].name} desk` : a.topic === "mission" ? "Legacy League · Mission" : "Legacy League"),
-    title: a.title.trim(), dek: (a.dek || "").trim(), cities: cids, players: pids, likes: 0, comments: 0,
+    title: a.title.trim(), dek: (a.dek || "").trim(), cities: cids, players: pids, events: a.eventIds || [], likes: 0, comments: 0,
     size: a.size || KINDS[kind], photo: a.photo_url || (await pickPhoto(env, id + a.title)),
     created_by: by, created_at: nowIso(),
   };
@@ -167,7 +248,7 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
 
 const find = (stories, id) => stories.find((s) => s.id === id) || fail(`No story '${id}'. Use list_stories.`);
 const summary = (s) => {
-  const keep = ["id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "size", "photo", "dur", "count", "scheduled_at"];
+  const keep = ["id", "status", "kind", "topic", "at", "author", "title", "dek", "cities", "players", "events", "size", "photo", "dur", "count", "scheduled_at"];
   const out = { status: "published" };
   for (const k of keep) if (s[k] != null && s[k] !== "" && !(Array.isArray(s[k]) && !s[k].length)) out[k] = s[k];
   if (s.slug && isLive(s)) out.url = `${SITE_ROOT}/stories/${s.slug}`;   // the story's own public address
@@ -209,7 +290,8 @@ function createServer(env, door) {
       "Create a DRAFT story. body = the article text, paragraphs separated by blank lines (2–4 short paragraphs; the " +
       "body may use only: '## ' subheadings, **bold**, *italic*, [words](https://…) links, and '- ' or '1. ' lists; the " +
       "collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and " +
-      "players may be names or ids. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
+      "players may be names or ids. events = the league events the story is about, names or ids (e.g. Mayakoba); " +
+      "leave out for a story not about an event. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
       "from the library is picked. at = ISO time in the demo's event timeline (default: the demo's current time, " +
       "shows as \"just now\"). A draft is not public until publish_story.",
     inputSchema: z.object({
@@ -217,7 +299,7 @@ function createServer(env, door) {
       cities: z.array(z.string()).optional(), players: z.array(z.string()).optional(),
       topic: z.string().default("league"), author: z.string().optional(), dur: z.string().optional(),
       count: z.number().int().optional(), photo_url: z.string().optional(), size: z.string().optional(),
-      at: z.string().optional(), body: z.string().optional(),
+      at: z.string().optional(), body: z.string().optional(), events: z.array(z.string()).optional(),
     }),
   }, tool(async (a) => {
     const kind = a.kind.trim().toLowerCase();
@@ -230,7 +312,8 @@ function createServer(env, door) {
     const cids = (a.cities || []).map(ref.cityId), pids = (a.players || []).map(ref.playerId);
     for (const pid of pids) if (!cids.includes(ref.player[pid].city)) cids.push(ref.player[pid].city);
     const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
-    const { out } = await change(env, (stories) => makeDraft(env, stories, { ...a, kind }, cids, pids, ref, now, "desk"));
+    const eventIds = (a.events || []).map(ref.eventId);
+    const { out } = await change(env, (stories) => makeDraft(env, stories, { ...a, kind, eventIds }, cids, pids, ref, now, "desk"));
     return { ok: true, story: summary(out), next: "Show the editor the draft. publish_story(id) makes it public." };
   }));
 
@@ -242,16 +325,18 @@ function createServer(env, door) {
       id: z.string(), title: z.string().optional(), dek: z.string().optional(),
       cities: z.array(z.string()).optional(), players: z.array(z.string()).optional(), size: z.string().optional(),
       photo_url: z.string().optional(), author: z.string().optional(), at: z.string().optional(), body: z.string().optional(),
+      events: z.array(z.string()).optional(),
     }),
   }, tool(async (a) => {
     if (a.size && !SIZES.includes(a.size)) fail(`size must be one of ${SIZES.join(", ")}`);
-    const ref = a.cities || a.players ? await reference(env) : null;
+    const ref = a.cities || a.players || a.events ? await reference(env) : null;
     const { out, stories } = await change(env, async (list) => {
       const s = find(list, a.id);
       if (a.title) s.title = a.title.trim();
       if (a.dek) s.dek = a.dek.trim();
       if (a.cities) s.cities = a.cities.map(ref.cityId);
       if (a.players) s.players = a.players.map(ref.playerId);
+      if (a.events) s.events = a.events.map(ref.eventId);
       if (a.size) s.size = a.size;
       if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; }   // the new picture's shape is looked up on publish
       if (a.author) s.author = a.author;
@@ -310,7 +395,8 @@ function createServer(env, door) {
   }));
 
   server.registerTool("delete_story", {
-    description: "Delete a story permanently, both languages. If it was published it leaves the public site at once.",
+    description: "Delete a story. If it was published it leaves the public site at once. Its last version is kept, so " +
+      "deleted_stories and restore_story_version can bring it back as a draft. Ask the editor first.",
     inputSchema: z.object({ id: z.string() }),
   }, tool(async ({ id }) => {
     let wasLive = false;
@@ -319,6 +405,38 @@ function createServer(env, door) {
     if (wasLive) res.site = { ...(await publishIndex(env, stories)), live: SITE };
     return res;
   }));
+
+  server.registerTool("story_history", {
+    description: "The earlier versions of a story, newest first: when each was saved and by whom, who replaced it and " +
+      "how, its status and headline. Every change by Claude, the editors' page or the photo page keeps the version it replaced.",
+    inputSchema: z.object({ id: z.string() }),
+  }, tool(async ({ id }) => ({ id, versions: await versions(env, id),
+    next: "To see one in full, get_story_version(id, version). To go back to one, restore_story_version." })));
+
+  server.registerTool("get_story_version", {
+    description: "One earlier version of a story in full, as it was saved.",
+    inputSchema: z.object({ id: z.string(), version: z.string() }),
+  }, tool(async ({ id, version }) => {
+    if (!/^[\w-]+$/.test(version)) fail("No such version.");
+    return (await readJson(env, `${HISTORY}${id}/${version}.json`)).data || fail(`No version '${version}' of story '${id}'.`);
+  }));
+
+  server.registerTool("restore_story_version", {
+    description: "Make an earlier version (from story_history) the story again: its text, tags, photo and kind come back; " +
+      "its status and address stay. If the story is published the site changes at once, so ask the editor first. " +
+      "A deleted story comes back as a draft. The version being replaced is kept too, so a restore can itself be undone.",
+    inputSchema: z.object({ id: z.string(), version: z.string() }),
+  }, tool(async ({ id, version }) => {
+    const out = await restoreVersion(env, id, version, "Claude");
+    const res = { ok: true, story: summary(out) };
+    if (isLive(out)) res.site = { live: SITE };
+    return res;
+  }));
+
+  server.registerTool("deleted_stories", {
+    description: "Stories that were deleted, newest first, with the version each had when it went. restore_story_version brings one back as a draft.",
+    inputSchema: z.object({}),
+  }, tool(async () => deletedStories(env)));
 
   return server;
 }
@@ -405,9 +523,9 @@ async function photoRoute(request, env, id) {
     const wh = (request.headers.get("x-photo-size") || "").match(/^(\d{1,5})x(\d{1,5})$/);
     if (wh) { s.photo_w = +wh[1]; s.photo_h = +wh[2]; } else { delete s.photo_w; delete s.photo_h; }
     if (credit) s.photo_credit = credit; else delete s.photo_credit;
-    s.updated_by = "desk"; s.updated_at = nowIso();
+    s.updated_by = "photo page"; s.updated_at = nowIso();
     return s;
-  });
+  }, "photo page");
   if (isLive(out)) await publishIndex(env, all);
   return json({ ok: true, photo: out.photo, public: isLive(out), kb: Math.round(bytes.byteLength / 1024) });
 }
@@ -429,11 +547,23 @@ async function editorApi(request, env, path) {
       stories.sort((a, b) => ((a.at || "") < (b.at || "") ? 1 : -1));
       return json({ site: SITE_ROOT, stories: await Promise.all(stories.map(withStamp)) });
     }
+    if (request.method === "GET" && path === "history") {
+      const id = new URL(request.url).searchParams.get("id") || "";
+      if (!/^[a-z]\d+$/.test(id)) fail("No such story.");
+      return json({ versions: await versions(env, id) });
+    }
+    if (request.method === "GET" && path === "version") {
+      const q = new URL(request.url).searchParams, id = q.get("id") || "", v = q.get("v") || "";
+      if (!/^[a-z]\d+$/.test(id) || !/^[\w-]+$/.test(v)) fail("No such version.");
+      return json({ story: (await readJson(env, `${HISTORY}${id}/${v}.json`)).data || fail("No such version.") });
+    }
+    if (request.method === "GET" && path === "deleted") return json({ deleted: await deletedStories(env) });
     if (request.method === "GET" && path === "ref") {
       const ref = await reference(env);
       return json({
         cities: Object.values(ref.city).map((c) => ({ id: c.id, name: c.name, short: c.short, color: c.color })),
         players: Object.values(ref.player).map((p) => ({ id: p.id, name: p.name, city: p.city })),
+        events: Object.values(ref.event).map((e) => ({ id: e.id, name: e.name, start: e.start, end: e.end, status: e.status })),
       });
     }
     if (request.method !== "POST") return json({ error: "Not found." }, 404);
@@ -450,16 +580,17 @@ async function editorApi(request, env, path) {
       if (kind === "video" && !f.dur) fail("A video needs its length, e.g. 2:14.");
       if (kind === "gallery" && !f.count) fail("A gallery needs its number of pictures.");
       const cids = (f.cities || []).filter((id) => ref.city[id]), pids = (f.players || []).filter((id) => ref.player[id]);
+      const eventIds = (f.events || []).filter((id) => ref.event[id]);
       const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
       const { out, stories } = await change(env, async (list) => {
-        if (!b.id) return makeDraft(env, list, { ...f, kind, topic: f.topic || "league" }, cids, pids, ref, now, "editor");
+        if (!b.id) return makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds }, cids, pids, ref, now, "editor");
         const s = find(list, b.id);
         await check(s);
         if (KINDS[kind] && kind !== "result" && s.kind !== "result") s.kind = kind;
         if (f.topic) s.topic = f.topic;
         s.title = f.title.trim();
         s.dek = (f.dek || "").trim();
-        s.cities = cids; s.players = pids;
+        s.cities = cids; s.players = pids; s.events = eventIds;
         if (f.author && f.author.trim()) s.author = f.author.trim();
         if (f.at) s.at = f.at;
         const body = paras(f.body || "");
@@ -468,7 +599,7 @@ async function editorApi(request, env, path) {
         if (s.kind === "gallery") s.count = +f.count; else delete s.count;
         s.updated_by = "editor"; s.updated_at = nowIso();
         return s;
-      });
+      }, "editor");
       if (isLive(out)) await publishIndex(env, stories);
       return json({ ok: true, story: await withStamp(out) });
     }
@@ -480,8 +611,12 @@ async function editorApi(request, env, path) {
         if (path === "publish") { s.status = "published"; delete s.scheduled_at; s.published_by = "editor"; s.published_at = nowIso(); }
         else s.status = "draft";
         return s;
-      });
+      }, "editor");
       if (isLive(out) || wasLive) await publishIndex(env, stories);
+      return json({ ok: true, story: await withStamp(out) });
+    }
+    if (path === "restore") {
+      const out = await restoreVersion(env, b.id, String(b.version || ""), "editor", b.deleted ? null : check);
       return json({ ok: true, story: await withStamp(out) });
     }
     if (path === "delete") {
@@ -490,7 +625,7 @@ async function editorApi(request, env, path) {
         await check(s);
         wasLive = isLive(s);
         list.splice(list.indexOf(s), 1);
-      });
+      }, "editor");
       if (wasLive) await publishIndex(env, stories);
       return json({ ok: true, deleted: b.id });
     }

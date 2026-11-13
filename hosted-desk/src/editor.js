@@ -58,6 +58,26 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .cities{display:flex;flex-wrap:wrap;gap:5px}
 .cities button{border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c);background:none;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer}
 .cities button.on{background:var(--c);color:#fff;border-color:var(--c)}
+.events{display:flex;flex-wrap:wrap;gap:5px}
+.events button{border:1px solid var(--line);background:none;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--dim)}
+.events button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.events button small{opacity:.7;margin-left:5px;font-size:10px}
+/* history: a panel over the right of the page, the versions listed, the chosen one shown as it read */
+.hist{position:fixed;top:0;right:0;bottom:0;width:min(760px,100vw);background:var(--bg);border-left:1px solid var(--line);z-index:20;
+  display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);box-shadow:-20px 0 60px rgba(0,0,0,.35)}
+.hist>header{grid-column:1/-1}
+.hist .vl{overflow-y:auto;border-right:1px solid var(--line)}
+.hist .vl button{display:block;width:100%;text-align:left;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer}
+.hist .vl button:hover,.hist .vl button.on{background:var(--panel)}.hist .vl button.on{box-shadow:inset 3px 0 var(--acc)}
+.hist .vl b{display:block;font-size:12.5px}.hist .vl small{display:block;color:var(--dim);font-size:11px;margin-top:2px;line-height:1.4}
+.hist .vp{overflow-y:auto;padding:18px 22px 60px}
+.hist .vp h2{margin:6px 0 8px;font-size:20px}.hist .vp .dek{color:var(--dim);margin:0 0 14px}
+.hist .vp .art{border-top:1px solid var(--line);padding-top:12px;line-height:1.6}.hist .vp .art p{margin:0 0 .8em}
+.hist .vp .art a{color:var(--acc)}.hist .vp img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:12px}
+.hist-inline{max-width:640px}.hist-inline h2{font-size:22px}.hist-inline .dek{color:var(--dim)}.hist-inline .art{border-top:1px solid var(--line);padding-top:12px;line-height:1.6}
+.hist-inline img{width:100%;max-height:280px;object-fit:cover;border-radius:10px;margin-bottom:12px}.hist-inline .tags{font-size:12px;color:var(--dim)}
+.hist .vp .tags{font-size:12px;color:var(--dim);margin:12px 0}
+@media(max-width:860px){.hist{grid-template-columns:1fr;grid-template-rows:auto 38dvh minmax(0,1fr)}.hist .vl{border-right:0;border-bottom:1px solid var(--line)}}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}.chip button{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;line-height:1}
@@ -71,7 +91,7 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
   <aside>
     <div class="tools">
       <input id="q" type="search" placeholder="Find a story" autocomplete="off">
-      <div class="seg" id="seg"><button data-s="all" class="on">All</button><button data-s="draft">Drafts</button><button data-s="published">Published</button></div>
+      <div class="seg" id="seg"><button data-s="all" class="on">All</button><button data-s="draft">Drafts</button><button data-s="published">Published</button><button data-s="deleted">Deleted</button></div>
       <button class="btn pri" id="new">+ New</button>
     </div>
     <div id="list"></div>
@@ -104,8 +124,16 @@ async function load(keep) {
   renderList();
   if (keep) { const s = stories.find((x) => x.id === keep); if (s) show(s.id, true); }
 }
+let deleted = [];
 function renderList() {
   const q = $("q").value.trim().toLowerCase();
+  if (filter === "deleted") {
+    const rows = deleted.filter((d) => !q || (d.title || "").toLowerCase().includes(q));
+    $("list").innerHTML = rows.map((d) => \`<button class="row \${cur && cur.deletedId === d.id ? "on" : ""}" onclick="showDeleted('\${d.id}')">
+      <span><b>\${esc(d.title || d.id)}</b><small><span class="st draft">deleted</span>\${esc(when(d.replaced_at))}\${d.replaced_by ? " by " + esc(d.replaced_by) : ""}</small></span></button>\`).join("") ||
+      '<div class="empty">No deleted stories.</div>';
+    return;
+  }
   const rows = stories.filter((s) => (filter === "all" || statusOf(s) === filter) &&
     (!q || [s.title, s.dek, s.author, ...(s.cities || []).map((c) => CITY[c] && CITY[c].name), ...(s.players || []).map((p) => PLAYER[p] && PLAYER[p].name)].join(" ").toLowerCase().includes(q)));
   $("list").innerHTML = rows.map((s) => \`<button class="row \${cur && cur.id === s.id ? "on" : ""}" onclick="pick('\${s.id}')"><img src="\${esc(pic(s.photo))}" alt="" loading="lazy">
@@ -117,12 +145,14 @@ function pick(id) {
   show(id);
 }
 function show(id, quiet) {
-  cur = stories.find((s) => s.id === id) || null;
+  const found = stories.find((s) => s.id === id);
+  cur = found ? structuredClone(found) : null;          // a copy: unsaved edits never touch the list
   dirty = false;
   renderList(); renderForm(); if (!quiet) $("main").scrollTop = 0;
 }
 function blank() {
-  return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], author: "" };
+  const live = ref.events.find((e) => e.status === "live");          // a new story is about the event on now, until untagged
+  return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "" };
 }
 function renderForm(msg) {
   const s = cur; if (!s) { $("main").innerHTML = '<div class="empty">Pick a story on the left, or make a new one.</div>'; return; }
@@ -131,7 +161,8 @@ function renderForm(msg) {
   $("main").innerHTML = \`
   <div class="bar"><span class="msg" id="msg">\${s.id ? \`<span class="st \${st}">\${st}</span>\` : "New story, not saved yet"}</span>
     \${s.url ? \`<a class="btn" href="\${esc(s.url)}" target="_blank" rel="noopener">View on site ↗</a>\` : ""}
-    \${s.id ? \`<button class="btn bad" onclick="del()">Delete</button>\` : ""}
+    <button class="btn" id="discard" onclick="discard()" \${s.id ? "hidden" : ""}>\${s.id ? "Discard changes" : "Cancel"}</button>
+    \${s.id ? \`<button class="btn" onclick="openHistory()">History</button><button class="btn bad" onclick="del()">Delete</button>\` : ""}
     \${s.id && st === "published" ? \`<button class="btn" onclick="act('unpublish')">Unpublish</button>\` : ""}
     <button class="btn \${st === "published" ? "pri" : ""}" id="save" onclick="save()">\${st === "published" ? "Save and update the site" : "Save draft"}</button>
     \${s.id && st !== "published" ? \`<button class="btn pri" onclick="act('publish')">Publish</button>\` : ""}
@@ -155,6 +186,8 @@ function renderForm(msg) {
         <div><label for="topic">Topic</label><select id="topic">\${["league", "city", "mission"].map((k) => \`<option \${k === s.topic ? "selected" : ""}>\${k}</option>\`).join("")}</select></div></div>
       <div class="f" id="kindx"></div>
       <div class="f"><label>Cities</label><div class="cities" id="cities">\${ref.cities.map((c) => \`<button type="button" style="--c:\${c.color}" class="\${(s.cities || []).includes(c.id) ? "on" : ""}" data-id="\${c.id}" title="\${esc(c.name)}">\${c.short}</button>\`).join("")}</div></div>
+      <div class="f"><label>Events</label><div class="events" id="events">\${ref.events.map((e) => \`<button type="button" class="\${(s.events || []).includes(e.id) ? "on" : ""}" data-id="\${e.id}" title="\${esc(e.start)} – \${esc(e.end)}">\${esc(e.name)}\${e.status === "live" ? "<small>live</small>" : ""}</button>\`).join("")}</div>
+        <div class="hint">The events this story is about. None for a story that is not about an event.</div></div>
       <div class="f"><label for="padd">Players</label><input id="padd" list="plist" placeholder="Type a name to add"><datalist id="plist">\${ref.players.map((p) => \`<option value="\${esc(p.name)}">\${CITY[p.city] ? CITY[p.city].short : ""}</option>\`).join("")}</datalist>
         <div class="chips" id="pchips"></div></div>
       <div class="f"><label for="author">Byline</label><input id="author" value="\${esc(s.author)}" placeholder="Set from the city"></div>
@@ -165,6 +198,7 @@ function renderForm(msg) {
   </div>\`;
   paintKind(); paintPlayers();
   $("kind").onchange = () => { paintKind(); touch(); };
+  $("events").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; b.classList.toggle("on"); touch(); };
   $("cities").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; b.classList.toggle("on"); touch(); };
   $("padd").onchange = () => {
     const name = $("padd").value.trim().toLowerCase(); const p = ref.players.find((x) => x.name.toLowerCase() === name);
@@ -222,12 +256,20 @@ function paintPlayers() {
     return \`<span class="chip" style="--c:\${c ? c.color : "var(--dim)"}"><i></i>\${esc(p.name)}<button type="button" title="Remove" onclick="dropPlayer('\${id}')">×</button></span>\`; }).join("");
 }
 function dropPlayer(id) { cur.players = cur.players.filter((x) => x !== id); paintPlayers(); touch(); }
-function touch() { dirty = true; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); }
+/* a new story not saved yet goes away; a story with unsaved changes goes back to how it was saved */
+function discard() {
+  if (dirty && !confirm(cur.id ? "Throw away your unsaved changes?" : "Throw away this new story?")) return;
+  dirty = false;
+  if (cur.id) { show(cur.id, true); say("", "Changes thrown away."); }
+  else { cur = null; renderList(); renderForm(); }
+}
+function touch() { dirty = true; if ($("discard")) $("discard").hidden = false; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); }
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
     author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, count: $("count") ? $("count").value : undefined,
-    cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [] };
+    cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
+    events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id) };
 }
 async function run(fn, busy) {
   document.querySelectorAll(".bar .btn").forEach((b) => (b.disabled = true)); say("", busy);
@@ -255,13 +297,72 @@ function act(what) {
   }, what === "publish" ? "Publishing…" : "Taking it off the site…");
 }
 function del() {
-  if (!confirm("Delete this story for good?" + (statusOf(cur) === "published" ? " It also leaves the site at once." : "") + " This cannot be undone.")) return;
+  if (!confirm("Delete this story for good?" + (statusOf(cur) === "published" ? " It also leaves the site at once." : "") + " It can be brought back from Deleted.")) return;
   run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
+}
+/* ------------------------------------------------ history */
+function versionHtml(v) {
+  const names = (ids, map) => (ids || []).map((x) => map[x] ? map[x].name : x).join(", ");
+  const EV = Object.fromEntries(ref.events.map((e) => [e.id, e]));
+  return \`\${v.photo ? \`<img src="\${esc(pic(v.photo))}" alt="">\` : ""}<span class="st \${statusOf(v)}">\${statusOf(v)}</span> <small style="color:var(--dim)">\${esc(v.kind || "")} · \${esc(when(v.at))}</small>
+    <h2>\${esc(shown(v, v.title))}</h2><p class="dek">\${esc(v.dek || "")}</p>
+    <div class="art">\${TT.fromMd(v.body || [])}</div>
+    <div class="tags">\${[names(v.events, EV), names(v.cities, CITY), names(v.players, PLAYER)].filter(Boolean).join(" · ") || "No tags"}\${v.author ? " · by " + esc(v.author) : ""}</div>\`;
+}
+async function openHistory() {
+  if (dirty) { say("err", "Save or undo your changes before opening the history."); return; }
+  const s = cur;
+  const box = document.createElement("div"); box.className = "hist"; box.id = "hist";
+  box.innerHTML = \`<header><h1>History <span>· \${esc(shown(s, s.title))}</span></h1><button class="btn" onclick="closeHistory()">Close</button></header>
+    <div class="vl" id="vl"><div class="empty">Loading…</div></div><div class="vp" id="vp"></div>\`;
+  document.body.appendChild(box);
+  const { versions } = await call("history?id=" + encodeURIComponent(s.id));
+  const who = (x) => x ? " by " + esc(x) : "";
+  $("vl").innerHTML = \`<button class="on" data-v="" onclick="pickVersion('')"><b>Now</b><small>\${esc(when(s.updated_at || s.published_at || s.created_at))}\${who(s.updated_by === "desk" ? "Claude" : s.updated_by)}</small></button>\` +
+    (versions.map((v) => \`<button data-v="\${v.version}" onclick="pickVersion('\${v.version}')"><b>\${esc(when(v.saved_at || v.replaced_at))}\${who(v.saved_by)}</b>
+      <small>\${esc(v.status)} · replaced \${esc(when(v.replaced_at))}\${who(v.replaced_by)}</small></button>\`).join("") ||
+     '<div class="empty" style="padding:30px 14px">No earlier versions yet. From now on every change keeps the version it replaces.</div>');
+  pickVersion("");
+}
+function closeHistory() { const h = $("hist"); if (h) h.remove(); }
+async function pickVersion(v) {
+  document.querySelectorAll("#vl button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+  if (!v) { $("vp").innerHTML = '<p class="hint" style="margin-top:0">The story as it is now.</p>' + versionHtml(cur); return; }
+  $("vp").innerHTML = '<div class="empty">Loading…</div>';
+  const { story } = await call("version?id=" + encodeURIComponent(cur.id) + "&v=" + encodeURIComponent(v));
+  const live = statusOf(cur) === "published";
+  $("vp").innerHTML = \`<div class="bar" style="top:-18px"><span class="msg" id="hmsg">\${live ? "Restoring updates the site at once." : "Restoring changes the draft."}</span>
+    <button class="btn pri" onclick="restore('\${v}')">Restore this version</button></div>\` + versionHtml(story);
+}
+async function restore(v) {
+  if (!confirm("Make this version the story again?" + (statusOf(cur) === "published" ? " The site shows it at once." : "") + " The current version is kept in the history."))
+    return;
+  try {
+    const j = await call("restore", { id: cur.id, version: v, stamp: cur.stamp });
+    closeHistory(); await load(j.story.id); renderForm(["ok", "Restored. The version it replaced is in the history."]);
+  } catch (e) { const m = $("hmsg"); if (m) { m.className = "msg err"; m.textContent = e.message; } }
+}
+async function showDeleted(id) {
+  const d = deleted.find((x) => x.id === id); if (!d) return;
+  const { story } = await call("version?id=" + encodeURIComponent(id) + "&v=" + encodeURIComponent(d.version));
+  cur = { deletedId: id }; dirty = false; renderList();
+  $("main").innerHTML = \`<div class="bar"><span class="msg" id="msg">Deleted \${esc(when(d.replaced_at))}\${d.replaced_by ? " by " + esc(d.replaced_by) : ""}. This is how it read.</span>
+    <button class="btn pri" onclick="undelete('\${id}','\${d.version}')">Restore as a draft</button></div><div class="hist-inline">\${versionHtml(story)}</div>\`;
+}
+async function undelete(id, v) {
+  try {
+    const j = await call("restore", { id, version: v, deleted: true });
+    deleted = deleted.filter((x) => x.id !== id);
+    filter = "draft"; document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x.dataset.s === "draft"));
+    await load(j.story.id); renderForm(["ok", "Back as a draft."]);
+  } catch (e) { say("err", e.message); }
 }
 function watchPhoto() { addEventListener("focus", () => { if (cur && cur.id && !dirty) load(cur.id); }, { once: true }); }
 $("q").oninput = renderList;
 $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s;
-  document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b)); renderList(); };
+  document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
+  if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
+  else renderList(); };
 $("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {

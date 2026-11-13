@@ -1057,9 +1057,11 @@ const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : 
    event's first day until the next event starts. The event picker shows only once stories span two events. */
 const cityOf = (s, id) => (s.cities || []).includes(id) || (s.players || []).some(p => PLAYER[p] && PLAYER[p].city === id);
 function eventOf(s) { const d = (s.at || "").slice(0, 10); let e = LEAGUE.schedule[0]; LEAGUE.schedule.forEach(x => { if (x.start <= d) e = x; }); return e.id; }
+/* the events a story is about: the ones the editor tagged, or, for a story without any, the one its date falls in */
+const eventsOf = s => (s.events || []).filter(id => LEAGUE.schedule.some(e => e.id === id)).length ? s.events : [eventOf(s)];
 function renderFilters() {
   if (state.city !== "all" && !CITY[state.city]) state.city = "all";
-  const evs = LEAGUE.schedule.filter(e => LEAGUE.stories.some(s => eventOf(s) === e.id));
+  const evs = LEAGUE.schedule.filter(e => LEAGUE.stories.some(s => eventsOf(s).includes(e.id)));
   if (evs.length < 2 || !evs.some(e => e.id === state.sevent)) state.sevent = "all";
   const n = f => LEAGUE.stories.filter(s => matchFilter(s, f)).length;
   const shown = n(state.filter);
@@ -1075,7 +1077,7 @@ const norm = x => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "
 const sTitle = s => fill(L(s, "title"), s), sDek = s => fill(L(s, "dek"), s);
 function matchFilter(s, f, city = state.city, ev = state.sevent) {
   if (city !== "all" && !cityOf(s, city)) return false;
-  if (ev !== "all" && eventOf(s) !== ev) return false;
+  if (ev !== "all" && !eventsOf(s).includes(ev)) return false;
   if (f === "all") return true;
   if (f === "following") return (s.cities || []).some(c => state.follow.has(c)) || (s.players || []).some(p => state.follow.has(p));
   if (f === "mission") return s.topic === "mission";
@@ -1276,7 +1278,10 @@ function renderStory() {
       <source src="${s.video}" type="video/webm">
       <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt" default></video>`;
   else fig = `<img src="${s.photo}" alt=""${focus}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span>` : ""}<span class="cap">${s.kind === "video" ? t("Video · hosted, adaptive, captioned") : t("Picture · supplied by Legacy")}</span>`;
-  const tags = (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
+  const hasCard = id => CARDS.some(c => c.k === "event" && c.id === id);
+  const tags = (s.events || []).map(id => LEAGUE.schedule.find(e => e.id === id)).filter(Boolean).map(e =>
+                 `<span class="chip ev" style="--c:var(--acc)" ${hasCard(e.id) ? `onclick="closeModal('smodal');goEvent('${e.id}')"` : ""}><i></i>${esc(L(e, "name"))}</span>`).join("") +
+               (s.cities || []).map(id => `<span class="chip" style="--c:${CITY[id].color}" onclick="closeModal('smodal');goCity('${id}')"><i></i>${esc(CITY[id].name)}</span>`).join("") +
                (s.players || []).filter(id => PLAYER[id]).map(id => `<span class="chip" style="--c:${CITY[PLAYER[id].city].color}" onclick="closeModal('smodal');goPlayer('${id}')"><i></i>${esc(PLAYER[id].name)}</span>`).join("");
   const more = LEAGUE.stories.filter(x => x.id !== s.id && x.kind !== "result" && ((x.cities || []).some(id => (s.cities || []).includes(id)) || x.topic === s.topic)).slice(0, 3);
   document.getElementById("rbody").innerHTML = `<article class="rpage" style="--c:${col}">
