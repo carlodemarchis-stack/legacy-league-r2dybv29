@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.14.1";
+export const STUDIO_VERSION = "0.14.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -472,7 +472,8 @@ async function readMeta(file) {
     }
   } catch (e) { /* a file that cannot be read for its data is uploaded without it */ }
   // a credit from the copyright line when nothing better: "© 2026 Jane Smith. All rights reserved." → "Jane Smith"
-  if (!out.credit && out.copyright) out.credit = out.copyright.replace(/©|\\(c\\)|copyright|all rights reserved\\.?|\\b(19|20)\\d\\d\\b/gi, "").replace(/^[\\s,.\\-]+|[\\s,.\\-]+$/g, "");
+  // a licence ("Public Domain", "CC-BY-SA") says how it may be used, not who took it: it is never a credit
+  if (!out.credit && out.copyright && !/public domain|cc[- ]?by|cc0|creative commons|gfdl/i.test(out.copyright)) out.credit = out.copyright.replace(/©|\\(c\\)|copyright|all rights reserved\\.?|\\b(19|20)\\d\\d\\b/gi, "").replace(/^[\\s,.\\-]+|[\\s,.\\-]+$/g, "");
   if (out.camera) { const w = out.camera.split(/\\s+/); out.camera = w.filter((x, k) => w.indexOf(x) === k).join(" "); }   // "Canon Canon EOS R5" → "Canon EOS R5"
   const d = String(out.taken || "").match(/^(\\d{4})[:-](\\d{2})[:-](\\d{2})(?:[T ](\\d{2}):(\\d{2}))?/);
   out.taken = d ? \`\${d[1]}-\${d[2]}-\${d[3]}\${d[4] ? "T" + d[4] + ":" + d[5] : ""}\` : "";
