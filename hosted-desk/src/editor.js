@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.17.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload
+export const STUDIO_VERSION = "0.18.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -848,11 +848,20 @@ function openAI() {
   box.innerHTML = \`<header><h1>Draft with AI <span class="model">· Claude Opus 5.5</span></h1><button class="btn" onclick="closeAI()">Close</button></header>
     <div id="aimsgs"></div>
     <div class="aiform"><textarea id="aiq" placeholder="What is the story? e.g. Round 2 recap for Boston, focus on Quintero's eagle on 13. Paste notes or quotes too."></textarea>
-      <div class="row2"><p class="hint">It looks up the league's names, scores and stories. Nothing is saved until you apply the draft and press Save.</p>
+      <div class="row2"><p class="hint">It looks up the league's names, scores and stories. Nothing is saved until you apply the draft and press Save.<br><b id="aibudget"></b></p>
       <button class="btn pri" id="aisend" onclick="sendAI()">Send</button></div></div>\`;
   document.body.appendChild(box);
   $("aiq").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) sendAI(); });
   renderAI(); $("aiq").focus();
+  call("budget").then(paintBudget).catch(() => {});
+}
+/* this week's AI allowance: every editor has a weekly amount, Draft with AI and photo descriptions together */
+function paintBudget(b) {
+  const el = $("aibudget"); if (!el || !b) return;
+  el.textContent = b.over ? \`This week's AI allowance is used up (€\${b.cap_eur.toFixed(2)}). It starts again on Monday.\`
+    : \`This week: €\${b.left_eur.toFixed(2)} of €\${b.cap_eur.toFixed(2)} left.\`;
+  el.style.color = b.over ? "var(--bad, #e66)" : b.left_eur < 2 ? "var(--warn, #d9ad4e)" : "";
+  if ($("aisend")) $("aisend").disabled = !!b.over;
 }
 function closeAI() { const a = $("ai"); if (a) a.remove(); }
 function renderAI(waiting, error) {
@@ -881,6 +890,7 @@ async function sendAI() {
     renderAI();
   } catch (e) { aiChat.pop(); $("aiq").value = q; renderAI(false, e.message); }
   $("aisend").disabled = false;
+  call("budget").then(paintBudget).catch(() => {});
 }
 function applyAI(i) {
   const p = aiChat[i].proposal; if (!p || !cur) return;
@@ -1076,16 +1086,17 @@ async function suggestFor(list) {
   if (!list.length) { await confirmModal("Nothing to suggest", "Every photo has a description or a suggestion waiting.", "OK"); return; }
   if (list.length > 1 && !(await confirmModal("Suggest descriptions for " + list.length + " photos?",
     "Claude looks at each photo and writes a description for you to accept or change. It never names people. Each one costs a fraction of a cent (Claude Haiku) and shows in AI usage.", "Suggest"))) return;
-  let cost = 0, done = 0, failed = 0;
+  let cost = 0, done = 0, failed = 0, capped = null;
   if ($("libsug")) $("libsug").disabled = true;
   for (const e of list) {
     $("libcount").textContent = "Describing " + (done + failed + 1) + " of " + list.length + "…";
     try { const j = await call("describe", { src: e.src }); cost += j.cost || 0; done++; Object.assign(e, j.photo || {}); paintLibrary(); }
-    catch (err) { failed++; }
+    catch (err) { failed++; if (/allowance/.test(err.message)) { capped = err.message; break; } }
   }
   if ($("libsug")) $("libsug").disabled = false;
   await loadLibrary(); paintLibrary();
   $("libcount").textContent = done + " suggested" + (failed ? ", " + failed + " could not be" : "") + " · about $" + cost.toFixed(2);
+  if (capped) await confirmModal("AI allowance used up", capped, "OK");
 }
 async function uploadToLibrary(files) {
   for (let i = 0; i < files.length; i++) {
@@ -1141,7 +1152,9 @@ async function openUsage() {
     const art = (r) => r.title ? esc(shown(stories.find((s) => s.id === r.key || s.id === r.story) || {}, r.title)) : esc(r.key || r.story || "(never saved)");
     $("ubody").innerHTML = \`
       <div class="big">\${$$(u.total.cost)}</div><p class="hint">\${u.total.requests} AI request\${u.total.requests === 1 ? "" : "s"} in all, paid on the league's Anthropic account.</p>
-      <h3>By person</h3>\${table(["Person", "Requests", "Cost"], u.by_user.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
+      <h3>This week · €\${u.budget.cap_eur} each</h3>\${table(["Person", "Requests", "Spent"], u.week.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">€\${r.cost_eur.toFixed(2)} of €\${r.cap_eur}</td></tr>\`))}
+      <p class="hint">You have €\${u.budget.left_eur.toFixed(2)} left this week. Every week starts on Monday at 00:00 UTC.</p>
+      <h3>By person, all time</h3>\${table(["Person", "Requests", "Cost"], u.by_user.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
       <h3>By article</h3>\${table(["Article", "Requests", "Cost"], u.by_article.map((r) => \`<tr><td>\${art(r)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
       <h3>By month</h3>\${table(["Month", "Requests", "Cost"], u.by_month.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
       <h3>Latest requests</h3>\${table(["When · who · article", "", "Cost"], u.recent.map((r) => \`<tr><td>\${esc(when(r.at))} · \${esc(r.user)} · \${r.title ? art(r) : esc(r.story || "(never saved)")}<br><small style="color:var(--dim)">\${esc(r.asked || "")}</small></td><td></td><td class="n">\${$$(r.cost)}</td></tr>\`))}\`;

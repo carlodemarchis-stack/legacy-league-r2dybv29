@@ -701,7 +701,8 @@ async function editorApi(request, env, path) {
       if (!/^[a-z]\d+$/.test(id) || !/^[\w-]+$/.test(v)) fail("No such version.");
       return json({ story: (await readJson(env, `${HISTORY}${id}/${v}.json`)).data || fail("No such version.") });
     }
-    if (request.method === "GET" && path === "usage") return json(await aiUsage(env));
+    if (request.method === "GET" && path === "usage") return json(await aiUsage(env, who));
+    if (request.method === "GET" && path === "budget") return json(await aiBudget(env, who));
     if (request.method === "GET" && path === "library") return json({ site: SITE_ROOT, photos: await library(env) });
     if (request.method === "GET" && path === "deleted") return json({ deleted: await deletedStories(env) });
     if (request.method === "GET" && path === "ref") {
@@ -716,6 +717,8 @@ async function editorApi(request, env, path) {
     if (path === "ai") {                                      // Draft with AI: a proposal for the form, nothing is saved
       try {
         const body = await request.json();
+        const capped = await capReached(env, who);
+        if (capped) return json({ error: capped, budget: await aiBudget(env, who) }, 429);
         const out = await draftWithAI(env, lookups(env), body);
         if (out.proposal) {                                     // tags may come back as names: the form needs ids
           const ref = await reference(env);
@@ -727,7 +730,7 @@ async function editorApi(request, env, path) {
         await logAI(env, { user: who, story: /^[a-z]\d+$/.test(body.story_id || "") ? body.story_id : null, chat: String(body.chat || "").slice(0, 40),
           model: out.model, usage: out.usage, cost: out.cost, asked: String((body.messages || []).slice(-1)[0]?.content || "").slice(0, 200),
           proposed: out.proposal ? out.proposal.title : null });
-        return json(out);
+        return json({ ...out, budget: await aiBudget(env, who) });
       }
       catch (e) { const [status, error] = aiError(e); return json({ error }, status); }
     }
@@ -755,6 +758,8 @@ async function editorApi(request, env, path) {
     }
     if (path === "describe") {                                // a suggested description for one library photo, waiting for the editor
       const b = await request.json();
+      const capped = await capReached(env, who);
+      if (capped) return json({ error: capped }, 429);
       const lib = (await readJson(env, LIBRARY)).data || [];
       const e = lib.find((x) => x.src === b.src) || fail("No such photo in the library.");
       const obj = await env.CONTENT.get(String(b.src).replace(/^content\//, ""));
@@ -960,7 +965,39 @@ async function logAI(env, e) {
       asked: (e.asked || "").slice(0, 120) },
   });
 }
-async function aiUsage(env) {
+/* Each editor may spend AI_WEEKLY_CAP_EUR a week (Monday 00:00 UTC to Monday), Draft with AI and photo descriptions
+   together. Costs are logged in US$, so the cap is turned into dollars at USD_PER_EUR. A request is refused once the
+   week's spending has reached the cap; the request that crosses it is allowed, so a week can end a few cents over.
+   The editor is the sign-in email once the Studio is behind Cloudflare Access; until then, the name the editor gave. */
+const AI_WEEKLY_CAP_EUR = 10;
+const USD_PER_EUR = 1.16;
+const weekStart = (d = new Date()) => { const w = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); w.setUTCDate(w.getUTCDate() - ((w.getUTCDay() + 6) % 7)); return w; };
+async function weekRows(env) {
+  const from = weekStart(), months = [...new Set([from, new Date()].map((d) => d.toISOString().slice(0, 7)))], rows = [];
+  for (const m of months) {
+    let cursor;
+    do {
+      const page = await env.CONTENT.list({ prefix: `ai/log/${m}/`, include: ["customMetadata"], cursor });
+      for (const o of page.objects) { const r = o.customMetadata || {}; if ((r.at || "") >= from.toISOString().slice(0, 19)) rows.push(r); }
+      cursor = page.truncated ? page.cursor : null;
+    } while (cursor);
+  }
+  return rows;
+}
+const sameUser = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+async function aiBudget(env, user, rows) {
+  rows = rows || await weekRows(env);
+  const spent = rows.filter((r) => sameUser(r.user, user)).reduce((a, r) => a + (+r.cost || 0), 0) / USD_PER_EUR;
+  const next = weekStart(); next.setUTCDate(next.getUTCDate() + 7);
+  const r2 = (x) => Math.round(x * 100) / 100;
+  return { user, cap_eur: AI_WEEKLY_CAP_EUR, spent_eur: r2(spent), left_eur: r2(Math.max(0, AI_WEEKLY_CAP_EUR - spent)), over: spent >= AI_WEEKLY_CAP_EUR, resets_at: next.toISOString() };
+}
+async function capReached(env, user) {
+  const b = await aiBudget(env, user);
+  return b.over ? `You have used your AI allowance for this week (€${b.cap_eur.toFixed(2)}, €${b.spent_eur.toFixed(2)} spent). It starts again on Monday at 00:00 UTC.` : null;
+}
+
+async function aiUsage(env, user) {
   const rows = [];
   let cursor;
   do {
@@ -981,7 +1018,11 @@ async function aiUsage(env) {
     total += +r.cost || 0;
   }
   const round = (m) => Object.entries(m).map(([k, v]) => ({ key: k, requests: v.requests, cost: Math.round(v.cost * 1000) / 1000 })).sort((a, b) => b.cost - a.cost);
+  const week = await weekRows(env), weekUsers = {}, spelled = {};   // one row per person, as the allowance counts them
+  for (const r of week) { const k = String(r.user || "unknown").trim(), low = k.toLowerCase(); add(weekUsers, (spelled[low] = spelled[low] || k), r); }
   return {
+    budget: await aiBudget(env, user, week),
+    week: round(weekUsers).map((r) => ({ ...r, cost_eur: Math.round(r.cost / USD_PER_EUR * 100) / 100, cap_eur: AI_WEEKLY_CAP_EUR })),
     total: { requests: rows.length, cost: Math.round(total * 1000) / 1000 },
     by_user: round(users), by_month: round(months).sort((a, b) => (a.key < b.key ? 1 : -1)),
     by_article: round(articles).map((a) => ({ ...a, title: title[a.key] || null })),
