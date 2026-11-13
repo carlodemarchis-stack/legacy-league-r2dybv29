@@ -6,6 +6,7 @@
 //   - one / - two            a bulleted list, one item per line
 //   1. one / 2. two          a numbered list, one item per line
 //   **bold**  *italic*  [words](https://…)
+//   ![alt text](content/photos/…#1280x853 "Caption")   a photo from the league's store, a block of its own
 // Nothing else exists: whatever else is pasted in is reduced to these.
 
 import { Editor } from "@tiptap/core";
@@ -18,6 +19,27 @@ import Italic from "@tiptap/extension-italic";
 import Link from "@tiptap/extension-link";
 import { BulletList, OrderedList, ListItem, ListKeymap } from "@tiptap/extension-list";
 import { UndoRedo, Placeholder } from "@tiptap/extensions";
+import Image from "@tiptap/extension-image";
+
+/* Photos live in the league's store; the page shows them from the site's address. */
+let SITE = "";
+const IMG = /^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(#\d+x\d+)?(?:\s+"([^"]*)")?\)$/;
+const toPath = (src) => { const i = String(src || "").indexOf("/content/photos/"); return i < 0 ? null : src.slice(i + 1); };
+export const photoMd = (path, alt, caption) => `![${String(alt || "").replace(/[\[\]]/g, "")}](${path}${caption ? ` "${String(caption).replace(/"/g, "”")}"` : ""})`;
+/* A photo in the text: full width, its caption under it. Only photos from the store are taken in, so a picture pasted
+   from another site never enters a story. */
+const Photo = Image.extend({
+  parseHTML() { return [{ tag: "img[src]", getAttrs: (el) => (toPath(el.getAttribute("src")) ? null : false) }]; },
+  addNodeView() {
+    return ({ node }) => {
+      const fig = document.createElement("figure"), img = document.createElement("img"), cap = document.createElement("figcaption");
+      fig.className = "ph"; fig.append(img, cap);
+      const paint = (n) => { img.src = n.attrs.src; img.alt = n.attrs.alt || ""; cap.textContent = n.attrs.title || ""; cap.hidden = !n.attrs.title; };
+      paint(node);
+      return { dom: fig, update: (n) => { if (n.type !== node.type) return false; paint(n); return true; } };
+    };
+  },
+}).configure({ inline: false, allowBase64: false });
 
 export const okUrl = (u) => /^(https:\/\/|mailto:|\/stories\/)/.test(u || "");
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -36,6 +58,8 @@ export function inlineHtml(text) {
 }
 const BULLET = /^[-*]\s+/, NUMBER = /^\d+[.)]\s+/;
 export function blockHtml(b) {
+  const im = String(b).trim().match(IMG);
+  if (im) return `<img src="${esc(SITE + "/" + im[2] + (im[3] || ""))}" alt="${esc(im[1])}" title="${esc(im[4] || "")}">`;
   const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
   if (lines.length && lines.every((l) => BULLET.test(l))) return `<ul>${lines.map((l) => `<li><p>${inlineHtml(l.replace(BULLET, ""))}</p></li>`).join("")}</ul>`;
   if (lines.length && lines.every((l) => NUMBER.test(l))) return `<ol>${lines.map((l) => `<li><p>${inlineHtml(l.replace(NUMBER, ""))}</p></li>`).join("")}</ol>`;
@@ -81,6 +105,7 @@ function items(list) {
 }
 export function toMd(doc) {
   return (doc.content || []).map((b) => {
+    if (b.type === "image") { const path = toPath(b.attrs.src); return path ? photoMd(path, b.attrs.alt, b.attrs.title) : null; }
     if (b.type === "bulletList") return items(b).map((t) => "- " + t).join("\n") || null;
     if (b.type === "orderedList") return items(b).map((t, i) => `${i + 1}. ${t}`).join("\n") || null;
     const t = inlineMd(b.content || []).trim();
@@ -89,15 +114,16 @@ export function toMd(doc) {
   }).filter(Boolean).join("\n\n");
 }
 
-export function makeEditor(element, blocks, onChange) {
+export function makeEditor(element, blocks, onChange, site) {
+  SITE = site || SITE;
   return new Editor({
     element,
     extensions: [
       Document, Text, Paragraph, Heading.configure({ levels: [2] }), Bold, Italic, UndoRedo,
-      BulletList, OrderedList, ListItem, ListKeymap,
+      BulletList, OrderedList, ListItem, ListKeymap, Photo,
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: "https",
         protocols: ["mailto"], isAllowedUri: (url) => okUrl(url), HTMLAttributes: { rel: "noopener", target: null } }),
-      Placeholder.configure({ placeholder: "Write the article. Subheadings, bold, italic, links and lists are all it can hold." }),
+      Placeholder.configure({ placeholder: "Write the article. Subheadings, bold, italic, links, lists and photos are all it can hold." }),
     ],
     content: fromMd(blocks),
     onUpdate: onChange,

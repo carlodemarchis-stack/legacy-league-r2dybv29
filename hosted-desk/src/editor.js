@@ -51,6 +51,11 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap h2{font-size:17px;margin:1.2em 0 .5em}
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
+.tiptap figure.ph{margin:0 0 1em;cursor:pointer}.tiptap figure.ph img{display:block;width:100%;border-radius:8px}
+.tiptap figure.ph figcaption{font-size:12px;color:var(--dim);margin-top:5px}
+.tiptap figure.ph.ProseMirror-selectednode img{outline:3px solid var(--acc);outline-offset:2px}
+.phbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 9px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);background:color-mix(in srgb,var(--acc) 8%,var(--panel))}
+.phbar span{flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phbar .btn{padding:4px 10px}
 .tiptap p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:var(--dim);float:left;height:0;pointer-events:none}
 #title{font-size:20px;font-weight:700}
 .hint{font-size:11px;color:var(--dim);margin-top:4px}
@@ -174,12 +179,16 @@ function renderForm(msg) {
       <div class="f"><label>Article</label><div class="rte"><div class="tb" id="tb">
           <button type="button" data-c="h" title="Subheading">H</button><button type="button" data-c="b" title="Bold (⌘B)"><b>B</b></button><button type="button" data-c="i" title="Italic (⌘I)"><i>I</i></button>
           <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
-          <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button></div>
+          <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button>
+          <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><input type="file" id="pfile" accept="image/*" hidden></div>
+          <div class="phbar" id="phbar" hidden><span id="phinfo"></span><button type="button" class="btn" onclick="editPhoto()">Edit text</button>
+            <button type="button" class="btn" onclick="mainFromPhoto()">Use as main photo</button><button type="button" class="btn bad" onclick="ed.chain().focus().deleteSelection().run()">Remove</button></div>
           <div id="body"></div></div>
-        <div class="hint">Subheadings, bold, italic, links and lists. The site and the app set the style.</div></div>
+        <div class="hint">Subheadings, bold, italic, links, lists and photos. The site and the app set the style.</div></div>
     </div>
     <div>
-      <div class="f photo"><label>Photo</label>\${s.photo ? \`<img src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
+      <div class="f photo"><label>Main photo</label>\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
+        \${s.photo_auto || !s.id ? '<div class="hint">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
         \${s.id ? \`<a class="btn" href="\${DOOR}/photo/\${s.id}" target="_blank" rel="noopener" onclick="watchPhoto()">Change photo ↗</a>\` : ""}
         \${s.photo_credit ? \`<div class="hint">Photo: \${esc(s.photo_credit)}</div>\` : ""}</div>
       <div class="f two"><div><label for="kind">Kind</label><select id="kind" \${kinds.length === 1 ? "disabled" : ""}>\${kinds.map((k) => \`<option \${k === s.kind ? "selected" : ""}>\${k}</option>\`).join("")}</select></div>
@@ -217,10 +226,15 @@ function renderForm(msg) {
 let ed = null;
 function mountBody(blocks) {
   if (ed) ed.destroy();
-  ed = TT.makeEditor($("body"), blocks, touch);
+  ed = TT.makeEditor($("body"), blocks, touch, SITE);
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
     { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
-  ed.on("transaction", paint); paint();
+  const photoBar = () => {
+    const on = ed.isActive("image"); $("phbar").hidden = !on;
+    if (on) { const a = ed.getAttributes("image"); $("phinfo").textContent = (a.title || "No caption") + " · " + (a.alt ? "described" : "NOT DESCRIBED"); }
+  };
+  ed.on("transaction", () => { paint(); photoBar(); }); paint();
+  $("pfile").onchange = () => { const f = $("pfile").files[0]; $("pfile").value = ""; if (f) addPhoto(f); };
   $("tb").onmousedown = (e) => e.preventDefault();            // keep the text selected while a button is pressed
   $("tb").onclick = (e) => { const b = e.target.closest("button"); if (b) command(b.dataset.c); };
   ed.view.dom.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); command("a"); } });
@@ -232,6 +246,7 @@ function command(c) {
   else if (c === "i") ch.toggleItalic().run();
   else if (c === "ul") ch.toggleBulletList().run();
   else if (c === "ol") ch.toggleOrderedList().run();
+  else if (c === "img") $("pfile").click();
   else if (c === "a") {
     const was = ed.getAttributes("link").href || "";
     let url = prompt("Link address (https://…). Leave empty to remove the link.", was);
@@ -244,6 +259,42 @@ function command(c) {
     if (ed.state.selection.empty && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
     else ch.extendMarkRange("link").setLink({ href: url }).run();
   }
+}
+/* photos in the article: shrunk in the browser, kept in the store, described and captioned, placed at the cursor */
+async function shrink(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+  cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+  return { blob: await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82)), w: cv.width, h: cv.height };
+}
+function askText(alt, caption) {
+  let a = alt || "";
+  do { a = prompt("Describe the photo for people who cannot see it (required):", a); if (a === null) return null; a = a.trim(); } while (!a);
+  const c = prompt("Caption, with the credit if you have one (optional):", caption || "");
+  return { alt: a, caption: (c || "").trim() };
+}
+async function addPhoto(file) {
+  say("", "Uploading the photo…");
+  try {
+    const { blob, w, h } = await shrink(file);
+    const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
+    const t = askText(); if (!t) { say("", "Photo not added."); return; }
+    ed.chain().focus().setImage({ src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption }).run();
+    say("", "Photo added. Save to keep it.");
+  } catch (e) { say("err", e.message || "That picture could not be read. Save it as a JPEG and try again."); }
+}
+function editPhoto() {
+  const a = ed.getAttributes("image"); const t = askText(a.alt, a.title); if (!t) return;
+  ed.chain().focus().updateAttributes("image", { alt: t.alt, title: t.caption }).run();
+}
+function mainFromPhoto() {
+  const src = ed.getAttributes("image").src || ""; const i = src.indexOf("/content/photos/"); if (i < 0) return;
+  const [path, size] = src.slice(i + 1).split("#"); const wh = (size || "").split("x");
+  cur.photo = path; cur.photo_w = +wh[0] || 0; cur.photo_h = +wh[1] || 0; cur.photo_auto = false; cur.mainChanged = true;
+  if ($("mainpic")) $("mainpic").src = pic(path);
+  touch(); say("", "Main photo changed. Save to keep it.");
 }
 function paintKind() {
   const k = $("kind").value, s = cur;
@@ -269,7 +320,8 @@ function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
     author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, count: $("count") ? $("count").value : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
-    events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id) };
+    events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id),
+    ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}) };
 }
 async function run(fn, busy) {
   document.querySelectorAll(".bar .btn").forEach((b) => (b.disabled = true)); say("", busy);

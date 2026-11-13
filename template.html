@@ -443,6 +443,9 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rtext ul,.rtext ol{margin:0 0 16px;padding-left:1.3em;font-size:clamp(14.5px,1.15vw,16.5px);line-height:1.7;font-weight:300}
 .rtext li{margin:0 0 6px}.rtext li::marker{color:var(--acc-ink)}
 .rtext strong{font-weight:700}
+.rtext figure.rimg{margin:22px 0 24px;break-inside:avoid}
+.rtext figure.rimg img{display:block;width:100%;height:auto;border-radius:12px;background:#0b0f11}
+.rtext figure.rimg figcaption{font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.45}
 .rtext a{color:var(--acc-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .rtext a:hover{text-decoration-thickness:2px}
 .rtext p:first-child::first-letter{font-size:2.6em;font-weight:700;float:left;line-height:.85;padding:4px 8px 0 0;color:var(--acc-ink)}
@@ -1142,6 +1145,9 @@ function mdInline(text) {
   });
 }
 function mdBlock(b) {
+  // a photo from the league's store, full width of the text, its caption under it; #WxH reserves its room
+  const im = String(b).trim().match(/^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(?:#(\d+)x(\d+))?(?:\s+"([^"]*)")?\)$/);
+  if (im) return `<figure class="rimg"><img src="${fromStore(im[2])}" alt="${esc(im[1])}" loading="lazy"${im[3] ? ` width="${im[3]}" height="${im[4]}"` : ""}>${im[5] ? `<figcaption>${esc(im[5])}</figcaption>` : ""}</figure>`;
   const lines = String(b).split("\n").map(l => l.trim()).filter(Boolean);
   if (lines.length && lines.every(l => /^[-*]\s+/.test(l))) return `<ul>${lines.map(l => `<li>${mdInline(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
   if (lines.length && lines.every(l => /^\d+[.)]\s+/.test(l))) return `<ol>${lines.map(l => `<li>${mdInline(l.replace(/^\d+[.)]\s+/, ""))}</li>`).join("")}</ol>`;
@@ -1211,7 +1217,7 @@ function storyLayout(s) {
     const width = Math.min(vw - 2 * Math.max(48, vw * 0.06), 1180), colW = (width - 48) / 2;
     const textH = Math.ceil(words * 6 / (colW / 8.3) / 2) * 27 + 60;
     const room = h => vh - h - (kind === "quote" ? 160 : 240);         // the byline, headline, summary and margins
-    if (vw >= 1100 && textH <= room(vh * floor)) {
+    if (vw >= 1100 && !s.body_photos && textH <= room(vh * floor)) {   // photos in the text read in one column
       two = true;
       while (textH > room(figh) && figh > vh * floor) figh -= 10;
     }

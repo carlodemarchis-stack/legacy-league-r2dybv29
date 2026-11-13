@@ -53,7 +53,21 @@ async function nameStories(env, stories) {
 }
 /* An article is plain text with a little Markdown: "## " subheadings, "- " and "1. " lists, **bold**, *italic*,
    [words](https://…). This takes it back to the words alone. */
-const plain = (t) => String(t).replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1").replace(/\*+/g, "").replace(/^(##\s+|[-*]\s+|\d+[.)]\s+)/gm, "");
+const plain = (t) => String(t).replace(/^!\[[^\]]*\]\([^)]*\)\s*$/gm, "").replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1").replace(/\*+/g, "").replace(/^(##\s+|[-*]\s+|\d+[.)]\s+)/gm, "");
+/* A photo in the article is a block of its own: ![alt text](content/photos/…#1280x853 "Caption · Photo: credit").
+   Only the league's own photos; the #WxH is the photo's size, so the reader can make room before it loads. */
+const IMG = /^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(?:#(\d+)x(\d+))?(?:\s+"([^"]*)")?\)$/;
+const bodyPhotos = (body) => (body || []).map((b) => b.trim().match(IMG)).filter(Boolean).map((m) => ({ src: m[2], w: +m[3] || 0, h: +m[4] || 0, alt: m[1], caption: m[5] || "" }));
+/* A story whose main photo was only picked from the library takes the first photo of its article instead. */
+function adoptFirstPhoto(s) {
+  const first = bodyPhotos(s.body)[0];
+  if (s.photo_auto && first) {
+    s.photo = first.src; delete s.photo_auto; delete s.photo_credit;
+    if (first.w && first.h) { s.photo_w = first.w; s.photo_h = first.h; } else { delete s.photo_w; delete s.photo_h; }
+  }
+  // photos uploaded for the article and now placed in it leave the waiting list
+  if (s.photo_inbox) { const used = new Set(bodyPhotos(s.body).map((p) => p.src)); s.photo_inbox = s.photo_inbox.filter((p) => !used.has(p.src)); if (!s.photo_inbox.length) delete s.photo_inbox; }
+}
 const paras = (text) => text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 const nowIso = () => new Date().toISOString().slice(0, 19);
 const isLive = (s) => (s.status || "published") === "published";
@@ -172,6 +186,8 @@ async function publishIndex(env, stories) {
     const s = { cities: [], players: [], photos: [], ...full };
     const lead = s.photo || s.photos[0];
     if (!(s.photo_w && s.photo_h) && sizes[lead]) [s.photo_w, s.photo_h] = sizes[lead];
+    s.body_photos = bodyPhotos(s.body).length;              // the reader keeps a story with photos in its text to one column
+    delete s.photo_auto; delete s.photo_inbox;
     s.words = plain([s.dek || "", ...(s.body || [])].join(" ")).split(/\s+/).filter(Boolean).length;
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
@@ -238,7 +254,9 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
     size: a.size || KINDS[kind], photo: a.photo_url || (await pickPhoto(env, id + a.title)),
     created_by: by, created_at: nowIso(),
   };
+  if (!a.photo_url) story.photo_auto = true;                 // a library photo, until the article gives one
   if (a.body) story.body = paras(a.body);
+  adoptFirstPhoto(story);
   if (a.dur) story.dur = a.dur;
   if (a.count) story.count = a.count;
   if (kind === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
@@ -288,7 +306,8 @@ function createServer(env, door) {
   server.registerTool("draft_story", {
     description:
       "Create a DRAFT story. body = the article text, paragraphs separated by blank lines (2–4 short paragraphs; the " +
-      "body may use only: '## ' subheadings, **bold**, *italic*, [words](https://…) links, and '- ' or '1. ' lists; the " +
+      "body may use only: '## ' subheadings, **bold**, *italic*, [words](https://…) links, '- ' or '1. ' lists, and " +
+      "photos as their own paragraph in the form photo_inbox gives (photo_upload_link with place=article); the " +
       "collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and " +
       "players may be names or ids. events = the league events the story is about, names or ids (e.g. Mayakoba); " +
       "leave out for a story not about an event. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
@@ -338,10 +357,11 @@ function createServer(env, door) {
       if (a.players) s.players = a.players.map(ref.playerId);
       if (a.events) s.events = a.events.map(ref.eventId);
       if (a.size) s.size = a.size;
-      if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; }   // the new picture's shape is looked up on publish
+      if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; delete s.photo_auto; }   // the new picture's shape is looked up on publish
       if (a.author) s.author = a.author;
       if (a.at) s.at = a.at;
       if (a.body) s.body = paras(a.body);
+      adoptFirstPhoto(s);
       s.updated_by = "desk"; s.updated_at = nowIso();
       return s;
     });
@@ -374,13 +394,18 @@ function createServer(env, door) {
     description:
       "The editor's own photo for a story. A picture pasted into the chat cannot reach the desk, so this returns a " +
       "private web page for that story: give the editor the link, they open it, choose the photo and press Upload. " +
-      "The desk then stores the photo and sets it as the story's picture (public at once if the story is published). " +
-      "Afterwards read the story again with get_story to confirm the new photo. The link is for editors only.",
-    inputSchema: z.object({ id: z.string() }),
-  }, tool(async ({ id }) => {
+      "place = main (default): the photo becomes the story's main picture, on the tile and at the top of the reader " +
+      "(public at once if the story is published). place = article: a photo to go inside the article text; the page " +
+      "also asks for its alt text and caption, and the photo waits in the story's photo_inbox (see get_story) until you " +
+      "put it in the body with update_story, as its own paragraph exactly as photo_inbox gives it (the markdown field). " +
+      "The link is for editors only.",
+    inputSchema: z.object({ id: z.string(), place: z.enum(["main", "article"]).default("main") }),
+  }, tool(async ({ id, place }) => {
     const s = find((await readJson(env, RECORDS)).data || [], id);
-    return { ok: true, link: `${door}/photo/${s.id}`, story: s.title,
-             next: "Give the editor this link. When they say the photo is uploaded, call get_story to confirm it." };
+    return { ok: true, link: `${door}/photo/${s.id}${place === "article" ? "?to=article" : ""}`, story: s.title,
+             next: place === "article"
+               ? "Give the editor this link. When they say it is uploaded, call get_story: the photo is in photo_inbox with its markdown; ask where it goes and put it in the body with update_story."
+               : "Give the editor this link. When they say the photo is uploaded, call get_story to confirm it." };
   }));
 
   server.registerTool("unpublish_story", {
@@ -451,7 +476,7 @@ const MAX_PHOTO = 8 * 1024 * 1024;
 
 /* The page an editor opens to give a story its photo. The browser shrinks the picture to web size before
    sending it, so nothing on the server has to process images. */
-function photoPage(story) {
+function photoPage(story, article) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>Photo for ${esc(story.id)}</title>
 <style>
@@ -463,8 +488,10 @@ button{margin-top:20px;width:100%;padding:14px;border-radius:999px;border:0;back
 button:disabled{opacity:.5;cursor:default}img{display:block;width:100%;border-radius:12px;margin-top:14px;border:1px solid #2a3438}
 #msg{margin-top:16px;padding:12px 14px;border-radius:10px;display:none}#msg.ok{display:block;background:#12301f;color:#9be0b6}#msg.bad{display:block;background:#3a1715;color:#ffc9c5}
 </style></head><body><main>
-<h1>Photo for this story</h1><p><b style="color:#e9eef0">${esc(story.title)}</b><br>${esc(story.id)} · ${esc(story.status || "published")}</p>
+<h1>${article ? "Photo for the article" : "Photo for this story"}</h1><p><b style="color:#e9eef0">${esc(story.title)}</b><br>${esc(story.id)} · ${esc(story.status || "published")}</p>
 <label for="f">Choose the photo</label><input id="f" type="file" accept="image/*">
+${article ? `<label for="a">Describe the photo (for people who cannot see it)</label><input id="a" type="text" placeholder="Required, e.g. Omar Quintero hits a 5-wood on the 13th" maxlength="200">
+<label for="cap">Caption</label><input id="cap" type="text" placeholder="Optional" maxlength="200">` : ""}
 <label for="c">Photo credit (who took it)</label><input id="c" type="text" placeholder="Optional" maxlength="120">
 <img id="pv" alt="" hidden>
 <button id="go" disabled>Upload</button><div id="msg" role="status"></div>
@@ -488,12 +515,16 @@ f.onchange = async () => {
   if (!blob) return say("bad", "This browser cannot read that picture. Save it as a JPEG and try again.");
   pv.src = URL.createObjectURL(blob); pv.hidden = false; go.disabled = false;
 };
+const ART = ${article ? "true" : "false"};
 go.onclick = async () => {
+  if (ART && !document.getElementById("a").value.trim()) return say("bad", "Describe the photo first: it is read aloud to people who cannot see it.");
   go.disabled = true; say("ok", "Uploading…");
   try {
-    const r = await fetch(location.pathname, { method: "POST", headers: { "content-type": blob.type, "x-photo-credit": encodeURIComponent(document.getElementById("c").value.trim()), "x-photo-size": size }, body: blob });
+    const r = await fetch(location.pathname, { method: "POST", headers: { "content-type": blob.type, "x-photo-credit": encodeURIComponent(document.getElementById("c").value.trim()), "x-photo-size": size,
+      ...(ART ? { "x-to": "article", "x-photo-alt": encodeURIComponent(document.getElementById("a").value.trim()), "x-photo-caption": encodeURIComponent(document.getElementById("cap").value.trim()) } : {}) }, body: blob });
     const out = await r.json();
     if (!r.ok) throw new Error(out.error || "The upload failed.");
+    if (ART) return say("ok", "Done. Tell Claude the photo is uploaded and where it goes in the article. You can close this page.");
     say("ok", out.public ? "Done. The photo is on the story, and the story is public, so it shows on the site now. You can close this page." : "Done. The photo is on the draft. You can close this page and tell Claude it is uploaded.");
   } catch (e) { say("bad", e.message); go.disabled = false; }
 };
@@ -506,28 +537,46 @@ async function photoRoute(request, env, id) {
   const story = /^[a-z]\d+$/.test(id) ? stories.find((s) => s.id === id) : null;
   if (!story) return new Response("No such story.", { status: 404 });
   if (request.method === "GET")
-    return new Response(photoPage(story), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
+    return new Response(photoPage(story, new URL(request.url).searchParams.get("to") === "article"), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
-  const ext = PHOTO_TYPES[(request.headers.get("content-type") || "").split(";")[0].trim()];
-  if (!ext) return json({ error: "The photo must be a JPEG, PNG or WebP." }, 415);
-  const bytes = await request.arrayBuffer();
-  if (!bytes.byteLength || bytes.byteLength > MAX_PHOTO) return json({ error: "The photo is empty or larger than 8 MB." }, 413);
-  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-1", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
-  const key = `photos/stories/${id}-${hash}.${ext}`;         // a new name per photo, so no browser shows a stale one
-  await env.CONTENT.put(key, bytes, { httpMetadata: { contentType: request.headers.get("content-type").split(";")[0].trim() } });
-  let credit = "";
-  try { credit = decodeURIComponent(request.headers.get("x-photo-credit") || "").slice(0, 120).trim(); } catch (e) {}
+  const up = await storePhoto(env, request, id);
+  if (up.error) return json({ error: up.error }, up.status);
+  const credit = header(request, "x-photo-credit", 120);
+  if (request.headers.get("x-to") === "article") {          // a photo for the article: it waits until Claude places it
+    const alt = header(request, "x-photo-alt", 200), caption = [header(request, "x-photo-caption", 200), credit ? `Photo: ${credit}` : ""].filter(Boolean).join(" · ");
+    if (!alt) return json({ error: "Describe the photo first." }, 400);
+    await change(env, async (list) => {
+      const s = find(list, id);
+      (s.photo_inbox = s.photo_inbox || []).push({ src: up.src, w: up.w, h: up.h, alt, caption, markdown: photoMd(up, alt, caption), at: nowIso() });
+      return s;
+    }, "photo page");
+    return json({ ok: true, photo: up.src, inbox: true, kb: up.kb });
+  }
   const { out, stories: all } = await change(env, async (list) => {
     const s = find(list, id);
-    s.photo = "content/" + key;
-    const wh = (request.headers.get("x-photo-size") || "").match(/^(\d{1,5})x(\d{1,5})$/);
-    if (wh) { s.photo_w = +wh[1]; s.photo_h = +wh[2]; } else { delete s.photo_w; delete s.photo_h; }
+    s.photo = up.src; delete s.photo_auto;
+    if (up.w) { s.photo_w = up.w; s.photo_h = up.h; } else { delete s.photo_w; delete s.photo_h; }
     if (credit) s.photo_credit = credit; else delete s.photo_credit;
     s.updated_by = "photo page"; s.updated_at = nowIso();
     return s;
   }, "photo page");
   if (isLive(out)) await publishIndex(env, all);
-  return json({ ok: true, photo: out.photo, public: isLive(out), kb: Math.round(bytes.byteLength / 1024) });
+  return json({ ok: true, photo: out.photo, public: isLive(out), kb: up.kb });
+}
+const header = (request, name, max) => { try { return decodeURIComponent(request.headers.get(name) || "").slice(0, max).trim(); } catch (e) { return ""; } };
+const photoMd = (p, alt, caption) => `![${String(alt).replace(/[\[\]]/g, "")}](${p.src}${p.w ? `#${p.w}x${p.h}` : ""}${caption ? ` "${String(caption).replace(/"/g, "”")}"` : ""})`;
+/* Keep an uploaded photo in the store. The browser has already made it web-sized (and says its size). */
+async function storePhoto(env, request, prefix) {
+  const type = (request.headers.get("content-type") || "").split(";")[0].trim();
+  const ext = PHOTO_TYPES[type];
+  if (!ext) return { error: "The photo must be a JPEG, PNG or WebP.", status: 415 };
+  const bytes = await request.arrayBuffer();
+  if (!bytes.byteLength || bytes.byteLength > MAX_PHOTO) return { error: "The photo is empty or larger than 8 MB.", status: 413 };
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-1", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+  const key = `photos/stories/${prefix}-${hash}.${ext}`;    // a new name per photo, so no browser shows a stale one
+  await env.CONTENT.put(key, bytes, { httpMetadata: { contentType: type } });
+  const wh = (request.headers.get("x-photo-size") || "").match(/^(\d{1,5})x(\d{1,5})$/);
+  return { src: "content/" + key, w: wh ? +wh[1] : 0, h: wh ? +wh[2] : 0, kb: Math.round(bytes.byteLength / 1024) };
 }
 
 /* ------------------------------------------------------------------ the stories editor */
@@ -567,6 +616,10 @@ async function editorApi(request, env, path) {
       });
     }
     if (request.method !== "POST") return json({ error: "Not found." }, 404);
+    if (path === "upload") {                                  // a photo for the article, placed by the editor page itself
+      const up = await storePhoto(env, request, "article");
+      return up.error ? json({ error: up.error }, up.status) : json({ ok: true, ...up });
+    }
     const b = await request.json();
     const check = async (s) => { if (b.stamp !== await stampOf(s)) throw new Conflict("This story was changed by someone else (Claude or another editor) since you opened it. Reload it to see their version."); };
     let wasLive = false;
@@ -583,7 +636,12 @@ async function editorApi(request, env, path) {
       const eventIds = (f.events || []).filter((id) => ref.event[id]);
       const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
       const { out, stories } = await change(env, async (list) => {
-        if (!b.id) return makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds }, cids, pids, ref, now, "editor");
+        const main = f.photo && /^content\/photos\//.test(f.photo) ? f.photo : undefined;
+        if (!b.id) {
+          const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, "editor");
+          if (main && f.photo_w && f.photo_h) { st.photo_w = +f.photo_w; st.photo_h = +f.photo_h; }
+          return st;
+        }
         const s = find(list, b.id);
         await check(s);
         if (KINDS[kind] && kind !== "result" && s.kind !== "result") s.kind = kind;
@@ -597,6 +655,11 @@ async function editorApi(request, env, path) {
         if (body.length) s.body = body; else delete s.body;
         if (s.kind === "video") s.dur = f.dur; else delete s.dur;
         if (s.kind === "gallery") s.count = +f.count; else delete s.count;
+        if (f.photo && /^content\/photos\//.test(f.photo) && f.photo !== s.photo) {     // "Use as main photo"
+          s.photo = f.photo; delete s.photo_auto; delete s.photo_credit;
+          if (f.photo_w && f.photo_h) { s.photo_w = +f.photo_w; s.photo_h = +f.photo_h; } else { delete s.photo_w; delete s.photo_h; }
+        }
+        adoptFirstPhoto(s);
         s.updated_by = "editor"; s.updated_at = nowIso();
         return s;
       }, "editor");
