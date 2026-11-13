@@ -1,9 +1,14 @@
-// The stories editor: one page, a list of every story on the left and the open story on the right.
+// The Content Studio: one page, a list of every story on the left and the open story on the right.
 // It talks to the Desk's own small API (/<key>/editor/api/…), next to the Claude connector.
+
+/* The Content Studio's version, shown in its top bar. Raise it with every change editors can see:
+   0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
+   0.6 photo menu on the photo, the name Content Studio and this number */
+export const STUDIO_VERSION = "0.6.0";
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Stories editor · Legacy League Golf</title><meta name="robots" content="noindex">
+<title>Content Studio · Legacy League Golf</title><meta name="robots" content="noindex">
 <style>
 :root{--bg:#0b0f11;--panel:#141a1d;--line:#26302f;--ink:#e9eeec;--dim:#93a09c;--acc:#d9ad4e;--on-acc:#1a1406;--bad:#e5675a;--ok:#5fbf7a;
   color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
@@ -13,6 +18,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line)}
 header h1{margin:0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}header h1 span{color:var(--dim);font-weight:400}
 header a{margin-left:auto;color:var(--dim);font-size:12px}
+header .ver{font-size:10.5px;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-variant-numeric:tabular-nums}
 .wrap{display:grid;grid-template-columns:340px minmax(0,1fr);height:calc(100dvh - 49px)}
 aside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tools{display:flex;gap:6px;padding:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -112,7 +118,7 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .meta{font-size:11px;color:var(--dim);line-height:1.7;margin-top:14px}
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
-<header><h1>Legacy League Golf <span>· Stories editor</span></h1><a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></header>
+<header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span><a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></header>
 <div class="wrap">
   <aside>
     <div class="tools">

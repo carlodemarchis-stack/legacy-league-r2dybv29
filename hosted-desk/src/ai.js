@@ -13,7 +13,7 @@ const PRICE = { input: 4, output: 20, cache_read: 0.2, cache_write: 5 };   // US
 const json = (x) => JSON.stringify(x);
 const obj = (properties = {}, required = []) => ({ type: "object", properties, required, additionalProperties: false });
 
-const SYSTEM = `You are the drafting assistant inside the Legacy League Golf stories editor. An editor asks you for a story in this chat.
+const SYSTEM = `You are the drafting assistant inside the Legacy League Golf Content Studio. An editor asks you for a story in this chat.
 
 How you work here:
 - Look things up before you write: league_reference for cities, events and the course time; find_players for names; live_board for the team board; city_round to name the players behind a city's score; list_stories and get_story to see what is already published, so you do not repeat a story.

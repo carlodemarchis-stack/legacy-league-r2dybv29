@@ -649,7 +649,7 @@ async function storePhoto(env, request, prefix) {
   return { src: "content/" + key, w: wh ? +wh[1] : 0, h: wh ? +wh[2] : 0, kb: Math.round(bytes.byteLength / 1024) };
 }
 
-/* ------------------------------------------------------------------ the stories editor */
+/* ------------------------------------------------------------------ the Content Studio (the stories editor) */
 
 /* A plain editing page for people, next to Claude. It changes the same records through the same steps
    (change, makeDraft, publishIndex), so a story edited here and one edited through Claude behave alike.
