@@ -124,9 +124,31 @@ export function toMd(doc) {
   }).filter(Boolean).join("\n\n");
 }
 
-export function makeEditor(element, blocks, onChange, site) {
+/* Pictures pasted or dropped in: picture files go to onFiles (the page uploads them and asks for a description);
+   a picture that is only a link to another site is left out, and onNotice says so. */
+const imageFiles = (dt) => [...((dt && dt.files) || [])].filter((f) => /^image\//.test(f.type));
+const foreignImages = (dt) => /<img[^>]+src=/i.test((dt && dt.getData("text/html")) || "") &&
+  ![...((dt.getData("text/html") || "").matchAll(/<img[^>]+src="([^"]+)"/gi))].every((m) => toPath(m[1]));
+
+export function makeEditor(element, blocks, onChange, site, onFiles, onNotice) {
   SITE = site || SITE;
   return new Editor({
+    editorProps: {
+      handlePaste(view, event) {
+        const files = imageFiles(event.clipboardData);
+        if (files.length && onFiles) { event.preventDefault(); onFiles(files, null); return true; }
+        if (foreignImages(event.clipboardData) && onNotice) onNotice("Pictures from other websites are left out. Copy the image itself, or use the Photo button.");
+        return false;
+      },
+      handleDrop(view, event, slice, moved) {
+        const files = imageFiles(event.dataTransfer);
+        if (moved || !files.length || !onFiles) return false;
+        event.preventDefault();
+        const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        onFiles(files, at ? at.pos : null);
+        return true;
+      },
+    },
     element,
     extensions: [
       Document, Text, Paragraph, Heading.configure({ levels: [2] }), Bold, Italic, UndoRedo,

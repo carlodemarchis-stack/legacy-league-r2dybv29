@@ -3,8 +3,9 @@
 
 /* The Content Studio's version, shown in its top bar. Raise it with every change editors can see:
    0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
-   0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log */
-export const STUDIO_VERSION = "0.7.0";
+   0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log ·
+   0.8 paste or drop photos into the article */
+export const STUDIO_VERSION = "0.8.0";
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -231,7 +232,7 @@ function renderForm(msg) {
           <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><input type="file" id="pfile" accept="image/*" hidden></div>
 
           <div id="body"></div></div>
-        <div class="hint">Subheadings, bold, italic, links, lists and photos. The site and the app set the style.</div></div>
+        <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button, or paste or drop a picture). The site and the app set the style.</div></div>
     </div>
     <div>
       <div class="f photo"><label>Main photo</label>\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
@@ -273,7 +274,7 @@ function renderForm(msg) {
 let ed = null;
 function mountBody(blocks) {
   if (ed) ed.destroy();
-  ed = TT.makeEditor($("body"), blocks, touch, SITE);
+  ed = TT.makeEditor($("body"), blocks, touch, SITE, addPhotos, (m) => setTimeout(() => say("", m), 60));
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
     { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
   ed.on("transaction", paint); paint();
@@ -311,21 +312,33 @@ async function shrink(file) {
   cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
   return { blob: await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82)), w: cv.width, h: cv.height };
 }
-function askText(alt, caption) {
+function askText(alt, caption, which = "") {
   let a = alt || "";
-  do { a = prompt("Describe the photo for people who cannot see it (required):", a); if (a === null) return null; a = a.trim(); } while (!a);
+  do { a = prompt("Describe the photo" + which + " for people who cannot see it (required):", a); if (a === null) return null; a = a.trim(); } while (!a);
   const c = prompt("Caption, with the credit if you have one (optional):", caption || "");
   return { alt: a, caption: (c || "").trim() };
 }
-async function addPhoto(file) {
-  say("", "Uploading the photo…");
+/* photos pasted or dropped in: one after the other, each described, each placed where it landed */
+async function addPhotos(files, pos) {
+  // a photo dropped on a paragraph goes after that paragraph, never into the middle of its words
+  if (pos != null) { const $p = ed.state.doc.resolve(Math.min(pos, ed.state.doc.content.size)); pos = $p.depth ? $p.after(1) : pos; }
+  for (let i = 0; i < files.length; i++) {
+    const placed = await addPhoto(files[i], files.length > 1 ? \` (\${i + 1} of \${files.length})\` : "", pos);
+    if (placed && pos != null) pos += 1;                       // the next one goes after the one just placed
+  }
+}
+async function addPhoto(file, which = "", at = null) {
+  say("", "Uploading the photo" + which + "…");
   try {
     const { blob, w, h } = await shrink(file);
     const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
     const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
-    const t = askText(); if (!t) { say("", "Photo not added."); return; }
-    ed.chain().focus().setImage({ src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption }).run();
+    const t = askText("", "", which); if (!t) { say("", "Photo not added."); return false; }
+    const attrs = { src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption };
+    if (at != null) ed.chain().focus().insertContentAt(at, { type: "image", attrs }).run();
+    else ed.chain().focus().setImage(attrs).run();
     say("", "Photo added. Save to keep it.");
+    return true;
   } catch (e) { say("err", e.message || "That picture could not be read. Save it as a JPEG and try again."); }
 }
 /* the ⋯ menu on a photo in the article */
