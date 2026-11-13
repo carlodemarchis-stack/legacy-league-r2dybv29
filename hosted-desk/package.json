@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/sdk": "1.3.0",
     "@modelcontextprotocol/server": "2.3.1",
     "agents": "^0.29.0",
     "zod": "^4.4.3"
@@ -24,6 +25,8 @@
     "wrangler": "^4.105.0"
   },
   "scripts": {
-    "build:editor": "esbuild editor-src/tiptap-entry.js --bundle --minify --format=iife --global-name=TT --legal-comments=none --outfile=src/tiptap.bundle.txt"
+    "build:editor": "esbuild editor-src/tiptap-entry.js --bundle --minify --format=iife --global-name=TT --legal-comments=none --outfile=src/tiptap.bundle.txt",
+    "build:skill": "cp ../desk/skills/legacy-publish-story/SKILL.md src/skill.bundle.txt",
+    "build": "npm run -s build:editor && npm run -s build:skill"
   }
 }

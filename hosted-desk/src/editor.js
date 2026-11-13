@@ -54,6 +54,7 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap figure.ph{margin:0 0 1em;cursor:pointer}.tiptap figure.ph img{display:block;width:100%;border-radius:8px}
 .tiptap figure.ph figcaption{font-size:12px;color:var(--dim);margin-top:5px}
 .tiptap figure.ph.ProseMirror-selectednode img{outline:3px solid var(--acc);outline-offset:2px}
+.phbar[hidden]{display:none}
 .phbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 9px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);background:color-mix(in srgb,var(--acc) 8%,var(--panel))}
 .phbar span{flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phbar .btn{padding:4px 10px}
 .tiptap p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:var(--dim);float:left;height:0;pointer-events:none}
@@ -79,6 +80,22 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .hist .vp h2{margin:6px 0 8px;font-size:20px}.hist .vp .dek{color:var(--dim);margin:0 0 14px}
 .hist .vp .art{border-top:1px solid var(--line);padding-top:12px;line-height:1.6}.hist .vp .art p{margin:0 0 .8em}
 .hist .vp .art a{color:var(--acc)}.hist .vp img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:12px}
+/* Draft with AI: a chat panel over the right of the page */
+.ai{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--bg);border-left:1px solid var(--line);z-index:20;
+  display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.35)}
+.ai>header .model{font-size:11px;color:var(--dim);letter-spacing:.04em;text-transform:none}
+#aimsgs{flex:1;overflow-y:auto;padding:16px}
+.am{margin:0 0 14px;line-height:1.5;font-size:13.5px;white-space:pre-wrap}
+.am.u{background:var(--panel);border:1px solid var(--line);border-radius:12px 12px 4px 12px;padding:9px 12px;margin-left:40px}
+.am.a{padding:2px 2px}.am small{display:block;color:var(--dim);font-size:11px;margin-top:6px}
+.am.wait{color:var(--dim)}.am.err{color:var(--bad)}
+.prop{white-space:normal;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:var(--panel)}
+.prop h3{margin:0 0 6px;font-size:16px}.prop .dek{color:var(--dim);margin:0 0 8px}
+.prop .art{font-size:13px;line-height:1.55;max-height:260px;overflow-y:auto;border-top:1px solid var(--line);padding-top:8px}.prop .art p{margin:0 0 .6em}
+.prop .tags{font-size:11.5px;color:var(--dim);margin:8px 0}.prop .warn{font-size:12px;color:var(--acc);margin:6px 0}
+.aiform{border-top:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px}
+.aiform textarea{width:100%;min-height:76px;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel);resize:vertical;line-height:1.45}
+.aiform .row2{display:flex;align-items:center;gap:8px}.aiform .row2 .hint{flex:1;margin:0}
 .hist-inline{max-width:640px}.hist-inline h2{font-size:22px}.hist-inline .dek{color:var(--dim)}.hist-inline .art{border-top:1px solid var(--line);padding-top:12px;line-height:1.6}
 .hist-inline img{width:100%;max-height:280px;object-fit:cover;border-radius:10px;margin-bottom:12px}.hist-inline .tags{font-size:12px;color:var(--dim)}
 .hist .vp .tags{font-size:12px;color:var(--dim);margin:12px 0}
@@ -150,6 +167,7 @@ function pick(id) {
   show(id);
 }
 function show(id, quiet) {
+  closeAI(); aiChat = [];
   const found = stories.find((s) => s.id === id);
   cur = found ? structuredClone(found) : null;          // a copy: unsaved edits never touch the list
   dirty = false;
@@ -166,6 +184,7 @@ function renderForm(msg) {
   $("main").innerHTML = \`
   <div class="bar"><span class="msg" id="msg">\${s.id ? \`<span class="st \${st}">\${st}</span>\` : "New story, not saved yet"}</span>
     \${s.url ? \`<a class="btn" href="\${esc(s.url)}" target="_blank" rel="noopener">View on site ↗</a>\` : ""}
+    <button class="btn \${s.id ? "" : "pri"}" onclick="openAI()" title="Ask Claude Opus 5.5 for a headline, summary and article">✦ Draft with AI</button>
     <button class="btn" id="discard" onclick="discard()" \${s.id ? "hidden" : ""}>\${s.id ? "Discard changes" : "Cancel"}</button>
     \${s.id ? \`<button class="btn" onclick="openHistory()">History</button><button class="btn bad" onclick="del()">Delete</button>\` : ""}
     \${s.id && st === "published" ? \`<button class="btn" onclick="act('unpublish')">Unpublish</button>\` : ""}
@@ -352,6 +371,57 @@ function del() {
   if (!confirm("Delete this story for good?" + (statusOf(cur) === "published" ? " It also leaves the site at once." : "") + " It can be brought back from Deleted.")) return;
   run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
 }
+/* ------------------------------------------------ draft with AI */
+let aiChat = [];
+function openAI() {
+  if ($("ai")) { $("aiq").focus(); return; }
+  const box = document.createElement("div"); box.className = "ai"; box.id = "ai";
+  box.innerHTML = \`<header><h1>Draft with AI <span class="model">· Claude Opus 5.5</span></h1><button class="btn" onclick="closeAI()">Close</button></header>
+    <div id="aimsgs"></div>
+    <div class="aiform"><textarea id="aiq" placeholder="What is the story? e.g. Round 2 recap for Boston, focus on Quintero's eagle on 13. Paste notes or quotes too."></textarea>
+      <div class="row2"><p class="hint">It looks up the league's names, scores and stories. Nothing is saved until you apply the draft and press Save.</p>
+      <button class="btn pri" id="aisend" onclick="sendAI()">Send</button></div></div>\`;
+  document.body.appendChild(box);
+  $("aiq").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) sendAI(); });
+  renderAI(); $("aiq").focus();
+}
+function closeAI() { const a = $("ai"); if (a) a.remove(); }
+function renderAI(waiting, error) {
+  const EV = Object.fromEntries(ref.events.map((e) => [e.id, e]));
+  const names = (ids, map) => (ids || []).map((x) => map[x] ? map[x].name : null).filter(Boolean).join(", ");
+  $("aimsgs").innerHTML = (aiChat.length ? "" : '<div class="am a">Tell me what the story is about. I will check the board, the players and what is already published, then write a headline, a summary and the article for you to apply.</div>') +
+    aiChat.map((m, i) => m.role === "user" ? \`<div class="am u">\${esc(m.content)}</div>\` :
+      \`<div class="am a">\${esc(m.content)}\${m.proposal ? \`<div class="prop"><h3>\${esc(m.proposal.title)}</h3><p class="dek">\${esc(m.proposal.dek)}</p>
+        <div class="art">\${TT.fromMd(m.proposal.body.split(/\\n\\s*\\n/))}</div>
+        <div class="tags">\${[names(m.proposal.events, EV), names(m.proposal.cities, CITY), names(m.proposal.players, PLAYER)].filter(Boolean).join(" · ") || "No tags"}</div>
+        \${(m.proposal.not_verified || []).length ? \`<div class="warn">Not verified: \${esc(m.proposal.not_verified.join("; "))}</div>\` : ""}
+        <button class="btn pri" onclick="applyAI(\${i})">Apply to the story</button></div>\` : ""}
+        <small>\${m.cost != null ? "This answer cost about $" + m.cost.toFixed(3) : ""}</small></div>\`).join("") +
+    (waiting ? '<div class="am a wait">Looking things up and writing…</div>' : "") + (error ? \`<div class="am err">\${esc(error)}</div>\` : "");
+  $("aimsgs").scrollTop = $("aimsgs").scrollHeight;
+}
+async function sendAI() {
+  const q = $("aiq").value.trim(); if (!q || $("aisend").disabled) return;
+  aiChat.push({ role: "user", content: q }); $("aiq").value = ""; $("aisend").disabled = true; renderAI(true);
+  try {
+    const history = aiChat.map((m) => ({ role: m.role, content: m.role === "assistant" && m.proposal
+      ? m.content + "\\n\\n[Proposed draft]\\nHeadline: " + m.proposal.title + "\\nSummary: " + m.proposal.dek + "\\nArticle:\\n" + m.proposal.body : m.content }));
+    const j = await call("ai", { messages: history, current: cur ? { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "" } : null });
+    aiChat.push({ role: "assistant", content: j.reply, proposal: j.proposal, cost: j.cost });
+    renderAI();
+  } catch (e) { aiChat.pop(); $("aiq").value = q; renderAI(false, e.message); }
+  $("aisend").disabled = false;
+}
+function applyAI(i) {
+  const p = aiChat[i].proposal; if (!p || !cur) return;
+  $("title").value = p.title; $("dek").value = p.dek;
+  ed.commands.setContent(TT.fromMd(p.body.split(/\\n\\s*\\n/)));
+  if ((p.cities || []).length) document.querySelectorAll("#cities button").forEach((b) => b.classList.toggle("on", p.cities.includes(b.dataset.id)));
+  if ((p.events || []).length) document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", p.events.includes(b.dataset.id)));
+  if ((p.players || []).length) { cur.players = p.players.filter((id) => PLAYER[id]); paintPlayers(); }
+  touch(); say("", "Draft applied. Read it, change what you like, then Save.");
+}
+
 /* ------------------------------------------------ history */
 function versionHtml(v) {
   const names = (ids, map) => (ids || []).map((x) => map[x] ? map[x].name : x).join(", ");
@@ -415,7 +485,7 @@ $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
   if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
   else renderList(); };
-$("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
+$("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; closeAI(); aiChat = []; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {
   try {

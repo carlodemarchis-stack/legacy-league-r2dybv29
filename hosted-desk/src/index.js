@@ -16,7 +16,8 @@ import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
 import { editorPage } from "./editor.js";
 import TIPTAP from "./tiptap.bundle.txt";
-import { scoring } from "./scores.js";                   // the article field (Tiptap), see editor-src/
+import { scoring } from "./scores.js";
+import { draftWithAI, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
 
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
@@ -287,6 +288,45 @@ async function scores(env) {
   return { ...scoring(feed, ref.site), ref, feed, clock: now.slice(11, 16) || "14:20" };
 }
 
+/* What the desk can look up, as plain functions: Claude's connector and the editor's AI drafting use the same ones. */
+const LIVE_BOARD_DOC = "The team leaderboard as fans see it at a course time (HH:MM on day 2; leave it out for now). Positions, " +
+  "today, thru, total, league points and each city's best individual rounds today. final_at is when the last group " +
+  "finishes: ask for that time or later for the final board. Every score is strokes relative to par: negative is under par.";
+const CITY_ROUND_DOC = "Who is doing what for one city: each player's holes and score, how many of the team's counted scores " +
+  "each supplied, the team's score hole by hole, and notable holes (eagles, holes in one). Use it to name players " +
+  "in a story. clock = course time HH:MM on day 2 (leave out for now; round 1 is complete). A hole is firm once every " +
+  "player on the team has finished it; only firm holes are on the board. Scores are relative to par.";
+const lookups = (env) => ({
+  async leagueReference() {
+    const { ref, feed, clock } = await scores(env);
+    const site = ref.site;
+    return {
+      cities: site.cities.map((c) => ({ id: c.id, name: c.name, short: c.short, teams: c.teams,
+        captain: ref.player[c.captain] ? ref.player[c.captain].name : null, charity: c.charity })),
+      events: (site.schedule || []).map((e) => ({ id: e.id, name: e.name, venue: e.venue, start: e.start, end: e.end, status: e.status })),
+      rules: site.rules, scores_at: { event: feed.event.name, course_time: clock },
+    };
+  },
+  async findPlayers(query, city) {
+    const ref = await reference(env);
+    const cid = city ? ref.cityId(city) : null, q = String(query || "").trim().toLowerCase();
+    return ref.site.players.filter((p) => (!cid || p.city === cid) &&
+      [p.name, p.team, p.role, p.sport, ref.city[p.city] && ref.city[p.city].name].join(" ").toLowerCase().includes(q))
+      .slice(0, 25).map((p) => ({ id: p.id, name: p.name, city: ref.city[p.city].name, sport: p.sport, team: p.team, role: p.role, captain: p.captain }));
+  },
+  async liveBoard(clock) { const sc = await scores(env); return sc.board(clock || sc.clock); },
+  async cityRound(city, clock, round = 2) {
+    const sc = await scores(env), cid = sc.ref.cityId(city);
+    return { city: sc.ref.city[cid].name, ...sc.cityRound(cid, clock || sc.clock, round) };
+  },
+  async listStories(status = "all", limit = 30) {
+    const stories = (await readJson(env, RECORDS)).data || [];
+    return stories.filter((s) => status === "all" || (s.status || "published") === status)
+      .sort((a, b) => ((a.at || "") < (b.at || "") ? 1 : -1)).slice(0, limit).map(summary);
+  },
+  async getStory(id) { return find((await readJson(env, RECORDS)).data || [], id); },
+});
+
 /* ------------------------------------------------------------------ the tools */
 
 function createServer(env, door) {
@@ -301,63 +341,37 @@ function createServer(env, door) {
       "Read a story with get_story before changing it. The site and the apps are in English only.",
   });
 
+  const look = lookups(env);
   server.registerTool("league_reference", {
     description: "The league at a glance: cities (id, name, code, heritage teams, captain, charity), the events of the " +
       "season (id, name, dates, status), the scoring rules, and the course time the scores are at now. Call this first.",
     inputSchema: z.object({}),
-  }, tool(async () => {
-    const { ref, feed, clock } = await scores(env);
-    const site = ref.site;
-    return {
-      cities: site.cities.map((c) => ({ id: c.id, name: c.name, short: c.short, teams: c.teams,
-        captain: ref.player[c.captain] ? ref.player[c.captain].name : null, charity: c.charity })),
-      events: (site.schedule || []).map((e) => ({ id: e.id, name: e.name, venue: e.venue, start: e.start, end: e.end, status: e.status })),
-      rules: site.rules, scores_at: { event: feed.event.name, course_time: clock },
-    };
-  }));
+  }, tool(() => look.leagueReference()));
 
   server.registerTool("find_players", {
     description: "Find players by name, former team, role or sport, optionally within one city (name, code or id).",
     inputSchema: z.object({ query: z.string(), city: z.string().optional() }),
-  }, tool(async ({ query, city }) => {
-    const ref = await reference(env);
-    const cid = city ? ref.cityId(city) : null, q = query.trim().toLowerCase();
-    return ref.site.players.filter((p) => (!cid || p.city === cid) &&
-      [p.name, p.team, p.role, p.sport, ref.city[p.city] && ref.city[p.city].name].join(" ").toLowerCase().includes(q))
-      .slice(0, 25).map((p) => ({ id: p.id, name: p.name, city: ref.city[p.city].name, sport: p.sport, team: p.team, role: p.role, captain: p.captain }));
-  }));
+  }, tool(({ query, city }) => look.findPlayers(query, city)));
 
   server.registerTool("live_board", {
-    description: "The team leaderboard as fans see it at a course time (HH:MM on day 2; leave it out for now). Positions, " +
-      "today, thru, total, league points and each city's best individual rounds today. final_at is when the last group " +
-      "finishes: ask for that time or later for the final board. Every score is strokes relative to par: negative is under par.",
+    description: LIVE_BOARD_DOC,
     inputSchema: z.object({ clock: z.string().optional() }),
-  }, tool(async ({ clock }) => { const sc = await scores(env); return sc.board(clock || sc.clock); }));
+  }, tool(({ clock }) => look.liveBoard(clock)));
 
   server.registerTool("city_round", {
-    description: "Who is doing what for one city: each player's holes and score, how many of the team's counted scores " +
-      "each supplied, the team's score hole by hole, and notable holes (eagles, holes in one). Use it to name players " +
-      "in a story. clock = course time HH:MM on day 2 (leave out for now; round 1 is complete). A hole is firm once every " +
-      "player on the team has finished it; only firm holes are on the board. Scores are relative to par.",
+    description: CITY_ROUND_DOC,
     inputSchema: z.object({ city: z.string(), clock: z.string().optional(), round: z.number().int().default(2) }),
-  }, tool(async ({ city, clock, round }) => {
-    const sc = await scores(env), cid = sc.ref.cityId(city);
-    return { city: sc.ref.city[cid].name, ...sc.cityRound(cid, clock || sc.clock, round) };
-  }));
+  }, tool(({ city, clock, round }) => look.cityRound(city, clock, round)));
 
   server.registerTool("list_stories", {
     description: "Stories, newest first. status: draft | scheduled | published | all.",
     inputSchema: z.object({ status: z.string().default("all"), limit: z.number().int().default(30) }),
-  }, tool(async ({ status, limit }) => {
-    const stories = (await readJson(env, RECORDS)).data || [];
-    return stories.filter((s) => status === "all" || (s.status || "published") === status)
-      .sort((a, b) => ((a.at || "") < (b.at || "") ? 1 : -1)).slice(0, limit).map(summary);
-  }));
+  }, tool(({ status, limit }) => look.listStories(status, limit)));
 
   server.registerTool("get_story", {
     description: "One story in full: every field, the article text, and its photo (with photo_credit when the editor gave one).",
     inputSchema: z.object({ id: z.string() }),
-  }, tool(async ({ id }) => find((await readJson(env, RECORDS)).data || [], id)));
+  }, tool(({ id }) => look.getStory(id)));
 
   server.registerTool("draft_story", {
     description:
@@ -672,6 +686,20 @@ async function editorApi(request, env, path) {
       });
     }
     if (request.method !== "POST") return json({ error: "Not found." }, 404);
+    if (path === "ai") {                                      // Draft with AI: a proposal for the form, nothing is saved
+      try {
+        const out = await draftWithAI(env, lookups(env), await request.json());
+        if (out.proposal) {                                     // tags may come back as names: the form needs ids
+          const ref = await reference(env);
+          const ids = (list, fn) => [...new Set((list || []).map((x) => { try { return fn(String(x)); } catch (e) { return null; } }).filter(Boolean))];
+          out.proposal.cities = ids(out.proposal.cities, ref.cityId);
+          out.proposal.players = ids(out.proposal.players, ref.playerId);
+          out.proposal.events = ids(out.proposal.events, ref.eventId);
+        }
+        return json(out);
+      }
+      catch (e) { const [status, error] = aiError(e); return json({ error }, status); }
+    }
     if (path === "upload") {                                  // a photo for the article, placed by the editor page itself
       const up = await storePhoto(env, request, "article");
       return up.error ? json({ error: up.error }, up.status) : json({ ok: true, ...up });
