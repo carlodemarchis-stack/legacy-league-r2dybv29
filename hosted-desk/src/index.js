@@ -152,7 +152,7 @@ async function deletedStories(env) {
 }
 /* Make an earlier version the story again. The story keeps its status, address, counts and publishing record;
    everything it says and shows comes back. A deleted story comes back as a draft. */
-const KEEP_ON_RESTORE = ["id", "status", "slug", "likes", "comments", "created_at", "created_by", "published_at", "published_by", "scheduled_at"];
+const KEEP_ON_RESTORE = ["id", "status", "slug", "likes", "comments", "created_at", "created_by", "published_at", "published_by", "scheduled_at", "ai_chats"];
 async function restoreVersion(env, id, version, by, check) {
   if (!/^[\w-]+$/.test(version)) fail("No such version.");
   const old = (await readJson(env, `${HISTORY}${id}/${version}.json`)).data || fail(`No version '${version}' of story '${id}'. Use story_history.`);
@@ -189,7 +189,7 @@ async function publishIndex(env, stories) {
     const lead = s.photo || s.photos[0];
     if (!(s.photo_w && s.photo_h) && sizes[lead]) [s.photo_w, s.photo_h] = sizes[lead];
     s.body_photos = bodyPhotos(s.body).length;              // the reader keeps a story with photos in its text to one column
-    delete s.photo_auto; delete s.photo_inbox;
+    delete s.photo_auto; delete s.photo_inbox; delete s.ai_chats;       // desk bookkeeping, not for the site
     s.words = plain([s.dek || "", ...(s.body || [])].join(" ")).split(/\s+/).filter(Boolean).length;
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
@@ -659,6 +659,8 @@ const stampOf = async (s) => (await sha1(JSON.stringify(s))).slice(0, 12);
 class Conflict extends Error {}
 async function editorApi(request, env, path) {
   const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  // who is working: the sign-in email once the Studio is behind Cloudflare Access, until then the name the editor gave
+  const who = (request.headers.get("cf-access-authenticated-user-email") || header(request, "x-editor", 60) || "editor").trim();
   const withStamp = async (s) => ({ ...s, stamp: await stampOf(s), url: s.slug && isLive(s) ? `${SITE_ROOT}/stories/${s.slug}` : null });
   try {
     if (request.method === "GET" && path === "stories") {
@@ -676,6 +678,7 @@ async function editorApi(request, env, path) {
       if (!/^[a-z]\d+$/.test(id) || !/^[\w-]+$/.test(v)) fail("No such version.");
       return json({ story: (await readJson(env, `${HISTORY}${id}/${v}.json`)).data || fail("No such version.") });
     }
+    if (request.method === "GET" && path === "usage") return json(await aiUsage(env));
     if (request.method === "GET" && path === "deleted") return json({ deleted: await deletedStories(env) });
     if (request.method === "GET" && path === "ref") {
       const ref = await reference(env);
@@ -688,7 +691,8 @@ async function editorApi(request, env, path) {
     if (request.method !== "POST") return json({ error: "Not found." }, 404);
     if (path === "ai") {                                      // Draft with AI: a proposal for the form, nothing is saved
       try {
-        const out = await draftWithAI(env, lookups(env), await request.json());
+        const body = await request.json();
+        const out = await draftWithAI(env, lookups(env), body);
         if (out.proposal) {                                     // tags may come back as names: the form needs ids
           const ref = await reference(env);
           const ids = (list, fn) => [...new Set((list || []).map((x) => { try { return fn(String(x)); } catch (e) { return null; } }).filter(Boolean))];
@@ -696,6 +700,9 @@ async function editorApi(request, env, path) {
           out.proposal.players = ids(out.proposal.players, ref.playerId);
           out.proposal.events = ids(out.proposal.events, ref.eventId);
         }
+        await logAI(env, { user: who, story: /^[a-z]\d+$/.test(body.story_id || "") ? body.story_id : null, chat: String(body.chat || "").slice(0, 40),
+          model: out.model, usage: out.usage, cost: out.cost, asked: String((body.messages || []).slice(-1)[0]?.content || "").slice(0, 200),
+          proposed: out.proposal ? out.proposal.title : null });
         return json(out);
       }
       catch (e) { const [status, error] = aiError(e); return json({ error }, status); }
@@ -722,8 +729,9 @@ async function editorApi(request, env, path) {
       const { out, stories } = await change(env, async (list) => {
         const main = f.photo && /^content\/photos\//.test(f.photo) ? f.photo : undefined;
         if (!b.id) {
-          const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, "editor");
+          const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, who);
           if (main && f.photo_w && f.photo_h) { st.photo_w = +f.photo_w; st.photo_h = +f.photo_h; }
+          linkChat(st, b.ai_chat);
           return st;
         }
         const s = find(list, b.id);
@@ -744,9 +752,10 @@ async function editorApi(request, env, path) {
           if (f.photo_w && f.photo_h) { s.photo_w = +f.photo_w; s.photo_h = +f.photo_h; } else { delete s.photo_w; delete s.photo_h; }
         }
         adoptFirstPhoto(s);
-        s.updated_by = "editor"; s.updated_at = nowIso();
+        s.updated_by = who; s.updated_at = nowIso();
+        linkChat(s, b.ai_chat);
         return s;
-      }, "editor");
+      }, who);
       if (isLive(out)) await publishIndex(env, stories);
       return json({ ok: true, story: await withStamp(out) });
     }
@@ -755,15 +764,15 @@ async function editorApi(request, env, path) {
         const s = find(list, b.id);
         await check(s);
         wasLive = isLive(s);
-        if (path === "publish") { s.status = "published"; delete s.scheduled_at; s.published_by = "editor"; s.published_at = nowIso(); }
+        if (path === "publish") { s.status = "published"; delete s.scheduled_at; s.published_by = who; s.published_at = nowIso(); }
         else s.status = "draft";
         return s;
-      }, "editor");
+      }, who);
       if (isLive(out) || wasLive) await publishIndex(env, stories);
       return json({ ok: true, story: await withStamp(out) });
     }
     if (path === "restore") {
-      const out = await restoreVersion(env, b.id, String(b.version || ""), "editor", b.deleted ? null : check);
+      const out = await restoreVersion(env, b.id, String(b.version || ""), who, b.deleted ? null : check);
       return json({ ok: true, story: await withStamp(out) });
     }
     if (path === "delete") {
@@ -772,7 +781,7 @@ async function editorApi(request, env, path) {
         await check(s);
         wasLive = isLive(s);
         list.splice(list.indexOf(s), 1);
-      }, "editor");
+      }, who);
       if (wasLive) await publishIndex(env, stories);
       return json({ ok: true, deleted: b.id });
     }
@@ -780,6 +789,53 @@ async function editorApi(request, env, path) {
   } catch (e) {
     return json({ error: String(e.message || e) }, e instanceof Conflict ? 409 : 400);
   }
+}
+
+/* ------------------------------------------------------------------ AI usage log */
+
+/* Every Draft-with-AI request is one file: ai/log/<YYYY-MM>/<time>.json, who asked, for which story, tokens and cost
+   in its metadata so the report reads only the listing. A chat started on a story not saved yet is tied to the story
+   when it is first saved (the story keeps the ids of its chats in ai_chats). */
+const linkChat = (s, chat) => {
+  chat = String(chat || "").slice(0, 40);
+  if (chat && /^[\w-]+$/.test(chat) && !(s.ai_chats || []).includes(chat)) s.ai_chats = [...(s.ai_chats || []), chat];
+};
+async function logAI(env, e) {
+  const at = new Date().toISOString();
+  await env.CONTENT.put(`ai/log/${at.slice(0, 7)}/${at.replace(/[:.]/g, "-")}-${crypto.randomUUID().slice(0, 6)}.json`, JSON.stringify({ at, ...e }), {
+    httpMetadata: { contentType: "application/json" },
+    customMetadata: { at: at.slice(0, 19), user: e.user, story: e.story || "", chat: e.chat || "", cost: String(e.cost || 0),
+      tokens_in: String((e.usage?.input || 0) + (e.usage?.cache_read || 0) + (e.usage?.cache_write || 0)), tokens_out: String(e.usage?.output || 0),
+      asked: (e.asked || "").slice(0, 120) },
+  });
+}
+async function aiUsage(env) {
+  const rows = [];
+  let cursor;
+  do {
+    const page = await env.CONTENT.list({ prefix: "ai/log/", include: ["customMetadata"], cursor });
+    for (const o of page.objects) rows.push(o.customMetadata || {});
+    cursor = page.truncated ? page.cursor : null;
+  } while (cursor);
+  const stories = (await readJson(env, RECORDS)).data || [];
+  const byChat = {};
+  for (const s of stories) for (const c of s.ai_chats || []) byChat[c] = s.id;
+  const title = Object.fromEntries(stories.map((s) => [s.id, s.title]));
+  const add = (map, key, r) => { const m = (map[key] = map[key] || { requests: 0, cost: 0 }); m.requests++; m.cost += +r.cost || 0; };
+  const users = {}, articles = {}, months = {};
+  let total = 0;
+  for (const r of rows) {
+    r.story = r.story || byChat[r.chat] || "";
+    add(users, r.user || "unknown", r); add(articles, r.story || "(never saved)", r); add(months, (r.at || "").slice(0, 7), r);
+    total += +r.cost || 0;
+  }
+  const round = (m) => Object.entries(m).map(([k, v]) => ({ key: k, requests: v.requests, cost: Math.round(v.cost * 1000) / 1000 })).sort((a, b) => b.cost - a.cost);
+  return {
+    total: { requests: rows.length, cost: Math.round(total * 1000) / 1000 },
+    by_user: round(users), by_month: round(months).sort((a, b) => (a.key < b.key ? 1 : -1)),
+    by_article: round(articles).map((a) => ({ ...a, title: title[a.key] || null })),
+    recent: rows.sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 40).map((r) => ({ ...r, title: title[r.story] || null, cost: +r.cost })),
+  };
 }
 
 /* Claude's connector screen signs in before it connects, and stops if the server has no sign-in service.

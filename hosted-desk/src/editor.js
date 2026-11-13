@@ -3,8 +3,8 @@
 
 /* The Content Studio's version, shown in its top bar. Raise it with every change editors can see:
    0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
-   0.6 photo menu on the photo, the name Content Studio and this number */
-export const STUDIO_VERSION = "0.6.0";
+   0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log */
+export const STUDIO_VERSION = "0.7.0";
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -17,7 +17,12 @@ export function editorPage(site) {
 button,input,select,textarea{font:inherit;color:inherit}
 header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line)}
 header h1{margin:0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}header h1 span{color:var(--dim);font-weight:400}
-header a{margin-left:auto;color:var(--dim);font-size:12px}
+header a{color:var(--dim);font-size:12px}
+header .hright{margin-left:auto;display:flex;align-items:center;gap:8px}
+.usage table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 18px}
+.usage th,.usage td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}.usage th{color:var(--dim);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.usage td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.usage h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px}
+.usage .big{font-size:26px;font-weight:700}
 header .ver{font-size:10.5px;letter-spacing:.06em;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-variant-numeric:tabular-nums}
 .wrap{display:grid;grid-template-columns:340px minmax(0,1fr);height:calc(100dvh - 49px)}
 aside{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -118,7 +123,9 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .meta{font-size:11px;color:var(--dim);line-height:1.7;margin-top:14px}
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
-<header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span><a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></header>
+<header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span>
+  <span class="hright"><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
+  <a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></span></header>
 <div class="wrap">
   <aside>
     <div class="tools">
@@ -144,8 +151,20 @@ const statusOf = (s) => s.status || "published";
 const shown = (s, t) => String(t || "").replace(/\{p0\}/g, PLAYER[(s.players || [])[0]] ? PLAYER[s.players[0]].name : "")
   .replace(/\{c0\}/g, CITY[(s.cities || [])[0]] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
 const when = (iso) => iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+/* who is working: asked once, kept in this browser; replaced by the sign-in once the Studio has one */
+let EDITOR = "";
+try { EDITOR = localStorage.getItem("studio-editor") || ""; } catch (e) {}
+function paintWho() { $("whobtn").textContent = EDITOR ? "👤 " + EDITOR : "👤 Your name"; }
+function askName() {
+  const n = prompt("Your name, as it should appear on the changes you make and the AI you use:", EDITOR);
+  if (n === null) return;
+  EDITOR = n.trim().slice(0, 60);
+  try { localStorage.setItem("studio-editor", EDITOR); } catch (e) {}
+  paintWho();
+}
 async function call(path, body) {
-  const r = await fetch(API + path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+  const who = { "x-editor": encodeURIComponent(EDITOR || "") };
+  const r = await fetch(API + path, body ? { method: "POST", headers: { "content-type": "application/json", ...who }, body: JSON.stringify(body) } : { headers: who });
   const j = await r.json().catch(() => ({ error: "The desk did not answer." }));
   if (!r.ok) { const e = new Error(j.error || "Something went wrong."); e.conflict = r.status === 409; throw e; }
   return j;
@@ -177,7 +196,7 @@ function pick(id) {
   show(id);
 }
 function show(id, quiet) {
-  closeAI(); aiChat = [];
+  closeAI(); aiChat = []; aiChatId = null;
   const found = stories.find((s) => s.id === id);
   cur = found ? structuredClone(found) : null;          // a copy: unsaved edits never touch the list
   dirty = false;
@@ -383,7 +402,7 @@ async function run(fn, busy) {
 function save() {
   const live = cur.id && statusOf(cur) === "published";
   run(async () => {
-    const j = await call("save", { id: cur.id, stamp: cur.stamp, fields: fields() });
+    const j = await call("save", { id: cur.id, stamp: cur.stamp, fields: fields(), ai_chat: aiChatId });
     dirty = false; await load(j.story.id); renderForm(["ok", live ? "Saved. The site shows the change on its next load." : "Draft saved."]);
   }, "Saving…");
 }
@@ -401,7 +420,7 @@ function del() {
   run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
 }
 /* ------------------------------------------------ draft with AI */
-let aiChat = [];
+let aiChat = [], aiChatId = null;                            // the chat's id ties its cost to the story it becomes
 function openAI() {
   if ($("ai")) { $("aiq").focus(); return; }
   const box = document.createElement("div"); box.className = "ai"; box.id = "ai";
@@ -431,11 +450,12 @@ function renderAI(waiting, error) {
 }
 async function sendAI() {
   const q = $("aiq").value.trim(); if (!q || $("aisend").disabled) return;
+  if (!aiChatId) aiChatId = crypto.randomUUID().slice(0, 18);
   aiChat.push({ role: "user", content: q }); $("aiq").value = ""; $("aisend").disabled = true; renderAI(true);
   try {
     const history = aiChat.map((m) => ({ role: m.role, content: m.role === "assistant" && m.proposal
       ? m.content + "\\n\\n[Proposed draft]\\nHeadline: " + m.proposal.title + "\\nSummary: " + m.proposal.dek + "\\nArticle:\\n" + m.proposal.body : m.content }));
-    const j = await call("ai", { messages: history, current: cur ? { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "" } : null });
+    const j = await call("ai", { story_id: cur && cur.id, chat: aiChatId, messages: history, current: cur ? { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "" } : null });
     aiChat.push({ role: "assistant", content: j.reply, proposal: j.proposal, cost: j.cost });
     renderAI();
   } catch (e) { aiChat.pop(); $("aiq").value = q; renderAI(false, e.message); }
@@ -449,6 +469,27 @@ function applyAI(i) {
   if ((p.events || []).length) document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", p.events.includes(b.dataset.id)));
   if ((p.players || []).length) { cur.players = p.players.filter((id) => PLAYER[id]); paintPlayers(); }
   touch(); say("", "Draft applied. Read it, change what you like, then Save.");
+}
+
+/* ------------------------------------------------ AI usage */
+function closeUsage() { const u = $("usage"); if (u) u.parentNode.removeChild(u); }
+async function openUsage() {
+  closeHistory(); closeUsage();
+  const box = document.createElement("div"); box.className = "ai usage"; box.id = "usage";
+  box.innerHTML = '<header><h1>AI usage <span class="model">· Draft with AI, Claude Opus 5.5</span></h1><button class="btn" onclick="closeUsage()">Close</button></header><div id="ubody" style="flex:1;overflow-y:auto;padding:16px 18px"><div class="empty">Loading…</div></div>';
+  document.body.appendChild(box);
+  try {
+    const u = await call("usage");
+    const $$ = (n) => "$" + (+n).toFixed(n < 1 ? 3 : 2);
+    const table = (head, rows) => rows.length ? \`<table><tr>\${head.map((h, i) => \`<th\${i ? ' class="n"' : ""}>\${h}</th>\`).join("")}</tr>\${rows.join("")}</table>\` : '<p class="hint">Nothing yet.</p>';
+    const art = (r) => r.title ? esc(shown(stories.find((s) => s.id === r.key || s.id === r.story) || {}, r.title)) : esc(r.key || r.story || "(never saved)");
+    $("ubody").innerHTML = \`
+      <div class="big">\${$$(u.total.cost)}</div><p class="hint">\${u.total.requests} AI request\${u.total.requests === 1 ? "" : "s"} in all, paid on the league's Anthropic account.</p>
+      <h3>By person</h3>\${table(["Person", "Requests", "Cost"], u.by_user.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
+      <h3>By article</h3>\${table(["Article", "Requests", "Cost"], u.by_article.map((r) => \`<tr><td>\${art(r)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
+      <h3>By month</h3>\${table(["Month", "Requests", "Cost"], u.by_month.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
+      <h3>Latest requests</h3>\${table(["When · who · article", "", "Cost"], u.recent.map((r) => \`<tr><td>\${esc(when(r.at))} · \${esc(r.user)} · \${r.title ? art(r) : esc(r.story || "(never saved)")}<br><small style="color:var(--dim)">\${esc(r.asked || "")}</small></td><td></td><td class="n">\${$$(r.cost)}</td></tr>\`))}\`;
+  } catch (e) { $("ubody").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
 }
 
 /* ------------------------------------------------ history */
@@ -514,9 +555,11 @@ $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
   if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
   else renderList(); };
-$("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; closeAI(); aiChat = []; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
+$("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; closeAI(); aiChat = []; aiChatId = null; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {
+  paintWho();
+  if (!EDITOR) setTimeout(askName, 400);
   try {
     ref = await call("ref");
     CITY = Object.fromEntries(ref.cities.map((c) => [c.id, c])); PLAYER = Object.fromEntries(ref.players.map((p) => [p.id, p]));
