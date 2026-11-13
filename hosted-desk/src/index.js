@@ -15,7 +15,8 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
 import { editorPage } from "./editor.js";
-import TIPTAP from "./tiptap.bundle.txt";                   // the article field (Tiptap), see editor-src/
+import TIPTAP from "./tiptap.bundle.txt";
+import { scoring } from "./scores.js";                   // the article field (Tiptap), see editor-src/
 
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
@@ -231,7 +232,7 @@ async function reference(env) {
     const e = events.find((e) => e.id === x || e.name.toLowerCase() === x) || events.filter((e) => e.name.toLowerCase().includes(x)).find((e, i, all) => all.length === 1);
     return e ? e.id : fail(`Unknown event '${x}'. Events: ` + events.map((e) => `${e.name} (${e.id})`).join(", "));
   };
-  return { city, player, cityId, playerId, event, eventId };
+  return { site, city, player, cityId, playerId, event, eventId };
 }
 
 async function pickPhoto(env, seed) {
@@ -277,6 +278,15 @@ const tool = (fn) => async (args) => {
   try { return reply(await fn(args)); } catch (e) { return { isError: true, content: [{ type: "text", text: String(e.message || e) }] }; }
 };
 
+/* The scores: the board and one city's round, from the feed in the store. The course time defaults to the demo's
+   current time (desk/config.json), where the site opens. */
+async function scores(env) {
+  const feed = (await readJson(env, "scores/feed.json")).data || fail("The store has no scoring feed yet (scores/feed.json).");
+  const ref = await reference(env);
+  const now = ((await readJson(env, "desk/config.json")).data || {}).now || feed.generated_at || "";
+  return { ...scoring(feed, ref.site), ref, feed, clock: now.slice(11, 16) || "14:20" };
+}
+
 /* ------------------------------------------------------------------ the tools */
 
 function createServer(env, door) {
@@ -286,8 +296,54 @@ function createServer(env, door) {
       "Publishing is public at once: the site and the app show the story on their next load. So ask the editor " +
       "before publish_story, and before changing, unpublishing or deleting a story that is already published. " +
       "Every published story has its own public address (url in its summary): give it to the editor after publishing. " +
+      "Use league_reference and find_players for names, live_board when a story quotes scores and city_round to " +
+      "name the players behind them; never state a score from memory. " +
       "Read a story with get_story before changing it. The site and the apps are in English only.",
   });
+
+  server.registerTool("league_reference", {
+    description: "The league at a glance: cities (id, name, code, heritage teams, captain, charity), the events of the " +
+      "season (id, name, dates, status), the scoring rules, and the course time the scores are at now. Call this first.",
+    inputSchema: z.object({}),
+  }, tool(async () => {
+    const { ref, feed, clock } = await scores(env);
+    const site = ref.site;
+    return {
+      cities: site.cities.map((c) => ({ id: c.id, name: c.name, short: c.short, teams: c.teams,
+        captain: ref.player[c.captain] ? ref.player[c.captain].name : null, charity: c.charity })),
+      events: (site.schedule || []).map((e) => ({ id: e.id, name: e.name, venue: e.venue, start: e.start, end: e.end, status: e.status })),
+      rules: site.rules, scores_at: { event: feed.event.name, course_time: clock },
+    };
+  }));
+
+  server.registerTool("find_players", {
+    description: "Find players by name, former team, role or sport, optionally within one city (name, code or id).",
+    inputSchema: z.object({ query: z.string(), city: z.string().optional() }),
+  }, tool(async ({ query, city }) => {
+    const ref = await reference(env);
+    const cid = city ? ref.cityId(city) : null, q = query.trim().toLowerCase();
+    return ref.site.players.filter((p) => (!cid || p.city === cid) &&
+      [p.name, p.team, p.role, p.sport, ref.city[p.city] && ref.city[p.city].name].join(" ").toLowerCase().includes(q))
+      .slice(0, 25).map((p) => ({ id: p.id, name: p.name, city: ref.city[p.city].name, sport: p.sport, team: p.team, role: p.role, captain: p.captain }));
+  }));
+
+  server.registerTool("live_board", {
+    description: "The team leaderboard as fans see it at a course time (HH:MM on day 2; leave it out for now). Positions, " +
+      "today, thru, total, league points and each city's best individual rounds today. final_at is when the last group " +
+      "finishes: ask for that time or later for the final board. Every score is strokes relative to par: negative is under par.",
+    inputSchema: z.object({ clock: z.string().optional() }),
+  }, tool(async ({ clock }) => { const sc = await scores(env); return sc.board(clock || sc.clock); }));
+
+  server.registerTool("city_round", {
+    description: "Who is doing what for one city: each player's holes and score, how many of the team's counted scores " +
+      "each supplied, the team's score hole by hole, and notable holes (eagles, holes in one). Use it to name players " +
+      "in a story. clock = course time HH:MM on day 2 (leave out for now; round 1 is complete). A hole is firm once every " +
+      "player on the team has finished it; only firm holes are on the board. Scores are relative to par.",
+    inputSchema: z.object({ city: z.string(), clock: z.string().optional(), round: z.number().int().default(2) }),
+  }, tool(async ({ city, clock, round }) => {
+    const sc = await scores(env), cid = sc.ref.cityId(city);
+    return { city: sc.ref.city[cid].name, ...sc.cityRound(cid, clock || sc.clock, round) };
+  }));
 
   server.registerTool("list_stories", {
     description: "Stories, newest first. status: draft | scheduled | published | all.",

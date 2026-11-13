@@ -51,6 +51,9 @@ def collect():
     ui = {}                                                    # English only: no interface translations
     rev, pack = build.site_content(content, ui)
     objects[f"site/site.{rev}.json"] = json.dumps({"rev": rev, **pack}, ensure_ascii=False).encode()
+    # the scoring feed, as the provider sends it: the hosted desk computes the board from it (live_board, city_round).
+    # In production the scoring service writes this from Golf Genius; for the demo it is the replay fixture.
+    objects["scores/feed.json"] = (ROOT / "data/feed.json").read_bytes()
 
     def photo(path):
         if not isinstance(path, str) or not path.startswith("img/"):
