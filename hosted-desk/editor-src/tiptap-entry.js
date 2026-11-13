@@ -31,10 +31,20 @@ export const photoMd = (path, alt, caption) => `![${String(alt || "").replace(/[
 const Photo = Image.extend({
   parseHTML() { return [{ tag: "img[src]", getAttrs: (el) => (toPath(el.getAttribute("src")) ? null : false) }]; },
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, getPos }) => {
       const fig = document.createElement("figure"), img = document.createElement("img"), cap = document.createElement("figcaption");
-      fig.className = "ph"; fig.append(img, cap);
-      const paint = (n) => { img.src = n.attrs.src; img.alt = n.attrs.alt || ""; cap.textContent = n.attrs.title || ""; cap.hidden = !n.attrs.title; };
+      // a ⋯ button on the photo opens the page's photo menu (edit text, use as main photo, remove)
+      const more = document.createElement("button");
+      more.type = "button"; more.className = "ph-more"; more.textContent = "⋯"; more.contentEditable = "false"; more.title = "Photo options";
+      more.addEventListener("mousedown", (e) => e.preventDefault());
+      more.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const r = more.getBoundingClientRect();
+        window.dispatchEvent(new CustomEvent("photo-menu", { detail: { pos: getPos(), x: r.right, y: r.bottom } }));
+      });
+      fig.className = "ph"; fig.append(img, more, cap);
+      const paint = (n) => { img.src = n.attrs.src; img.alt = n.attrs.alt || ""; cap.textContent = n.attrs.title || ""; cap.hidden = !n.attrs.title;
+        fig.classList.toggle("nodesc", !n.attrs.alt); };
       paint(node);
       return { dom: fig, update: (n) => { if (n.type !== node.type) return false; paint(n); return true; } };
     };

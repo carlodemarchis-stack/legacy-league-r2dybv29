@@ -51,12 +51,16 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap h2{font-size:17px;margin:1.2em 0 .5em}
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
-.tiptap figure.ph{margin:0 0 1em;cursor:pointer}.tiptap figure.ph img{display:block;width:100%;border-radius:8px}
+.tiptap figure.ph{margin:0 0 1em;cursor:pointer;position:relative}
+.tiptap figure.ph .ph-more{position:absolute;top:8px;right:8px;width:34px;height:28px;border-radius:8px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
+.tiptap figure.ph .ph-more:hover{background:rgba(0,0,0,.8)}
+.tiptap figure.ph.nodesc .ph-more{box-shadow:0 0 0 2px var(--bad)}
+.pmenu{position:fixed;z-index:30;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.pmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:none;cursor:pointer;font-size:13px}
+.pmenu button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}.pmenu button.bad{color:var(--bad)}
+.pmenu .note{font-size:11px;color:var(--bad);padding:4px 10px 6px}.tiptap figure.ph img{display:block;width:100%;border-radius:8px}
 .tiptap figure.ph figcaption{font-size:12px;color:var(--dim);margin-top:5px}
 .tiptap figure.ph.ProseMirror-selectednode img{outline:3px solid var(--acc);outline-offset:2px}
-.phbar[hidden]{display:none}
-.phbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 9px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);background:color-mix(in srgb,var(--acc) 8%,var(--panel))}
-.phbar span{flex:1 1 200px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.phbar .btn{padding:4px 10px}
 .tiptap p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:var(--dim);float:left;height:0;pointer-events:none}
 #title{font-size:20px;font-weight:700}
 .hint{font-size:11px;color:var(--dim);margin-top:4px}
@@ -200,8 +204,7 @@ function renderForm(msg) {
           <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
           <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button>
           <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><input type="file" id="pfile" accept="image/*" hidden></div>
-          <div class="phbar" id="phbar" hidden><span id="phinfo"></span><button type="button" class="btn" onclick="editPhoto()">Edit text</button>
-            <button type="button" class="btn" onclick="mainFromPhoto()">Use as main photo</button><button type="button" class="btn bad" onclick="ed.chain().focus().deleteSelection().run()">Remove</button></div>
+
           <div id="body"></div></div>
         <div class="hint">Subheadings, bold, italic, links, lists and photos. The site and the app set the style.</div></div>
     </div>
@@ -248,11 +251,7 @@ function mountBody(blocks) {
   ed = TT.makeEditor($("body"), blocks, touch, SITE);
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
     { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
-  const photoBar = () => {
-    const on = ed.isActive("image"); $("phbar").hidden = !on;
-    if (on) { const a = ed.getAttributes("image"); $("phinfo").textContent = (a.title || "No caption") + " · " + (a.alt ? "described" : "NOT DESCRIBED"); }
-  };
-  ed.on("transaction", () => { paint(); photoBar(); }); paint();
+  ed.on("transaction", paint); paint();
   $("pfile").onchange = () => { const f = $("pfile").files[0]; $("pfile").value = ""; if (f) addPhoto(f); };
   $("tb").onmousedown = (e) => e.preventDefault();            // keep the text selected while a button is pressed
   $("tb").onclick = (e) => { const b = e.target.closest("button"); if (b) command(b.dataset.c); };
@@ -304,6 +303,30 @@ async function addPhoto(file) {
     say("", "Photo added. Save to keep it.");
   } catch (e) { say("err", e.message || "That picture could not be read. Save it as a JPEG and try again."); }
 }
+/* the ⋯ menu on a photo in the article */
+function closePhotoMenu() { const m = $("pmenu"); if (m) m.remove(); }
+addEventListener("photo-menu", (e) => {
+  closePhotoMenu();
+  const { pos, x, y } = e.detail;
+  ed.chain().setNodeSelection(pos).run();
+  const a = ed.getAttributes("image");
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = \`\${a.alt ? "" : '<div class="note">Not described yet: people who cannot see it get nothing.</div>'}
+    <button type="button" data-a="edit">Edit description and caption</button><button type="button" data-a="main">Use as main photo</button>
+    <button type="button" data-a="remove" class="bad">Remove from the article</button>\`;
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(y + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    closePhotoMenu(); ed.chain().setNodeSelection(pos).run();
+    if (b.dataset.a === "edit") editPhoto();
+    else if (b.dataset.a === "main") mainFromPhoto();
+    else ed.chain().focus().deleteSelection().run();
+  };
+});
+addEventListener("mousedown", (ev) => { if ($("pmenu") && !ev.target.closest("#pmenu") && !ev.target.closest(".ph-more")) closePhotoMenu(); });
+addEventListener("keydown", (e) => { if (e.key === "Escape") closePhotoMenu(); });
 function editPhoto() {
   const a = ed.getAttributes("image"); const t = askText(a.alt, a.title); if (!t) return;
   ed.chain().focus().updateAttributes("image", { alt: t.alt, title: t.caption }).run();
