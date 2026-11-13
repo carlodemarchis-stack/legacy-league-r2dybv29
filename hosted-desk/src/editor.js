@@ -5,12 +5,18 @@
    0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
    0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log ·
    0.8 paste or drop photos into the article · 0.9 the Studio's own dialogs instead of the browser's ·
-   0.10 the main photo changed in place, with its credit */
-export const STUDIO_VERSION = "0.10.0";
+   0.10 the main photo changed in place, with its credit · 0.10.1 its own icon in the browser tab ·
+   0.11 the photo library: every photo, searchable, uploaded on its own, chosen wherever a photo goes */
+export const STUDIO_VERSION = "0.11.0";
+
+/* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
+const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
+  '<circle cx="16" cy="16" r="9" fill="none" stroke="#080c0e" stroke-width="2.8"/><circle cx="16" cy="16" r="3.2" fill="#1f7a4c"/></svg>';
+export const STUDIO_ICON = `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,${encodeURIComponent(ICON_SVG)}">`;
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Content Studio · Legacy League Golf</title><meta name="robots" content="noindex">
+<title>Content Studio · Legacy League Golf</title>${STUDIO_ICON}<meta name="robots" content="noindex">
 <style>
 :root{--bg:#0b0f11;--panel:#141a1d;--line:#26302f;--ink:#e9eeec;--dim:#93a09c;--acc:#d9ad4e;--on-acc:#1a1406;--bad:#e5675a;--ok:#5fbf7a;
   color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
@@ -65,8 +71,8 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
 .tiptap figure.ph{margin:0 0 1em;cursor:pointer;position:relative}
-.tiptap figure.ph .ph-more{position:absolute;top:8px;right:8px;width:34px;height:28px;border-radius:8px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
-.tiptap figure.ph .ph-more:hover{background:rgba(0,0,0,.8)}
+.ph-more{position:absolute;top:8px;right:8px;width:34px;height:28px;border-radius:8px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
+.ph-more:hover{background:rgba(0,0,0,.8)}
 .tiptap figure.ph.nodesc .ph-more{box-shadow:0 0 0 2px var(--bad)}
 .pmenu{position:fixed;z-index:30;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
 .pmenu button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:6px;background:none;cursor:pointer;font-size:13px}
@@ -135,18 +141,35 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .mbox .mbtns{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:8px}
 .mbox .mbtns .btn{padding:8px 16px;font-size:13px}.mbox .mbtns .left{margin-right:auto}
 .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
+/* the photo library: a page of its own over the Studio, also used to choose a photo */
+.lib{position:fixed;left:0;right:0;bottom:0;top:49px;z-index:25;background:var(--bg);display:flex;flex-direction:column}
+.lib.pick{top:0;z-index:40}
+.lib .libbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}
+.lib .libbar h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.lib .libbar input[type=search]{flex:1 1 240px;max-width:420px;padding:8px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.lib .libbar .count{color:var(--dim);font-size:12px;margin-left:auto}
+.lib .grid{flex:1;overflow-y:auto;padding:18px 20px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;align-content:start}
+.lib.drop .grid{outline:3px dashed var(--acc);outline-offset:-10px}
+.pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column}
+.pcard:hover{border-color:color-mix(in srgb,var(--acc) 60%,var(--line))}
+.pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#000}
+.pcard span{padding:8px 10px 10px;display:block}.pcard b{display:block;font-size:12.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard b.none{color:var(--bad);font-weight:500}.pcard small{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.mused{font-size:12px;color:var(--dim);margin:-4px 0 14px;line-height:1.5}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}.chip button{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;line-height:1}
 .photo img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;display:block;background:#000}
 .photo .btn{margin-top:8px}
-.photo .mainbtns{display:flex;gap:6px}
+.mainwrap{position:relative}
+.mainwrap .mainph{display:grid;place-items:center;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:16px}
+.mainwrap .ph-more.lone{position:static;margin-top:8px;width:auto;padding:0 12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:12px}
 .photo.drop img{outline:3px dashed var(--acc);outline-offset:3px}
 .meta{font-size:11px;color:var(--dim);line-height:1.7;margin-top:14px}
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
 <header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span>
-  <span class="hright"><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
+  <span class="hright"><button class="btn" id="libbtn" onclick="openLibrary()">Photo library</button><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
   <a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></span></header>
 <div class="wrap">
   <aside>
@@ -262,6 +285,7 @@ async function pick(id) {
   show(id);
 }
 function show(id, quiet) {
+  closeLibrary();
   closeAI(); aiChat = []; aiChatId = null;
   const found = stories.find((s) => s.id === id);
   cur = found ? structuredClone(found) : null;          // a copy: unsaved edits never touch the list
@@ -297,13 +321,13 @@ function renderForm(msg) {
           <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><input type="file" id="pfile" accept="image/*" hidden></div>
 
           <div id="body"></div></div>
-        <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button, or paste or drop a picture). The site and the app set the style.</div></div>
+        <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button for the library, or paste or drop a picture). The site and the app set the style.</div></div>
     </div>
     <div>
-      <div class="f photo"><label>Main photo</label>\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
-        \${s.photo_auto || !s.id ? '<div class="hint">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
-        <div class="mainbtns"><button type="button" class="btn" onclick="$('mainfile').click()">Change photo</button>
-          \${s.photo ? \`<button type="button" class="btn" onclick="editMainCredit()">Credit</button>\` : ""}</div>
+      <div class="f photo"><label>Main photo</label>
+        <div class="mainwrap" id="mainwrap">\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="mainph" id="mainph">A golf photo from the library is given to a new story when it is saved.</div>'}
+          <button type="button" class="ph-more" id="mainmore" title="Main photo options" onclick="mainMenu(this)">⋯</button></div>
+        \${s.photo_auto || !s.id ? '<div class="hint" id="mainauto">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
         <input type="file" id="mainfile" accept="image/*" hidden>
         <div class="hint" id="maincredit">\${s.photo_credit ? "Photo: " + esc(s.photo_credit) : ""}</div></div>
       <div class="f two"><div><label for="kind">Kind</label><select id="kind" \${kinds.length === 1 ? "disabled" : ""}>\${kinds.map((k) => \`<option \${k === s.kind ? "selected" : ""}>\${k}</option>\`).join("")}</select></div>
@@ -358,7 +382,7 @@ function command(c) {
   else if (c === "i") ch.toggleItalic().run();
   else if (c === "ul") ch.toggleBulletList().run();
   else if (c === "ol") ch.toggleOrderedList().run();
-  else if (c === "img") $("pfile").click();
+  else if (c === "img") photoFromLibrary();
   else if (c === "a") {
     linkDialog();
   }
@@ -402,6 +426,18 @@ function askText(alt, caption, which = "", img = "") {
     ok: alt ? "Save" : "Add photo",
   }).then((v) => v && { alt: v.alt, caption: v.caption });
 }
+/* the article's Photo button: a photo from the library, or a new one */
+async function photoFromLibrary() {
+  const { from } = ed.state.selection;
+  const r = await choosePhoto("Add a photo to the article");
+  if (!r) return;
+  ed.chain().focus().setTextSelection(from).run();
+  if (r.file) return addPhoto(r.file);
+  const e = r.entry;
+  const t = await askText(e.alt || "", photoText(e), "", pic(e.src)); if (!t) return;
+  ed.chain().focus().setTextSelection(from).setImage({ src: SITE + "/" + e.src + (e.w ? "#" + e.w + "x" + e.h : ""), alt: t.alt, title: t.caption }).run();
+  say("", "Photo added. Save to keep it.");
+}
 /* photos pasted or dropped in: one after the other, each described, each placed where it landed */
 async function addPhotos(files, pos) {
   // a photo dropped on a paragraph goes after that paragraph, never into the middle of its words
@@ -421,8 +457,7 @@ async function addPhoto(file, which = "", at = null) {
     URL.revokeObjectURL(preview);
     if (!t) { say("", "Photo not added."); return false; }
     say("", "Uploading the photo" + which + "…");
-    const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
-    const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
+    const j = await uploadBlob(blob, w, h, { alt: t.alt, caption: t.caption });
     const attrs = { src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption };
     if (at != null) ed.chain().focus().insertContentAt(at, { type: "image", attrs }).run();
     else ed.chain().focus().setImage(attrs).run();
@@ -474,11 +509,38 @@ function wireMainPhoto() {
   });
 }
 function showMain(path, credit) {
-  const box = document.querySelector(".f.photo");
-  if (!$("mainpic")) { const img = document.createElement("img"); img.id = "mainpic"; img.alt = ""; box.insertBefore(img, box.querySelector(".mainbtns")); }
+  if (!$("mainpic")) { const img = document.createElement("img"); img.id = "mainpic"; img.alt = ""; $("mainwrap").insertBefore(img, $("mainmore")); }
+  if ($("mainph")) $("mainph").parentNode.removeChild($("mainph"));
+  if ($("mainauto")) $("mainauto").parentNode.removeChild($("mainauto"));
   $("mainpic").src = pic(path);
   $("maincredit").textContent = credit ? "Photo: " + credit : "";
-  box.querySelectorAll(".hint").forEach((h) => { if (/library/.test(h.textContent)) h.parentNode.removeChild(h); });
+}
+/* the ⋯ menu on the main photo: the same menu as on a photo in the article */
+function mainMenu(btn) {
+  closePhotoMenu();
+  const r = btn.getBoundingClientRect();
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = \`<button type="button" data-a="lib">Choose from the library</button><button type="button" data-a="up">Upload a new photo</button>
+    \${cur.photo ? '<button type="button" data-a="credit">Edit the credit</button>' : ""}\`;
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    closePhotoMenu();
+    if (b.dataset.a === "lib") mainFromLibrary();
+    else if (b.dataset.a === "up") $("mainfile").click();
+    else editMainCredit();
+  };
+}
+async function mainFromLibrary() {
+  const r = await choosePhoto("Choose the main photo");
+  if (!r) return;
+  if (r.file) return newMainPhoto(r.file);
+  const e = r.entry;
+  Object.assign(cur, { photo: e.src, photo_w: e.w || 0, photo_h: e.h || 0, photo_auto: false, photo_credit: e.credit || "", mainChanged: true });
+  showMain(e.src, e.credit || "");
+  touch(); say("", "New main photo. Save to keep it.");
 }
 async function newMainPhoto(file) {
   try {
@@ -491,8 +553,7 @@ async function newMainPhoto(file) {
     URL.revokeObjectURL(preview);
     if (!v) return;
     say("", "Uploading the photo…");
-    const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
-    const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
+    const j = await uploadBlob(blob, w, h, { credit: v.credit });
     Object.assign(cur, { photo: j.src, photo_w: w, photo_h: h, photo_auto: false, photo_credit: v.credit, mainChanged: true });
     showMain(j.src, v.credit);
     touch(); say("", "New main photo. Save to keep it.");
@@ -623,6 +684,107 @@ function applyAI(i) {
   if ((p.events || []).length) document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", p.events.includes(b.dataset.id)));
   if ((p.players || []).length) { cur.players = p.players.filter((id) => PLAYER[id]); paintPlayers(); }
   touch(); say("", "Draft applied. Read it, change what you like, then Save.");
+}
+
+/* ------------------------------------------------ photo library
+   openLibrary() manages it; choosePhoto(title) uses the same page to pick one and resolves to
+   { entry } (a photo from the library), { file } (a new one to upload) or null. */
+let libPhotos = [];
+const photoText = (e) => [e.caption, e.credit ? "Photo: " + e.credit : ""].filter(Boolean).join(" · ");
+function libraryPage({ pick = false, title = "Photo library", resolve = null } = {}) {
+  closeLibrary();
+  const box = document.createElement("div"); box.className = "lib" + (pick ? " pick" : ""); box.id = "lib";
+  box.innerHTML = \`<div class="libbar"><h1>\${esc(title)}</h1><input type="search" id="libq" placeholder="Search descriptions, captions, credits, stories…" autocomplete="off">
+      <div class="seg" id="libseg"><button data-s="all" class="on">All</button><button data-s="nodesc">No description</button><button data-s="unused">Not used</button></div>
+      <span class="count" id="libcount"></span>
+      <button type="button" class="btn pri" id="libup">\${pick ? "Upload new" : "Upload photos"}</button><input type="file" id="libfile" accept="image/*" \${pick ? "" : "multiple"} hidden>
+      <button type="button" class="btn" id="libclose">\${pick ? "Cancel" : "Close"}</button></div>
+    <div class="grid" id="libgrid"><div class="empty">Loading the library…</div></div>\`;
+  document.body.appendChild(box);
+  let filter = "all";
+  const finish = (v) => { closeLibrary(); if (resolve) resolve(v); };
+  $("libclose").onclick = () => finish(null);
+  $("libup").onclick = () => $("libfile").click();
+  $("libfile").onchange = () => {
+    const files = [...$("libfile").files]; $("libfile").value = "";
+    if (!files.length) return;
+    if (pick) finish({ file: files[0] }); else uploadToLibrary(files);
+  };
+  $("libq").oninput = () => paintLibrary();
+  $("libseg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s; $("libseg").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); paintLibrary(); };
+  if (!pick) {                                                // drop pictures anywhere on the library to add them
+    box.addEventListener("dragover", (e) => { if ([...e.dataTransfer.items].some((i) => i.kind === "file")) { e.preventDefault(); box.classList.add("drop"); } });
+    box.addEventListener("dragleave", (e) => { if (e.target === box || !box.contains(e.relatedTarget)) box.classList.remove("drop"); });
+    box.addEventListener("drop", (e) => { box.classList.remove("drop"); const f = [...e.dataTransfer.files].filter((x) => /^image\\//.test(x.type)); if (f.length) { e.preventDefault(); uploadToLibrary(f); } });
+  }
+  window.paintLibrary = () => {
+    const words = $("libq").value.toLowerCase().split(/\\s+/).filter(Boolean);
+    const rows = libPhotos.filter((e) => (filter === "all" || (filter === "nodesc" && !e.alt) || (filter === "unused" && !e.used_in.length)) &&
+      words.every((w) => [e.alt, e.caption, e.credit, e.src, ...e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title))].join(" ").toLowerCase().includes(w)));
+    $("libcount").textContent = rows.length + " of " + libPhotos.length + " photos";
+    $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}"><img src="\${esc(pic(e.src))}" alt="" loading="lazy">
+      <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : '<b class="none">No description yet</b>'}<small>\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small></span></button>\`).join("") ||
+      '<div class="empty" style="grid-column:1/-1">No photo matches.</div>';
+  };
+  $("libgrid").onclick = (e) => {
+    const c = e.target.closest(".pcard"); if (!c) return;
+    const entry = libPhotos[+c.dataset.i];
+    if (pick) finish({ entry }); else editLibraryPhoto(entry);
+  };
+  loadLibrary().then(() => { paintLibrary(); $("libq").focus(); });
+}
+function closeLibrary() { const l = $("lib"); if (l) l.parentNode.removeChild(l); }
+async function loadLibrary() { libPhotos = (await call("library")).photos; }
+function openLibrary() { closeAI(); closeHistory(); closeUsage(); libraryPage(); }
+const choosePhoto = (title) => new Promise((resolve) => libraryPage({ pick: true, title, resolve }));
+async function editLibraryPhoto(e) {
+  const uses = e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title) + " (" + u.how + ")");
+  const v = await modal({
+    title: "Photo details", img: pic(e.src),
+    text: uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.",
+    fields: [
+      { id: "alt", label: "Description", value: e.alt, type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
+      { id: "caption", label: "Caption", value: e.caption, hint: "Shown under the photo when it goes in an article." },
+      { id: "credit", label: "Credit", value: e.credit, placeholder: "e.g. Jane Smith", hint: "Who took it." },
+    ],
+    ok: "Save", extra: e.used_in.length ? null : { label: "Remove from library", value: "hide", danger: true },
+  });
+  if (!v) return;
+  try {
+    if (v.action === "hide") {
+      if (!(await confirmModal("Remove this photo from the library?", "It is used in no story. The file stays in the store, so nothing on the site changes.", "Remove", true))) return;
+      await call("libhide", { src: e.src });
+    } else await call("libsave", { src: e.src, ...v });
+    await loadLibrary(); paintLibrary();
+  } catch (err) { await confirmModal("That did not work", err.message, "OK"); }
+}
+async function uploadToLibrary(files) {
+  for (let i = 0; i < files.length; i++) {
+    const which = files.length > 1 ? \` (\${i + 1} of \${files.length})\` : "";
+    try {
+      const { blob, w, h } = await shrink(files[i]);
+      const preview = URL.createObjectURL(blob);
+      const v = await modal({ title: "Add to the library" + which, img: preview,
+        fields: [
+          { id: "alt", label: "Description", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", placeholder: "e.g. Omar Quintero hits a 5-wood on the 13th", hint: "What the photo shows. It also makes the photo easy to find." },
+          { id: "caption", label: "Caption", placeholder: "e.g. The 13th at El Camaleón" },
+          { id: "credit", label: "Credit", placeholder: "e.g. Jane Smith" },
+        ], ok: "Add photo" });
+      URL.revokeObjectURL(preview);
+      if (!v) continue;
+      $("libcount").textContent = "Uploading" + which + "…";
+      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, library: true });
+    } catch (e) { await confirmModal("That photo could not be added", e.message || "Save it as a JPEG and try again.", "OK"); }
+  }
+  await loadLibrary(); paintLibrary();
+}
+/* one upload for every place a photo comes from; the library records it with what is known about it */
+async function uploadBlob(blob, w, h, meta = {}) {
+  const enc = (x) => encodeURIComponent(x || "");
+  const r = await fetch(API + "upload", { method: "POST", body: blob, headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h,
+    "x-editor": enc(EDITOR), "x-photo-alt": enc(meta.alt), "x-photo-caption": enc(meta.caption), "x-photo-credit": enc(meta.credit), ...(meta.library ? { "x-library": "1" } : {}) } });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
+  return j;
 }
 
 /* ------------------------------------------------ AI usage */

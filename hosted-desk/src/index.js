@@ -14,7 +14,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
-import { editorPage } from "./editor.js";
+import { editorPage, STUDIO_ICON } from "./editor.js";
 import TIPTAP from "./tiptap.bundle.txt";
 import { scoring } from "./scores.js";
 import { draftWithAI, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
@@ -460,6 +460,24 @@ function createServer(env, door) {
     return res;
   }));
 
+  server.registerTool("search_photos", {
+    description: "Search the league's photo library: every editorial photo, used in a story or not, by description, caption, " +
+      "credit, file name or the headlines of the stories that use it. Each result has photo_url (pass it to draft_story " +
+      "or update_story as the main photo) and markdown (put it in a body as a paragraph of its own to show it inside the " +
+      "article). Prefer a photo from the library before asking the editor to upload one. Empty query = the newest photos.",
+    inputSchema: z.object({ query: z.string().default(""), limit: z.number().int().default(12) }),
+  }, tool(async ({ query, limit }) => {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const hits = (await library(env)).filter((e) => {
+      const hay = [e.alt, e.caption, e.credit, e.src, ...e.used_in.map((u) => u.title)].join(" ").toLowerCase();
+      return words.every((w) => hay.includes(w));
+    });
+    return { found: hits.length, photos: hits.slice(0, Math.min(limit, 40)).map((e) => ({
+      photo_url: e.src, size: e.w ? `${e.w}x${e.h}` : null, description: e.alt || null, caption: e.caption || null, credit: e.credit || null,
+      used_in: e.used_in.map((u) => `${u.id} (${u.how})`), markdown: libraryMd(e),
+      note: e.alt ? undefined : "No description yet: ask the editor for one before putting it in an article." })) };
+  }));
+
   server.registerTool("photo_upload_link", {
     description:
       "The editor's own photo for a story. A picture pasted into the chat cannot reach the desk, so this returns a " +
@@ -548,7 +566,7 @@ const MAX_PHOTO = 8 * 1024 * 1024;
    sending it, so nothing on the server has to process images. */
 function photoPage(story, article) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>Photo for ${esc(story.id)}</title>
+<meta name="robots" content="noindex"><title>Photo for ${esc(story.id)}</title>${STUDIO_ICON}
 <style>
 body{margin:0;font:16px/1.5 -apple-system,system-ui,sans-serif;background:#0b0f11;color:#e9eef0;display:grid;place-items:start center;padding:28px 18px}
 main{width:100%;max-width:520px}h1{font-size:20px;margin:0 0 4px}p{color:#9aa7ab;margin:0 0 18px}
@@ -612,6 +630,7 @@ async function photoRoute(request, env, id) {
   const up = await storePhoto(env, request, id);
   if (up.error) return json({ error: up.error }, up.status);
   const credit = header(request, "x-photo-credit", 120);
+  await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit }, "photo page");
   if (request.headers.get("x-to") === "article") {          // a photo for the article: it waits until Claude places it
     const alt = header(request, "x-photo-alt", 200), caption = [header(request, "x-photo-caption", 200), credit ? `Photo: ${credit}` : ""].filter(Boolean).join(" · ");
     if (!alt) return json({ error: "Describe the photo first." }, 400);
@@ -679,6 +698,7 @@ async function editorApi(request, env, path) {
       return json({ story: (await readJson(env, `${HISTORY}${id}/${v}.json`)).data || fail("No such version.") });
     }
     if (request.method === "GET" && path === "usage") return json(await aiUsage(env));
+    if (request.method === "GET" && path === "library") return json({ site: SITE_ROOT, photos: await library(env) });
     if (request.method === "GET" && path === "deleted") return json({ deleted: await deletedStories(env) });
     if (request.method === "GET" && path === "ref") {
       const ref = await reference(env);
@@ -707,9 +727,28 @@ async function editorApi(request, env, path) {
       }
       catch (e) { const [status, error] = aiError(e); return json({ error }, status); }
     }
-    if (path === "upload") {                                  // a photo for the article, placed by the editor page itself
-      const up = await storePhoto(env, request, "article");
-      return up.error ? json({ error: up.error }, up.status) : json({ ok: true, ...up });
+    if (path === "upload") {                                  // a photo from the Studio: for the article, the main photo or the library
+      const up = await storePhoto(env, request, request.headers.get("x-library") ? "library" : "article");
+      if (up.error) return json({ error: up.error }, up.status);
+      await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit: header(request, "x-photo-credit", 120) }, who);
+      return json({ ok: true, ...up });
+    }
+    if (path === "libsave") {                                 // a photo's description, caption and credit
+      const b = await request.json();
+      const e = await changeLibrary(env, (list) => {
+        const x = list.find((y) => y.src === b.src) || fail("No such photo in the library.");
+        for (const k of ["alt", "caption", "credit"]) { const v = String(b[k] || "").trim().slice(0, k === "credit" ? 120 : 200); if (v) x[k] = v; else delete x[k]; }
+        x.updated_by = who; x.updated_at = nowIso();
+        return x;
+      });
+      return json({ ok: true, photo: e });
+    }
+    if (path === "libhide") {                                 // out of the library, when no story uses it (the file stays in the store)
+      const b = await request.json();
+      const used = photoUses((await readJson(env, RECORDS)).data || [])[b.src];
+      if (used && used.length) fail(`This photo is used in ${used.length} ${used.length === 1 ? "story" : "stories"}, so it stays in the library.`);
+      await changeLibrary(env, (list) => { const x = list.find((y) => y.src === b.src) || fail("No such photo in the library."); x.hidden = true; x.hidden_by = who; x.hidden_at = nowIso(); });
+      return json({ ok: true });
     }
     const b = await request.json();
     const check = async (s) => { if (b.stamp !== await stampOf(s)) throw new Conflict("This story was changed by someone else (Claude or another editor) since you opened it. Reload it to see their version."); };
@@ -792,6 +831,77 @@ async function editorApi(request, env, path) {
     return json({ error: String(e.message || e) }, e instanceof Conflict ? 409 : 400);
   }
 }
+
+/* ------------------------------------------------------------------ photo library */
+
+/* Every editorial photo the league has, whether a story uses it or not: desk/photos.json, one record per photo
+   (src, size, description, caption, credit, who added it). Photos already in the store are picked up on their own;
+   player headshots and cut-outs are profile pictures and stay out. A photo is never removed from the store: taking it
+   out of the library only hides it, and only when no story uses it. */
+const LIBRARY = "desk/photos.json";
+const LIBRARY_DIRS = ["photos/course/", "photos/action/", "photos/people/", "photos/stories/", "photos/library/"];
+async function changeLibrary(env, fn) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const { data, etag } = await readJson(env, LIBRARY);
+    const list = data || [];
+    const out = await fn(list);
+    const saved = await env.CONTENT.put(LIBRARY, JSON.stringify(list), { httpMetadata: { contentType: "application/json" }, onlyIf: etag ? { etagMatches: etag } : undefined });
+    if (saved) return out;
+  }
+  fail("The photo library was being changed by someone else at the same moment. Try again.");
+}
+async function registerPhoto(env, up, meta, by) {
+  await changeLibrary(env, (list) => {
+    let e = list.find((x) => x.src === up.src);
+    if (!e) { e = { src: up.src, added_at: nowIso(), added_by: by }; list.push(e); }
+    if (up.w) { e.w = up.w; e.h = up.h; }
+    for (const k of ["alt", "caption", "credit"]) if (meta[k]) e[k] = meta[k];
+    delete e.hidden;
+    return e;
+  });
+}
+/* the photos in the store that the library does not know yet */
+async function syncLibrary(env) {
+  const keys = [];
+  for (const prefix of LIBRARY_DIRS) {
+    let cursor;
+    do {
+      const page = await env.CONTENT.list({ prefix, cursor });
+      keys.push(...page.objects.map((o) => o.key).filter((k) => /\.(jpe?g|png|webp)$/i.test(k)));
+      cursor = page.truncated ? page.cursor : null;
+    } while (cursor);
+  }
+  const known = new Set(((await readJson(env, LIBRARY)).data || []).map((e) => e.src));
+  const missing = keys.map((k) => "content/" + k).filter((src) => !known.has(src));
+  if (!missing.length) return;
+  const sizes = (await readJson(env, "photos/sizes.json")).data || {};
+  await changeLibrary(env, (list) => {
+    const have = new Set(list.map((e) => e.src));
+    for (const src of missing) if (!have.has(src)) {
+      const e = { src, added_at: nowIso(), added_by: "store" };
+      if (sizes[src]) [e.w, e.h] = sizes[src];
+      list.push(e);
+    }
+  });
+}
+/* where each photo is used: main photo, gallery or inside the article */
+function photoUses(stories) {
+  const uses = {};
+  const add = (src, s, how) => { if (!src) return; src = src.split("#")[0]; (uses[src] = uses[src] || []).push({ id: s.id, title: s.title, status: s.status || "published", how }); };
+  for (const s of stories) {
+    add(s.photo, s, "main photo");
+    for (const g of (s.photos || []).slice(1)) add(g, s, "gallery");
+    for (const b of bodyPhotos(s.body)) add(b.src, s, "in the article");
+  }
+  return uses;
+}
+async function library(env) {
+  await syncLibrary(env);
+  const list = ((await readJson(env, LIBRARY)).data || []).filter((e) => !e.hidden);
+  const uses = photoUses((await readJson(env, RECORDS)).data || []);
+  return list.map((e) => ({ ...e, used_in: uses[e.src] || [] })).sort((a, b) => ((a.added_at || "") < (b.added_at || "") ? 1 : -1));
+}
+const libraryMd = (e, caption) => photoMd({ src: e.src, w: e.w, h: e.h }, e.alt || "", caption != null ? caption : [e.caption, e.credit ? `Photo: ${e.credit}` : ""].filter(Boolean).join(" · "));
 
 /* ------------------------------------------------------------------ AI usage log */
 
