@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.16.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players
+export const STUDIO_VERSION = "0.16.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -315,6 +315,11 @@ async function pick(id) {
   if (!(await leaveUnsaved())) return;
   show(id);
 }
+function remember() {
+  const on = document.querySelector("#snav button.on"), v = on ? on.dataset.v : "stories";
+  const h = v !== "stories" ? "#" + v : cur && cur.id ? "#story/" + cur.id : "";
+  if (location.hash !== h) history.replaceState(null, "", location.pathname + location.search + h);
+}
 function show(id, quiet) {
   closeLibrary(); closeSoon(); document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === "stories"));
   closeAI(); aiChat = []; aiChatId = null;
@@ -328,6 +333,7 @@ function blank() {
   return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "" };
 }
 function renderForm(msg) {
+  remember();
   const s = cur; if (!s) { $("main").innerHTML = '<div class="empty">Pick a story on the left, or make a new one.</div>'; return; }
   const st = s.id ? statusOf(s) : "new";
   const kinds = s.kind === "result" ? ["result"] : ["article", "video", "gallery", "quote"];
@@ -484,11 +490,14 @@ async function readMeta(file) {
           const le = dv.getUint16(0) === 0x4949;
           const u16 = (o) => dv.getUint16(o, le), u32 = (o) => dv.getUint32(o, le);
           const ascii = (o) => { const n = u32(o + 4), at = n > 4 ? u32(o + 8) : o + 8; let s = ""; for (let k = 0; k < n - 1 && at + k < dv.byteLength; k++) s += String.fromCharCode(dv.getUint8(at + k)); return s.trim(); };
-          const tags = {}, ifd = (o) => { const n = u16(o); for (let k = 0; k < n; k++) { const e = o + 2 + k * 12, tag = u16(e); if (u16(e + 2) === 2) tags[tag] = ascii(e); else if (tag === 0x8769) tags.exif = u32(e + 8); } };
+          const utf16 = (o) => { const n = u32(o + 4), at = n > 4 ? u32(o + 8) : o + 8; let s = ""; for (let k = 0; k + 1 < n && at + k + 1 < dv.byteLength; k += 2) { const c = dv.getUint16(at + k, true); if (!c) break; s += String.fromCharCode(c); } return s.trim(); };
+          const tags = {}, ifd = (o) => { const n = u16(o); for (let k = 0; k < n; k++) { const e = o + 2 + k * 12, tag = u16(e);
+            if (u16(e + 2) === 2) tags[tag] = ascii(e); else if (tag === 0x9c9d || tag === 0x9c9b) tags[tag] = utf16(e); else if (tag === 0x8769) tags.exif = u32(e + 8); } };
           ifd(u32(4)); if (tags.exif) ifd(tags.exif);
           const junk = (x) => !x || /^(OLYMPUS DIGITAL CAMERA|SONY DSC|DCIM|default|image|untitled)/i.test(x);
-          if (!out.caption && !junk(tags[0x010e])) out.caption = tags[0x010e];
-          if (!out.credit && tags[0x013b]) out.credit = tags[0x013b];
+          if (!junk(tags[0x010e])) { out.imageDescription = tags[0x010e]; if (!out.caption) out.caption = tags[0x010e]; }
+          else if (!out.caption && !junk(tags[0x9c9b])) out.caption = tags[0x9c9b];            // the Windows title
+          if (!out.credit) out.credit = tags[0x013b] || tags[0x9c9d] || "";                       // Artist, or the Windows author
           if (!out.copyright && tags[0x8298]) out.copyright = tags[0x8298];
           if (!out.taken && tags[0x9003]) out.taken = tags[0x9003];
           if (!out.camera) out.camera = [tags[0x010f], tags[0x0110]].filter(Boolean).join(" ");
@@ -505,6 +514,8 @@ async function readMeta(file) {
   if (out.camera) { const w = out.camera.split(/\\s+/); out.camera = w.filter((x, k) => w.indexOf(x) === k).join(" "); }   // "Canon Canon EOS R5" → "Canon EOS R5"
   const d = String(out.taken || "").match(/^(\\d{4})[:-](\\d{2})[:-](\\d{2})(?:[T ](\\d{2}):(\\d{2}))?/);
   out.taken = d ? \`\${d[1]}-\${d[2]}-\${d[3]}\${d[4] ? "T" + d[4] + ":" + d[5] : ""}\` : "";
+  if (!out.alt) out.alt = out.imageDescription || out.caption || "";
+  delete out.imageDescription;
   for (const k of ["alt", "caption", "credit"]) out[k] = (out[k] || "").replace(/\\s+/g, " ").trim().slice(0, k === "credit" ? 120 : 200);
   return out;
 }
@@ -927,6 +938,7 @@ const SOON = {
 };
 function setView(v) {
   document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+  remember();
   closeLibrary(); closeSoon(); closeAI(); closeHistory(); closeUsage();
   if (v === "photos") libraryPage();
   else if (SOON[v]) {
@@ -1158,6 +1170,7 @@ async function undelete(id, v) {
 $("q").oninput = renderList;
 $("snav").onclick = (e) => { const b = e.target.closest("button"); if (b) goView(b.dataset.v); };
 $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s;
+  try { localStorage.setItem("studio-filter", filter); } catch (err) {}
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
   if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
   else renderList(); };
@@ -1170,6 +1183,12 @@ addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.ret
     ref = await call("ref");
     CITY = Object.fromEntries(ref.cities.map((c) => [c.id, c])); PLAYER = Object.fromEntries(ref.players.map((p) => [p.id, p]));
     await load();
+    let saved = "all";
+    try { saved = localStorage.getItem("studio-filter") || "all"; } catch (err) {}
+    if (saved !== "all") { const b = document.querySelector(\`#seg [data-s="\${saved}"]\`); if (b) b.click(); }
+    const h = location.hash, m = h.match(/^#story\\/([a-z]\\d+)$/);
+    if (m && stories.find((s) => s.id === m[1])) show(m[1]);
+    else if (/^#(photos|videos|shorts)$/.test(h)) setView(h.slice(1));
   } catch (e) { $("main").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
 })();
 </script></body></html>`;
