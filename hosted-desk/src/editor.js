@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.18.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor
+export const STUDIO_VERSION = "0.19.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name)
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -270,11 +270,16 @@ function modal({ title, text = "", img = "", html = "", fields = [], custom = nu
 const confirmModal = (title, text, ok, danger = false) => modal({ title, text, ok, danger });
 const leaveUnsaved = () => !dirty ? Promise.resolve(true) : confirmModal("Leave without saving?", "Your changes to this story are not saved yet. They will be lost.", "Leave without saving", true);
 
-/* who is working: asked once, kept in this browser; replaced by the sign-in once the Studio has one */
-let EDITOR = "";
+/* who is working: the sign-in email when the Studio is behind Cloudflare Access; otherwise a name asked once and kept in this browser */
+let EDITOR = "", SIGNED = null;
 try { EDITOR = localStorage.getItem("studio-editor") || ""; } catch (e) {}
 function paintWho() { $("whobtn").textContent = EDITOR ? "👤 " + EDITOR : "👤 Your name"; }
 async function askName() {
+  if (SIGNED) {
+    if (await modal({ title: "Signed in", text: \`You are signed in as \${SIGNED.email}. Your changes and AI requests carry this address.\`, ok: "Sign out", cancel: "Close" }))
+      location.href = SIGNED.signout;
+    return;
+  }
   const v = await modal({ title: EDITOR ? "Your name" : "Welcome to the Content Studio", text: "Your name goes on the changes you make and the AI requests you send, so the team can see who did what.",
     fields: [{ id: "name", label: "Name", value: EDITOR, required: true, placeholder: "e.g. Carlo De Marchis", requiredText: "Type your name." }], ok: "Save" });
   if (!v) return;
@@ -858,7 +863,8 @@ function openAI() {
 /* this week's AI allowance: every editor has a weekly amount, Draft with AI and photo descriptions together */
 function paintBudget(b) {
   const el = $("aibudget"); if (!el || !b) return;
-  el.textContent = b.over ? \`This week's AI allowance is used up (€\${b.cap_eur.toFixed(2)}). It starts again on Monday.\`
+  el.textContent = b.league_over ? \`The league's AI allowance for this week is used up (€\${b.league_cap_eur.toFixed(2)} for everyone). It starts again on Monday.\`
+    : b.over ? \`Your AI allowance for this week is used up (€\${b.cap_eur.toFixed(2)}). It starts again on Monday.\`
     : \`This week: €\${b.left_eur.toFixed(2)} of €\${b.cap_eur.toFixed(2)} left.\`;
   el.style.color = b.over ? "var(--bad, #e66)" : b.left_eur < 2 ? "var(--warn, #d9ad4e)" : "";
   if ($("aisend")) $("aisend").disabled = !!b.over;
@@ -1153,7 +1159,7 @@ async function openUsage() {
     $("ubody").innerHTML = \`
       <div class="big">\${$$(u.total.cost)}</div><p class="hint">\${u.total.requests} AI request\${u.total.requests === 1 ? "" : "s"} in all, paid on the league's Anthropic account.</p>
       <h3>This week · €\${u.budget.cap_eur} each</h3>\${table(["Person", "Requests", "Spent"], u.week.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">€\${r.cost_eur.toFixed(2)} of €\${r.cap_eur}</td></tr>\`))}
-      <p class="hint">You have €\${u.budget.left_eur.toFixed(2)} left this week. Every week starts on Monday at 00:00 UTC.</p>
+      <p class="hint">You have €\${u.budget.left_eur.toFixed(2)} left this week. The whole league together: €\${u.budget.league_spent_eur.toFixed(2)} of €\${u.budget.league_cap_eur}. Every week starts on Monday at 00:00 UTC.</p>
       <h3>By person, all time</h3>\${table(["Person", "Requests", "Cost"], u.by_user.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
       <h3>By article</h3>\${table(["Article", "Requests", "Cost"], u.by_article.map((r) => \`<tr><td>\${art(r)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
       <h3>By month</h3>\${table(["Month", "Requests", "Cost"], u.by_month.map((r) => \`<tr><td>\${esc(r.key)}</td><td class="n">\${r.requests}</td><td class="n">\${$$(r.cost)}</td></tr>\`))}
@@ -1228,6 +1234,7 @@ $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return
 $("new").onclick = async () => { if (!(await leaveUnsaved())) return; closeAI(); aiChat = []; aiChatId = null; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {
+  try { const me = await call("me"); if (me.email) { SIGNED = me; EDITOR = me.email; $("whobtn").title = "Signed in: your changes and AI requests carry this address"; } } catch (e) {}
   paintWho();
   if (!EDITOR) setTimeout(askName, 400);
   try {

@@ -623,7 +623,8 @@ go.onclick = async () => {
 </script></body></html>`;
 }
 
-async function photoRoute(request, env, id) {
+async function photoRoute(request, env, id, signedIn) {
+  const by = signedIn || "photo page";                    // the signed-in editor, once the Studio has sign-in
   const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   const stories = (await readJson(env, RECORDS)).data || [];
   const story = /^[a-z]\d+$/.test(id) ? stories.find((s) => s.id === id) : null;
@@ -634,7 +635,7 @@ async function photoRoute(request, env, id) {
   const up = await storePhoto(env, request, id);
   if (up.error) return json({ error: up.error }, up.status);
   const credit = header(request, "x-photo-credit", 120);
-  await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit }, "photo page");
+  await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit }, by);
   if (request.headers.get("x-to") === "article") {          // a photo for the article: it waits until Claude places it
     const alt = header(request, "x-photo-alt", 200), caption = [header(request, "x-photo-caption", 200), credit ? `Photo: ${credit}` : ""].filter(Boolean).join(" · ");
     if (!alt) return json({ error: "Describe the photo first." }, 400);
@@ -642,7 +643,7 @@ async function photoRoute(request, env, id) {
       const s = find(list, id);
       (s.photo_inbox = s.photo_inbox || []).push({ src: up.src, w: up.w, h: up.h, alt, caption, markdown: photoMd(up, alt, caption), at: nowIso() });
       return s;
-    }, "photo page");
+    }, by);
     return json({ ok: true, photo: up.src, inbox: true, kb: up.kb });
   }
   const { out, stories: all } = await change(env, async (list) => {
@@ -650,9 +651,9 @@ async function photoRoute(request, env, id) {
     s.photo = up.src; delete s.photo_auto;
     if (up.w) { s.photo_w = up.w; s.photo_h = up.h; } else { delete s.photo_w; delete s.photo_h; }
     if (credit) s.photo_credit = credit; else delete s.photo_credit;
-    s.updated_by = "photo page"; s.updated_at = nowIso();
+    s.updated_by = by; s.updated_at = nowIso();
     return s;
-  }, "photo page");
+  }, by);
   if (isLive(out)) await publishIndex(env, all);
   return json({ ok: true, photo: out.photo, public: isLive(out), kb: up.kb });
 }
@@ -680,10 +681,11 @@ async function storePhoto(env, request, prefix) {
    the story in between, the save is refused and the editor reloads, so nobody's work is silently lost. */
 const stampOf = async (s) => (await sha1(JSON.stringify(s))).slice(0, 12);
 class Conflict extends Error {}
-async function editorApi(request, env, path) {
+async function editorApi(request, env, path, signedIn) {
   const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
-  // who is working: the sign-in email once the Studio is behind Cloudflare Access, until then the name the editor gave
-  const who = (request.headers.get("cf-access-authenticated-user-email") || header(request, "x-editor", 60) || "editor").trim();
+  // who is working: the checked Cloudflare Access email when the Studio has sign-in, until then the name the editor gave
+  const who = (signedIn || header(request, "x-editor", 60) || "editor").trim();
+  if (request.method === "GET" && path === "me") return json({ email: signedIn || null, signout: signedIn ? "/cdn-cgi/access/logout" : null });
   const withStamp = async (s) => ({ ...s, stamp: await stampOf(s), url: s.slug && isLive(s) ? `${SITE_ROOT}/stories/${s.slug}` : null });
   try {
     if (request.method === "GET" && path === "stories") {
@@ -970,6 +972,7 @@ async function logAI(env, e) {
    week's spending has reached the cap; the request that crosses it is allowed, so a week can end a few cents over.
    The editor is the sign-in email once the Studio is behind Cloudflare Access; until then, the name the editor gave. */
 const AI_WEEKLY_CAP_EUR = 10;
+const AI_LEAGUE_WEEKLY_CAP_EUR = 50;                          // everyone together, a backstop whatever the names
 const USD_PER_EUR = 1.16;
 const weekStart = (d = new Date()) => { const w = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); w.setUTCDate(w.getUTCDate() - ((w.getUTCDay() + 6) % 7)); return w; };
 async function weekRows(env) {
@@ -987,13 +990,19 @@ async function weekRows(env) {
 const sameUser = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
 async function aiBudget(env, user, rows) {
   rows = rows || await weekRows(env);
-  const spent = rows.filter((r) => sameUser(r.user, user)).reduce((a, r) => a + (+r.cost || 0), 0) / USD_PER_EUR;
+  const eur = (list) => list.reduce((a, r) => a + (+r.cost || 0), 0) / USD_PER_EUR;
+  const spent = eur(rows.filter((r) => sameUser(r.user, user))), league = eur(rows);
   const next = weekStart(); next.setUTCDate(next.getUTCDate() + 7);
   const r2 = (x) => Math.round(x * 100) / 100;
-  return { user, cap_eur: AI_WEEKLY_CAP_EUR, spent_eur: r2(spent), left_eur: r2(Math.max(0, AI_WEEKLY_CAP_EUR - spent)), over: spent >= AI_WEEKLY_CAP_EUR, resets_at: next.toISOString() };
+  // what this editor can still spend: their own allowance, or what is left for the league if that is less
+  const left = Math.max(0, Math.min(AI_WEEKLY_CAP_EUR - spent, AI_LEAGUE_WEEKLY_CAP_EUR - league));
+  return { user, cap_eur: AI_WEEKLY_CAP_EUR, spent_eur: r2(spent), left_eur: r2(left),
+    league_cap_eur: AI_LEAGUE_WEEKLY_CAP_EUR, league_spent_eur: r2(league), league_over: league >= AI_LEAGUE_WEEKLY_CAP_EUR,
+    over: spent >= AI_WEEKLY_CAP_EUR || league >= AI_LEAGUE_WEEKLY_CAP_EUR, resets_at: next.toISOString() };
 }
 async function capReached(env, user) {
   const b = await aiBudget(env, user);
+  if (b.league_over) return `The league's AI allowance for this week is used up (€${b.league_cap_eur.toFixed(2)} for everyone together, €${b.league_spent_eur.toFixed(2)} spent). It starts again on Monday at 00:00 UTC.`;
   return b.over ? `You have used your AI allowance for this week (€${b.cap_eur.toFixed(2)}, €${b.spent_eur.toFixed(2)} spent). It starts again on Monday at 00:00 UTC.` : null;
 }
 
@@ -1065,6 +1074,42 @@ function signIn(request, url) {
   return null;
 }
 
+/* ------------------------------------------------------------------ sign-in (Cloudflare Access)
+
+   Off until both are set on the Worker: ACCESS_TEAM_DOMAIN (https://<team>.cloudflareaccess.com) and ACCESS_AUD (the
+   Application Audience tag of the Access application). Then every Studio and photo-page request must carry a valid
+   Access token (the Cf-Access-Jwt-Assertion header Access adds, or its CF_Authorization cookie): signed by the team's
+   keys, for this application, from this team, not expired. The editor is the token's email; a typed name is ignored. */
+let ACCESS_KEYS = null, ACCESS_KEYS_AT = 0;
+const b64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=")), (c) => c.charCodeAt(0));
+async function accessKeys(env, fresh) {
+  if (!fresh && ACCESS_KEYS && Date.now() - ACCESS_KEYS_AT < 3600e3) return ACCESS_KEYS;
+  const r = await fetch(env.ACCESS_TEAM_DOMAIN.replace(/\/+$/, "") + "/cdn-cgi/access/certs");
+  if (!r.ok) throw new Error("certs " + r.status);
+  ACCESS_KEYS = (await r.json()).keys || []; ACCESS_KEYS_AT = Date.now();
+  return ACCESS_KEYS;
+}
+async function accessUser(request, env) {
+  if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return { off: true };
+  const refused = { error: "Sign in to the Content Studio first: open its address again and sign in with your email." };
+  const cookie = (request.headers.get("cookie") || "").match(/(?:^|;\s*)CF_Authorization=([^;]+)/);
+  const jwt = request.headers.get("cf-access-jwt-assertion") || (cookie && cookie[1]);
+  if (!jwt) return refused;
+  try {
+    const [h, p, sig] = jwt.split(".");
+    const text = (x) => JSON.parse(new TextDecoder().decode(b64u(x)));
+    const head = text(h), body = text(p), team = env.ACCESS_TEAM_DOMAIN.replace(/\/+$/, "");
+    if (head.alg !== "RS256" || !sig) return refused;
+    const jwk = (await accessKeys(env)).find((k) => k.kid === head.kid) || (await accessKeys(env, true)).find((k) => k.kid === head.kid);
+    if (!jwk) return refused;
+    const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+    const good = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, b64u(sig), new TextEncoder().encode(h + "." + p));
+    const now = Date.now() / 1000;
+    if (!good || ![].concat(body.aud).includes(env.ACCESS_AUD) || body.iss !== team || !(body.exp > now) || (body.nbf && body.nbf > now + 60) || !body.email) return refused;
+    return { email: String(body.email).toLowerCase() };
+  } catch (e) { return refused; }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -1075,8 +1120,15 @@ export default {
     let diff = 0;                                              // compare the whole key every time, whatever was sent
     for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.DESK_KEY.charCodeAt(i);
     if (diff) return new Response("Not found", { status: 404 });
-    if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length));
-    if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length));
+    // the pages people open (the Studio and the photo pages) need a Cloudflare Access sign-in once it is configured
+    let signedIn = null;
+    if (rest.startsWith("/photo/") || rest.startsWith("/editor")) {
+      const a = await accessUser(request, env);
+      if (a.error) return new Response(a.error, { status: 403, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
+      signedIn = a.email || null;
+    }
+    if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length), signedIn);
+    if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length), signedIn);
     if (rest === "/editor/app.js") return new Response(TIPTAP, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-cache" } });
     if (rest === "/editor") return new Response(editorPage(SITE_ROOT), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
     const door = `${url.origin}/${key}`;
