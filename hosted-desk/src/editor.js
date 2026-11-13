@@ -4,8 +4,9 @@
 /* The Content Studio's version, shown in its top bar. Raise it with every change editors can see:
    0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
    0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log ·
-   0.8 paste or drop photos into the article · 0.9 the Studio's own dialogs instead of the browser's */
-export const STUDIO_VERSION = "0.9.0";
+   0.8 paste or drop photos into the article · 0.9 the Studio's own dialogs instead of the browser's ·
+   0.10 the main photo changed in place, with its credit */
+export const STUDIO_VERSION = "0.10.0";
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -139,6 +140,8 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}.chip button{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;line-height:1}
 .photo img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;display:block;background:#000}
 .photo .btn{margin-top:8px}
+.photo .mainbtns{display:flex;gap:6px}
+.photo.drop img{outline:3px dashed var(--acc);outline-offset:3px}
 .meta{font-size:11px;color:var(--dim);line-height:1.7;margin-top:14px}
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
@@ -299,8 +302,10 @@ function renderForm(msg) {
     <div>
       <div class="f photo"><label>Main photo</label>\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
         \${s.photo_auto || !s.id ? '<div class="hint">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
-        \${s.id ? \`<a class="btn" href="\${DOOR}/photo/\${s.id}" target="_blank" rel="noopener" onclick="watchPhoto()">Change photo ↗</a>\` : ""}
-        \${s.photo_credit ? \`<div class="hint">Photo: \${esc(s.photo_credit)}</div>\` : ""}</div>
+        <div class="mainbtns"><button type="button" class="btn" onclick="$('mainfile').click()">Change photo</button>
+          \${s.photo ? \`<button type="button" class="btn" onclick="editMainCredit()">Credit</button>\` : ""}</div>
+        <input type="file" id="mainfile" accept="image/*" hidden>
+        <div class="hint" id="maincredit">\${s.photo_credit ? "Photo: " + esc(s.photo_credit) : ""}</div></div>
       <div class="f two"><div><label for="kind">Kind</label><select id="kind" \${kinds.length === 1 ? "disabled" : ""}>\${kinds.map((k) => \`<option \${k === s.kind ? "selected" : ""}>\${k}</option>\`).join("")}</select></div>
         <div><label for="topic">Topic</label><select id="topic">\${["league", "city", "mission"].map((k) => \`<option \${k === s.topic ? "selected" : ""}>\${k}</option>\`).join("")}</select></div></div>
       <div class="f" id="kindx"></div>
@@ -330,6 +335,7 @@ function renderForm(msg) {
   };
   ["title", "dek", "topic", "author", "at"].forEach((id) => $(id).addEventListener("input", touch));
   mountBody(s.body || []);
+  wireMainPhoto();
   if (msg) say(msg[0], msg[1]);
 }
 /* the article field */
@@ -454,11 +460,57 @@ async function editPhoto() {
   ed.chain().setNodeSelection(sel.from).run();
   ed.chain().focus().updateAttributes("image", { alt: t.alt, title: t.caption }).run();
 }
+/* the main photo, changed in place: pick a file or drop one on it, see it in the dialog with its credit,
+   and it is the story's main photo from the next Save */
+function wireMainPhoto() {
+  $("mainfile").onchange = () => { const f = $("mainfile").files[0]; $("mainfile").value = ""; if (f) newMainPhoto(f); };
+  const box = document.querySelector(".f.photo");
+  box.addEventListener("dragover", (e) => { if ([...e.dataTransfer.items].some((i) => i.kind === "file")) { e.preventDefault(); box.classList.add("drop"); } });
+  box.addEventListener("dragleave", () => box.classList.remove("drop"));
+  box.addEventListener("drop", (e) => {
+    box.classList.remove("drop");
+    const f = [...e.dataTransfer.files].find((x) => /^image\\//.test(x.type)); if (!f) return;
+    e.preventDefault(); newMainPhoto(f);
+  });
+}
+function showMain(path, credit) {
+  const box = document.querySelector(".f.photo");
+  if (!$("mainpic")) { const img = document.createElement("img"); img.id = "mainpic"; img.alt = ""; box.insertBefore(img, box.querySelector(".mainbtns")); }
+  $("mainpic").src = pic(path);
+  $("maincredit").textContent = credit ? "Photo: " + credit : "";
+  box.querySelectorAll(".hint").forEach((h) => { if (/library/.test(h.textContent)) h.parentNode.removeChild(h); });
+}
+async function newMainPhoto(file) {
+  try {
+    const { blob, w, h } = await shrink(file);
+    const preview = URL.createObjectURL(blob);
+    const v = await modal({ title: "New main photo", img: preview,
+      text: "It shows on the story's tile, at the top of the story and in link previews.",
+      fields: [{ id: "credit", label: "Credit", value: "", placeholder: "e.g. Jane Smith", hint: "Who took the photo. Shown with the story." }],
+      ok: "Use this photo" });
+    URL.revokeObjectURL(preview);
+    if (!v) return;
+    say("", "Uploading the photo…");
+    const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
+    Object.assign(cur, { photo: j.src, photo_w: w, photo_h: h, photo_auto: false, photo_credit: v.credit, mainChanged: true });
+    showMain(j.src, v.credit);
+    touch(); say("", "New main photo. Save to keep it.");
+  } catch (e) { say("err", e.message || "That picture could not be read. Save it as a JPEG and try again."); }
+}
+async function editMainCredit() {
+  const v = await modal({ title: "Photo credit", img: pic(cur.photo),
+    fields: [{ id: "credit", label: "Credit", value: cur.photo_credit || "", placeholder: "e.g. Jane Smith", hint: "Who took the photo. Leave empty for none." }], ok: "Save" });
+  if (!v) return;
+  cur.photo_credit = v.credit; cur.creditChanged = true;
+  $("maincredit").textContent = v.credit ? "Photo: " + v.credit : "";
+  touch();
+}
 function mainFromPhoto() {
   const src = ed.getAttributes("image").src || ""; const i = src.indexOf("/content/photos/"); if (i < 0) return;
   const [path, size] = src.slice(i + 1).split("#"); const wh = (size || "").split("x");
-  cur.photo = path; cur.photo_w = +wh[0] || 0; cur.photo_h = +wh[1] || 0; cur.photo_auto = false; cur.mainChanged = true;
-  if ($("mainpic")) $("mainpic").src = pic(path);
+  cur.photo = path; cur.photo_w = +wh[0] || 0; cur.photo_h = +wh[1] || 0; cur.photo_auto = false; cur.photo_credit = ""; cur.mainChanged = true;
+  showMain(path, "");
   touch(); say("", "Main photo changed. Save to keep it.");
 }
 function paintKind() {
@@ -487,7 +539,8 @@ function fields() {
     author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, count: $("count") ? $("count").value : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
     events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id),
-    ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}) };
+    ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}),
+    ...(cur.mainChanged || cur.creditChanged ? { photo_credit: cur.photo_credit || "" } : {}) };
 }
 async function run(fn, busy) {
   document.querySelectorAll(".bar .btn").forEach((b) => (b.disabled = true)); say("", busy);
@@ -650,7 +703,6 @@ async function undelete(id, v) {
     await load(j.story.id); renderForm(["ok", "Back as a draft."]);
   } catch (e) { say("err", e.message); }
 }
-function watchPhoto() { addEventListener("focus", () => { if (cur && cur.id && !dirty) load(cur.id); }, { once: true }); }
 $("q").oninput = renderList;
 $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s;
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));

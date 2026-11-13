@@ -731,6 +731,7 @@ async function editorApi(request, env, path) {
         if (!b.id) {
           const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, who);
           if (main && f.photo_w && f.photo_h) { st.photo_w = +f.photo_w; st.photo_h = +f.photo_h; }
+          if (main && typeof f.photo_credit === "string" && f.photo_credit.trim()) st.photo_credit = f.photo_credit.trim().slice(0, 120);
           linkChat(st, b.ai_chat);
           return st;
         }
@@ -751,6 +752,7 @@ async function editorApi(request, env, path) {
           s.photo = f.photo; delete s.photo_auto; delete s.photo_credit;
           if (f.photo_w && f.photo_h) { s.photo_w = +f.photo_w; s.photo_h = +f.photo_h; } else { delete s.photo_w; delete s.photo_h; }
         }
+        if (typeof f.photo_credit === "string") { const c = f.photo_credit.trim().slice(0, 120); if (c) s.photo_credit = c; else delete s.photo_credit; }
         adoptFirstPhoto(s);
         s.updated_by = who; s.updated_at = nowIso();
         linkChat(s, b.ai_chat);
