@@ -17,7 +17,7 @@ import { z } from "zod";
 import { editorPage, STUDIO_ICON } from "./editor.js";
 import TIPTAP from "./tiptap.bundle.txt";
 import { scoring } from "./scores.js";
-import { draftWithAI, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
+import { draftWithAI, describePhoto, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
 
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
@@ -469,7 +469,7 @@ function createServer(env, door) {
   }, tool(async ({ query, limit }) => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
     const hits = (await library(env)).filter((e) => {
-      const hay = [e.alt, e.caption, e.credit, e.src, ...e.used_in.map((u) => u.title)].join(" ").toLowerCase();
+      const hay = [e.alt, e.caption, e.credit, e.src, ...(e.terms || []), ...e.used_in.map((u) => u.title)].join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
     });
     return { found: hits.length, photos: hits.slice(0, Math.min(limit, 40)).map((e) => ({
@@ -730,7 +730,8 @@ async function editorApi(request, env, path) {
     if (path === "upload") {                                  // a photo from the Studio: for the article, the main photo or the library
       const up = await storePhoto(env, request, request.headers.get("x-library") ? "library" : "article");
       if (up.error) return json({ error: up.error }, up.status);
-      await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit: header(request, "x-photo-credit", 120) }, who);
+      await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit: header(request, "x-photo-credit", 120),
+        taken: header(request, "x-photo-taken", 20), camera: header(request, "x-photo-camera", 60) }, who);
       return json({ ok: true, ...up });
     }
     if (path === "libsave") {                                 // a photo's description, caption and credit
@@ -738,10 +739,32 @@ async function editorApi(request, env, path) {
       const e = await changeLibrary(env, (list) => {
         const x = list.find((y) => y.src === b.src) || fail("No such photo in the library.");
         for (const k of ["alt", "caption", "credit"]) { const v = String(b[k] || "").trim().slice(0, k === "credit" ? 120 : 200); if (v) x[k] = v; else delete x[k]; }
+        if (b.alt && x.suggested_terms) x.terms = x.suggested_terms;  // the words that came with the suggestion help search
+        if (b.alt || b.dismiss) { delete x.suggested_alt; delete x.suggested_terms; delete x.suggested_at; }
         x.updated_by = who; x.updated_at = nowIso();
         return x;
       });
       return json({ ok: true, photo: e });
+    }
+    if (path === "describe") {                                // a suggested description for one library photo, waiting for the editor
+      const b = await request.json();
+      const lib = (await readJson(env, LIBRARY)).data || [];
+      const e = lib.find((x) => x.src === b.src) || fail("No such photo in the library.");
+      const obj = await env.CONTENT.get(String(b.src).replace(/^content\//, ""));
+      if (!obj) fail("The photo file is missing from the store.");
+      const ext = (b.src.match(/\.(jpe?g|png|webp)$/i) || [])[1] || "jpeg";
+      const mediaType = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" }[ext.toLowerCase()];
+      const uses = photoUses((await readJson(env, RECORDS)).data || [])[e.src] || [];
+      try {
+        const out = await describePhoto(env, { bytes: await obj.arrayBuffer(), mediaType, context: uses.map((u) => u.title).join("; ") });
+        const saved = await changeLibrary(env, (list) => {
+          const x = list.find((y) => y.src === b.src); if (!x) return null;
+          x.suggested_alt = out.alt; x.suggested_terms = out.terms; x.suggested_at = nowIso();
+          return x;
+        });
+        await logAI(env, { user: who, kind: "describe", story: null, chat: "", model: out.model, usage: out.usage, cost: out.cost, asked: "Describe " + e.src.split("/").pop(), proposed: null });
+        return json({ ok: true, photo: saved, cost: out.cost });
+      } catch (err) { const [status, error] = aiError(err); return json({ error }, status); }
     }
     if (path === "libhide") {                                 // out of the library, when no story uses it (the file stays in the store)
       const b = await request.json();
@@ -856,6 +879,8 @@ async function registerPhoto(env, up, meta, by) {
     if (!e) { e = { src: up.src, added_at: nowIso(), added_by: by }; list.push(e); }
     if (up.w) { e.w = up.w; e.h = up.h; }
     for (const k of ["alt", "caption", "credit"]) if (meta[k]) e[k] = meta[k];
+    if (/^\d{4}-\d{2}-\d{2}/.test(meta.taken || "")) e.taken_at = meta.taken.slice(0, 16);
+    if (meta.camera) e.camera = meta.camera.slice(0, 60);
     delete e.hidden;
     return e;
   });
@@ -916,7 +941,7 @@ async function logAI(env, e) {
   const at = new Date().toISOString();
   await env.CONTENT.put(`ai/log/${at.slice(0, 7)}/${at.replace(/[:.]/g, "-")}-${crypto.randomUUID().slice(0, 6)}.json`, JSON.stringify({ at, ...e }), {
     httpMetadata: { contentType: "application/json" },
-    customMetadata: { at: at.slice(0, 19), user: e.user, story: e.story || "", chat: e.chat || "", cost: String(e.cost || 0),
+    customMetadata: { at: at.slice(0, 19), user: e.user, kind: e.kind || "draft", story: e.story || "", chat: e.chat || "", cost: String(e.cost || 0),
       tokens_in: String((e.usage?.input || 0) + (e.usage?.cache_read || 0) + (e.usage?.cache_write || 0)), tokens_out: String(e.usage?.output || 0),
       asked: (e.asked || "").slice(0, 120) },
   });
@@ -938,7 +963,7 @@ async function aiUsage(env) {
   let total = 0;
   for (const r of rows) {
     r.story = r.story || byChat[r.chat] || "";
-    add(users, r.user || "unknown", r); add(articles, r.story || "(never saved)", r); add(months, (r.at || "").slice(0, 7), r);
+    add(users, r.user || "unknown", r); add(articles, r.kind === "describe" ? "(photo descriptions)" : r.story || "(never saved)", r); add(months, (r.at || "").slice(0, 7), r);
     total += +r.cost || 0;
   }
   const round = (m) => Object.entries(m).map(([k, v]) => ({ key: k, requests: v.requests, cost: Math.round(v.cost * 1000) / 1000 })).sort((a, b) => b.cost - a.cost);

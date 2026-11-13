@@ -96,3 +96,38 @@ export function aiError(e) {
   if (e instanceof Anthropic.APIError) return [502, `The AI service answered with an error (${e.status || "?"}). Try again.`];
   return [400, String(e.message || e)];
 }
+
+/* ------------------------------------------------------------------ photo descriptions */
+
+/* A suggested description for a library photo: Claude Opus 5.5 looks at the picture and writes the alt text an editor
+   then accepts, edits or ignores. It never names a person from their face: who is in a photo is the editor's call. */
+import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
+
+const DESCRIBE = `You write the description (alt text) of a photo for the Legacy League Golf website, a golf league of retired professional athletes playing for their cities.
+Write one sentence, at most 25 words, saying what the photo shows for someone who cannot see it: the scene, the action, the setting, what stands out. Start with the subject, not "A photo of" or "An image of".
+Never name a person or guess who they are from how they look. Use "a golfer", "four players", "a caddie". If the context below names someone and nothing in the picture contradicts it, you still do not name them: the editor adds names.
+Also give search_terms: five to eight single words or short phrases someone might search for to find this photo (hole, bunker, green, crowd, celebration, course, sky...).`;
+
+export async function describePhoto(env, { bytes, mediaType, context }) {
+  if (!env.ANTHROPIC_API_KEY) throw new Error("The desk has no Anthropic API key yet.");
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  let b64 = "";
+  const u8 = new Uint8Array(bytes);
+  for (let i = 0; i < u8.length; i += 0x8000) b64 += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+  b64 = btoa(b64);
+  const res = await client.messages.parse({
+    model: MODEL, max_tokens: 4000,
+    output_config: { effort: "low", format: jsonSchemaOutputFormat(obj({ description: { type: "string" }, search_terms: { type: "array", items: { type: "string" } } }, ["description", "search_terms"])) },
+    system: DESCRIBE,
+    messages: [{ role: "user", content: [
+      { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+      { type: "text", text: context ? `Context, for the setting only: ${context}` : "No context." },
+    ] }],
+  });
+  if (res.stop_reason === "refusal" || !res.parsed_output) throw new Error("No description could be suggested for this photo.");
+  const u = res.usage || {};
+  const cost = ((u.input_tokens || 0) * PRICE.input + (u.output_tokens || 0) * PRICE.output + (u.cache_read_input_tokens || 0) * PRICE.cache_read + (u.cache_creation_input_tokens || 0) * PRICE.cache_write) / 1e6;
+  return { alt: res.parsed_output.description.trim(), terms: res.parsed_output.search_terms.slice(0, 10), model: res.model,
+           usage: { input: u.input_tokens || 0, output: u.output_tokens || 0, cache_read: u.cache_read_input_tokens || 0, cache_write: u.cache_creation_input_tokens || 0 },
+           cost: Math.round(cost * 10000) / 10000 };
+}

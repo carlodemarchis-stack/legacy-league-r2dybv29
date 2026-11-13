@@ -6,8 +6,11 @@
    0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log ·
    0.8 paste or drop photos into the article · 0.9 the Studio's own dialogs instead of the browser's ·
    0.10 the main photo changed in place, with its credit · 0.10.1 its own icon in the browser tab ·
-   0.11 the photo library: every photo, searchable, uploaded on its own, chosen wherever a photo goes */
-export const STUDIO_VERSION = "0.11.0";
+   0.11 the photo library: every photo, searchable, uploaded on its own, chosen wherever a photo goes ·
+   0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
+   0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
+   0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date */
+export const STUDIO_VERSION = "0.14.0";
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -26,6 +29,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line)}
 header h1{margin:0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}header h1 span{color:var(--dim);font-weight:400}
 header a{color:var(--dim);font-size:12px}
+header .snav{display:flex;gap:2px;margin-left:18px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+header .snav button{border:0;background:none;border-radius:999px;padding:5px 14px;font-size:12px;letter-spacing:.04em;cursor:pointer;color:var(--dim)}
+header .snav button:hover{color:var(--ink)}header .snav button.on{background:var(--acc);color:var(--on-acc);font-weight:600}
 header .hright{margin-left:auto;display:flex;align-items:center;gap:8px}
 .usage table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 18px}
 .usage th,.usage td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}.usage th{color:var(--dim);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
@@ -143,18 +149,24 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
 /* the photo library: a page of its own over the Studio, also used to choose a photo */
 .lib{position:fixed;left:0;right:0;bottom:0;top:49px;z-index:25;background:var(--bg);display:flex;flex-direction:column}
-.lib.pick{top:0;z-index:40}
-.lib .libbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}
-.lib .libbar h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
-.lib .libbar input[type=search]{flex:1 1 240px;max-width:420px;padding:8px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
-.lib .libbar .count{color:var(--dim);font-size:12px;margin-left:auto}
-.lib .grid{flex:1;overflow-y:auto;padding:18px 20px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;align-content:start}
+.libpick .mbox.libmodal{width:min(1040px,100%);height:min(86dvh,820px);max-height:none;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.libpick .libbar{padding:14px 18px}.libpick .grid{padding:14px 18px 24px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.soon{flex:1;display:grid;place-items:center;text-align:center;color:var(--dim);padding:40px}
+.soon h2{color:var(--ink);font-size:20px;margin:0 0 8px}.soon p{max-width:520px;line-height:1.55;margin:0 auto}
+:is(.lib,.libmodal) .libbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}
+:is(.lib,.libmodal) .libbar h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+:is(.lib,.libmodal) .libbar input[type=search]{flex:1 1 240px;max-width:420px;padding:8px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+:is(.lib,.libmodal) .libbar .count{color:var(--dim);font-size:12px;margin-left:auto}
+:is(.lib,.libmodal) .grid{flex:1;min-height:0;grid-auto-rows:max-content;overflow-y:auto;padding:18px 20px 60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;align-content:start}
 .lib.drop .grid{outline:3px dashed var(--acc);outline-offset:-10px}
 .pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel);cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column}
 .pcard:hover{border-color:color-mix(in srgb,var(--acc) 60%,var(--line))}
-.pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#000}
+.pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#000;flex:none}
 .pcard span{padding:8px 10px 10px;display:block}.pcard b{display:block;font-size:12.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pcard b.none{color:var(--bad);font-weight:500}.pcard small{display:block;color:var(--dim);font-size:11px;margin-top:4px}
+.pcard i.sug{display:block;font-style:normal;font-size:12px;line-height:1.35;color:var(--ink);opacity:.85}
+.pcard i.sug::before{content:"✦ ";color:var(--acc)}
+.pcard .pact{display:flex;gap:6px;margin-top:7px}.pcard .pact .btn{padding:3px 9px;font-size:11px}
 .mused{font-size:12px;color:var(--dim);margin:-4px 0 14px;line-height:1.5}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px}
@@ -169,7 +181,8 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
 <header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span>
-  <span class="hright"><button class="btn" id="libbtn" onclick="openLibrary()">Photo library</button><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
+  <nav class="snav" id="snav"><button data-v="stories" class="on">Stories</button><button data-v="photos">Photos</button><button data-v="videos">Videos</button><button data-v="shorts">Shorts</button></nav>
+  <span class="hright"><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
   <a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></span></header>
 <div class="wrap">
   <aside>
@@ -285,7 +298,7 @@ async function pick(id) {
   show(id);
 }
 function show(id, quiet) {
-  closeLibrary();
+  closeLibrary(); closeSoon(); document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === "stories"));
   closeAI(); aiChat = []; aiChatId = null;
   const found = stories.find((s) => s.id === id);
   cur = found ? structuredClone(found) : null;          // a copy: unsaved edits never touch the list
@@ -407,6 +420,66 @@ async function linkDialog() {
   if (from === to && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
   else ch.extendMarkRange("link").setLink({ href: url }).run();
 }
+/* What a photo file says about itself, read before the browser shrinks it (shrinking drops it all).
+   XMP, written by Lightroom, Photo Mechanic and most agencies (it carries the IPTC fields too), is read first;
+   EXIF, written by the camera, fills what XMP leaves empty. Camera boilerplate ("OLYMPUS DIGITAL CAMERA") is ignored. */
+async function readMeta(file) {
+  const out = {};
+  try {
+    const u8 = new Uint8Array(await file.slice(0, 1024 * 1024).arrayBuffer());
+    const latin = new TextDecoder("latin1").decode(u8);
+    const a = latin.indexOf("<x:xmpmeta"), b = latin.indexOf("</x:xmpmeta>");
+    if (a >= 0 && b > a) {
+      const doc = new DOMParser().parseFromString(new TextDecoder("utf-8").decode(u8.subarray(a, b + 12)), "application/xml");
+      const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+      const NS = { dc: "http://purl.org/dc/elements/1.1/", ps: "http://ns.adobe.com/photoshop/1.0/", iptc: "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/",
+        exif: "http://ns.adobe.com/exif/1.0/", xmp: "http://ns.adobe.com/xap/1.0/", tiff: "http://ns.adobe.com/tiff/1.0/" };
+      const val = (ns, name) => {
+        const el = doc.getElementsByTagNameNS(NS[ns], name)[0];
+        if (el) { const li = el.getElementsByTagNameNS(RDF, "li")[0]; return ((li || el).textContent || "").trim(); }
+        for (const d of doc.getElementsByTagNameNS(RDF, "Description")) { const v = d.getAttributeNS(NS[ns], name); if (v) return v.trim(); }
+        return "";
+      };
+      out.alt = val("iptc", "AltTextAccessibility");
+      out.caption = val("dc", "description") || val("dc", "title");
+      out.credit = val("ps", "Credit") || val("dc", "creator");
+      out.taken = val("ps", "DateCreated") || val("exif", "DateTimeOriginal") || val("xmp", "CreateDate");
+      out.camera = [val("tiff", "Make"), val("tiff", "Model")].filter(Boolean).join(" ");
+      out.copyright = val("dc", "rights");
+    }
+    // EXIF in a JPEG: the APP1 "Exif" block, a small TIFF of its own
+    if (u8[0] === 0xff && u8[1] === 0xd8) {
+      let i = 2;
+      while (i + 4 < u8.length && u8[i] === 0xff) {
+        const marker = u8[i + 1], len = (u8[i + 2] << 8) | u8[i + 3];
+        if (marker === 0xe1 && latin.substr(i + 4, 6) === "Exif\\0\\0") {
+          const t = i + 10, dv = new DataView(u8.buffer, u8.byteOffset + t, Math.min(len - 8, u8.length - t));
+          const le = dv.getUint16(0) === 0x4949;
+          const u16 = (o) => dv.getUint16(o, le), u32 = (o) => dv.getUint32(o, le);
+          const ascii = (o) => { const n = u32(o + 4), at = n > 4 ? u32(o + 8) : o + 8; let s = ""; for (let k = 0; k < n - 1 && at + k < dv.byteLength; k++) s += String.fromCharCode(dv.getUint8(at + k)); return s.trim(); };
+          const tags = {}, ifd = (o) => { const n = u16(o); for (let k = 0; k < n; k++) { const e = o + 2 + k * 12, tag = u16(e); if (u16(e + 2) === 2) tags[tag] = ascii(e); else if (tag === 0x8769) tags.exif = u32(e + 8); } };
+          ifd(u32(4)); if (tags.exif) ifd(tags.exif);
+          const junk = (x) => !x || /^(OLYMPUS DIGITAL CAMERA|SONY DSC|DCIM|default|image|untitled)/i.test(x);
+          if (!out.caption && !junk(tags[0x010e])) out.caption = tags[0x010e];
+          if (!out.credit && tags[0x013b]) out.credit = tags[0x013b];
+          if (!out.copyright && tags[0x8298]) out.copyright = tags[0x8298];
+          if (!out.taken && tags[0x9003]) out.taken = tags[0x9003];
+          if (!out.camera) out.camera = [tags[0x010f], tags[0x0110]].filter(Boolean).join(" ");
+          break;
+        }
+        i += 2 + len;
+      }
+    }
+  } catch (e) { /* a file that cannot be read for its data is uploaded without it */ }
+  // a credit from the copyright line when nothing better: "© 2026 Jane Smith. All rights reserved." → "Jane Smith"
+  if (!out.credit && out.copyright) out.credit = out.copyright.replace(/©|\\(c\\)|copyright|all rights reserved\\.?|\\b(19|20)\\d\\d\\b/gi, "").replace(/^[\\s,.\\-]+|[\\s,.\\-]+$/g, "");
+  if (out.camera) { const w = out.camera.split(/\\s+/); out.camera = w.filter((x, k) => w.indexOf(x) === k).join(" "); }   // "Canon Canon EOS R5" → "Canon EOS R5"
+  const d = String(out.taken || "").match(/^(\\d{4})[:-](\\d{2})[:-](\\d{2})(?:[T ](\\d{2}):(\\d{2}))?/);
+  out.taken = d ? \`\${d[1]}-\${d[2]}-\${d[3]}\${d[4] ? "T" + d[4] + ":" + d[5] : ""}\` : "";
+  for (const k of ["alt", "caption", "credit"]) out[k] = (out[k] || "").replace(/\\s+/g, " ").trim().slice(0, k === "credit" ? 120 : 200);
+  return out;
+}
+const metaNote = (m) => (m.caption || m.credit || m.alt || m.taken) ? "Filled in from the photo's own data" + (m.taken ? " (taken " + when(m.taken) + (m.camera ? ", " + m.camera : "") + ")" : "") + ": check it." : "";
 /* photos in the article: shrunk in the browser, kept in the store, described and captioned, placed at the cursor */
 async function shrink(file) {
   const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -415,9 +488,9 @@ async function shrink(file) {
   cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
   return { blob: await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82)), w: cv.width, h: cv.height };
 }
-function askText(alt, caption, which = "", img = "") {
+function askText(alt, caption, which = "", img = "", note = "") {
   return modal({
-    title: (alt ? "Edit the photo's text" : "Describe the photo") + which, img,
+    title: (alt ? "Edit the photo's text" : "Describe the photo") + which, img, text: note,
     fields: [
       { id: "alt", label: "Description", value: alt, required: true, type: "textarea", rows: 2, requiredText: "Describe the photo: it is read aloud to people who cannot see it.",
         placeholder: "e.g. Omar Quintero hits a 5-wood to six feet on the 13th", hint: "What the photo shows, for people who cannot see it. Not shown on the page." },
@@ -450,14 +523,15 @@ async function addPhotos(files, pos) {
 async function addPhoto(file, which = "", at = null) {
   say("", "Uploading the photo" + which + "…");
   try {
+    const meta = await readMeta(file);
     const { blob, w, h } = await shrink(file);
     const preview = URL.createObjectURL(blob);
     say("", "");
-    const t = await askText("", "", which, preview);           // described first: a photo given up is never uploaded
+    const t = await askText(meta.alt, [meta.caption, meta.credit ? "Photo: " + meta.credit : ""].filter(Boolean).join(" · "), which, preview, metaNote(meta));           // described first: a photo given up is never uploaded
     URL.revokeObjectURL(preview);
     if (!t) { say("", "Photo not added."); return false; }
     say("", "Uploading the photo" + which + "…");
-    const j = await uploadBlob(blob, w, h, { alt: t.alt, caption: t.caption });
+    const j = await uploadBlob(blob, w, h, { alt: t.alt, caption: t.caption, credit: meta.credit, taken: meta.taken, camera: meta.camera });
     const attrs = { src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption };
     if (at != null) ed.chain().focus().insertContentAt(at, { type: "image", attrs }).run();
     else ed.chain().focus().setImage(attrs).run();
@@ -544,16 +618,17 @@ async function mainFromLibrary() {
 }
 async function newMainPhoto(file) {
   try {
+    const meta = await readMeta(file);
     const { blob, w, h } = await shrink(file);
     const preview = URL.createObjectURL(blob);
     const v = await modal({ title: "New main photo", img: preview,
-      text: "It shows on the story's tile, at the top of the story and in link previews.",
-      fields: [{ id: "credit", label: "Credit", value: "", placeholder: "e.g. Jane Smith", hint: "Who took the photo. Shown with the story." }],
+      text: "It shows on the story's tile, at the top of the story and in link previews. " + metaNote(meta),
+      fields: [{ id: "credit", label: "Credit", value: meta.credit, placeholder: "e.g. Jane Smith", hint: "Who took the photo. Shown with the story." }],
       ok: "Use this photo" });
     URL.revokeObjectURL(preview);
     if (!v) return;
     say("", "Uploading the photo…");
-    const j = await uploadBlob(blob, w, h, { credit: v.credit });
+    const j = await uploadBlob(blob, w, h, { credit: v.credit, alt: meta.alt, caption: meta.caption, taken: meta.taken, camera: meta.camera });
     Object.assign(cur, { photo: j.src, photo_w: w, photo_h: h, photo_auto: false, photo_credit: v.credit, mainChanged: true });
     showMain(j.src, v.credit);
     touch(); say("", "New main photo. Save to keep it.");
@@ -693,17 +768,27 @@ let libPhotos = [];
 const photoText = (e) => [e.caption, e.credit ? "Photo: " + e.credit : ""].filter(Boolean).join(" · ");
 function libraryPage({ pick = false, title = "Photo library", resolve = null } = {}) {
   closeLibrary();
-  const box = document.createElement("div"); box.className = "lib" + (pick ? " pick" : ""); box.id = "lib";
+  // the Photos section is a page under the top menu; choosing a photo for a story is a dialog over the story
+  const outer = document.createElement("div"); outer.id = "lib";
+  let box = outer;
+  if (pick) { outer.className = "mback libpick"; box = document.createElement("div"); box.className = "mbox libmodal"; outer.appendChild(box); }
+  else outer.className = "lib";
   box.innerHTML = \`<div class="libbar"><h1>\${esc(title)}</h1><input type="search" id="libq" placeholder="Search descriptions, captions, credits, stories…" autocomplete="off">
-      <div class="seg" id="libseg"><button data-s="all" class="on">All</button><button data-s="nodesc">No description</button><button data-s="unused">Not used</button></div>
+      <div class="seg" id="libseg"><button data-s="all" class="on">All</button><button data-s="nodesc">No description</button><button data-s="unused">Not used</button><button data-s="review">To review</button></div>
       <span class="count" id="libcount"></span>
+      \${pick ? "" : '<button type="button" class="btn" id="libsug" title="Claude looks at each photo without a description and suggests one for you to accept">✦ Suggest descriptions</button><button type="button" class="btn" id="liball" hidden>Accept all suggestions</button>'}
       <button type="button" class="btn pri" id="libup">\${pick ? "Upload new" : "Upload photos"}</button><input type="file" id="libfile" accept="image/*" \${pick ? "" : "multiple"} hidden>
-      <button type="button" class="btn" id="libclose">\${pick ? "Cancel" : "Close"}</button></div>
+      \${pick ? '<button type="button" class="btn" id="libclose">Cancel</button>' : ""}</div>
     <div class="grid" id="libgrid"><div class="empty">Loading the library…</div></div>\`;
-  document.body.appendChild(box);
+  document.body.appendChild(outer);
   let filter = "all";
-  const finish = (v) => { closeLibrary(); if (resolve) resolve(v); };
-  $("libclose").onclick = () => finish(null);
+  const keys = (e) => { if (e.key === "Escape" && $("lib") === outer && !document.querySelector(".mback:not(.libpick)")) { e.preventDefault(); finish(null); } };
+  const finish = (v) => { removeEventListener("keydown", keys, true); closeLibrary(); if (resolve) resolve(v); };
+  if (pick) {
+    $("libclose").onclick = () => finish(null);
+    outer.addEventListener("mousedown", (e) => { if (e.target === outer) finish(null); });
+    addEventListener("keydown", keys, true);
+  }
   $("libup").onclick = () => $("libfile").click();
   $("libfile").onchange = () => {
     const files = [...$("libfile").files]; $("libfile").value = "";
@@ -711,6 +796,15 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
     if (pick) finish({ file: files[0] }); else uploadToLibrary(files);
   };
   $("libq").oninput = () => paintLibrary();
+  if (!pick) {
+    $("libsug").onclick = () => suggestFor(libPhotos.filter((e) => !e.alt && !e.suggested_alt));
+    $("liball").onclick = async () => {
+      const list = libPhotos.filter((e) => e.suggested_alt);
+      if (!(await confirmModal("Accept " + list.length + " suggested descriptions?", "Each becomes the photo's description as written. You can still change any of them later.", "Accept all"))) return;
+      for (const e of list) await call("libsave", { src: e.src, alt: e.suggested_alt, caption: e.caption, credit: e.credit });
+      await loadLibrary(); paintLibrary();
+    };
+  }
   $("libseg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s; $("libseg").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); paintLibrary(); };
   if (!pick) {                                                // drop pictures anywhere on the library to add them
     box.addEventListener("dragover", (e) => { if ([...e.dataTransfer.items].some((i) => i.kind === "file")) { e.preventDefault(); box.classList.add("drop"); } });
@@ -719,16 +813,22 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
   }
   window.paintLibrary = () => {
     const words = $("libq").value.toLowerCase().split(/\\s+/).filter(Boolean);
-    const rows = libPhotos.filter((e) => (filter === "all" || (filter === "nodesc" && !e.alt) || (filter === "unused" && !e.used_in.length)) &&
-      words.every((w) => [e.alt, e.caption, e.credit, e.src, ...e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title))].join(" ").toLowerCase().includes(w)));
+    const rows = libPhotos.filter((e) => (filter === "all" || (filter === "nodesc" && !e.alt) || (filter === "unused" && !e.used_in.length) || (filter === "review" && e.suggested_alt)) &&
+      words.every((w) => [e.alt, e.suggested_alt, e.caption, e.credit, e.src, ...(e.terms || []), ...(e.suggested_terms || []), ...e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title))].join(" ").toLowerCase().includes(w)));
+    const toReview = libPhotos.filter((e) => e.suggested_alt).length;
+    if ($("liball")) { $("liball").hidden = !toReview; $("liball").textContent = "Accept all suggestions (" + toReview + ")"; }
     $("libcount").textContent = rows.length + " of " + libPhotos.length + " photos";
     $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}"><img src="\${esc(pic(e.src))}" alt="" loading="lazy">
-      <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : '<b class="none">No description yet</b>'}<small>\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small></span></button>\`).join("") ||
+      <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : e.suggested_alt ? \`<i class="sug">\${esc(e.suggested_alt)}</i>\` : '<b class="none">No description yet</b>'}<small>\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small>
+      \${pick || e.alt ? "" : \`<span class="pact">\${e.suggested_alt ? \`<span class="btn pri" data-act="accept">Accept</span>\` : \`<span class="btn" data-act="suggest">✦ Suggest</span>\`}</span>\`}</span></button>\`).join("") ||
       '<div class="empty" style="grid-column:1/-1">No photo matches.</div>';
   };
-  $("libgrid").onclick = (e) => {
+  $("libgrid").onclick = async (e) => {
     const c = e.target.closest(".pcard"); if (!c) return;
     const entry = libPhotos[+c.dataset.i];
+    const act = e.target.closest("[data-act]");
+    if (act && act.dataset.act === "accept") { await call("libsave", { src: entry.src, alt: entry.suggested_alt, caption: entry.caption, credit: entry.credit }); await loadLibrary(); paintLibrary(); return; }
+    if (act && act.dataset.act === "suggest") { act.textContent = "Looking…"; await suggestFor([entry]); return; }
     if (pick) finish({ entry }); else editLibraryPhoto(entry);
   };
   loadLibrary().then(() => { paintLibrary(); $("libq").focus(); });
@@ -736,14 +836,33 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
 function closeLibrary() { const l = $("lib"); if (l) l.parentNode.removeChild(l); }
 async function loadLibrary() { libPhotos = (await call("library")).photos; }
 function openLibrary() { closeAI(); closeHistory(); closeUsage(); libraryPage(); }
+
+/* ------------------------------------------------ the top menu: Stories, Photos, Videos, Shorts */
+function closeSoon() { const x = $("soon"); if (x) x.parentNode.removeChild(x); }
+const SOON = {
+  videos: ["Videos", "Highlights, documentaries and series, hosted with captions. To be decided: where the files live (Cloudflare Stream is in the plan), what a video entry holds (title, description, poster, captions, length, cities, players, events), and who uploads them."],
+  shorts: ["Shorts", "Vertical clips for the app and social. To be decided what they are: their own feed, a kind of story, or clips cut from the videos, and what each one carries."],
+};
+function setView(v) {
+  document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
+  closeLibrary(); closeSoon(); closeAI(); closeHistory(); closeUsage();
+  if (v === "photos") libraryPage();
+  else if (SOON[v]) {
+    const box = document.createElement("div"); box.className = "lib"; box.id = "soon";
+    box.innerHTML = \`<div class="soon"><div><h2>\${esc(SOON[v][0])}: coming</h2><p>\${esc(SOON[v][1])}</p></div></div>\`;
+    document.body.appendChild(box);
+  }
+}
+function goView(v) { setView(v); }                          // the open story stays as it is underneath, unsaved changes included
 const choosePhoto = (title) => new Promise((resolve) => libraryPage({ pick: true, title, resolve }));
 async function editLibraryPhoto(e) {
   const uses = e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title) + " (" + u.how + ")");
+  const sug = !e.alt && e.suggested_alt;
   const v = await modal({
     title: "Photo details", img: pic(e.src),
-    text: uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.",
+    text: (e.taken_at ? "Taken " + when(e.taken_at) + (e.camera ? " with a " + e.camera : "") + ". " : "") + (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
     fields: [
-      { id: "alt", label: "Description", value: e.alt, type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
+      { id: "alt", label: sug ? "Description (suggested)" : "Description", value: e.alt || e.suggested_alt || "", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
       { id: "caption", label: "Caption", value: e.caption, hint: "Shown under the photo when it goes in an article." },
       { id: "credit", label: "Credit", value: e.credit, placeholder: "e.g. Jane Smith", hint: "Who took it." },
     ],
@@ -758,22 +877,39 @@ async function editLibraryPhoto(e) {
     await loadLibrary(); paintLibrary();
   } catch (err) { await confirmModal("That did not work", err.message, "OK"); }
 }
+/* suggestions, one photo after another; each waits on its card for the editor */
+async function suggestFor(list) {
+  if (!list.length) { await confirmModal("Nothing to suggest", "Every photo has a description or a suggestion waiting.", "OK"); return; }
+  if (list.length > 1 && !(await confirmModal("Suggest descriptions for " + list.length + " photos?",
+    "Claude looks at each photo and writes a description for you to accept or change. It never names people. Each one costs about a cent and shows in AI usage.", "Suggest"))) return;
+  let cost = 0, done = 0, failed = 0;
+  if ($("libsug")) $("libsug").disabled = true;
+  for (const e of list) {
+    $("libcount").textContent = "Describing " + (done + failed + 1) + " of " + list.length + "…";
+    try { const j = await call("describe", { src: e.src }); cost += j.cost || 0; done++; Object.assign(e, j.photo || {}); paintLibrary(); }
+    catch (err) { failed++; }
+  }
+  if ($("libsug")) $("libsug").disabled = false;
+  await loadLibrary(); paintLibrary();
+  $("libcount").textContent = done + " suggested" + (failed ? ", " + failed + " could not be" : "") + " · about $" + cost.toFixed(2);
+}
 async function uploadToLibrary(files) {
   for (let i = 0; i < files.length; i++) {
     const which = files.length > 1 ? \` (\${i + 1} of \${files.length})\` : "";
     try {
+      const meta = await readMeta(files[i]);
       const { blob, w, h } = await shrink(files[i]);
       const preview = URL.createObjectURL(blob);
-      const v = await modal({ title: "Add to the library" + which, img: preview,
+      const v = await modal({ title: "Add to the library" + which, img: preview, text: metaNote(meta),
         fields: [
-          { id: "alt", label: "Description", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", placeholder: "e.g. Omar Quintero hits a 5-wood on the 13th", hint: "What the photo shows. It also makes the photo easy to find." },
-          { id: "caption", label: "Caption", placeholder: "e.g. The 13th at El Camaleón" },
-          { id: "credit", label: "Credit", placeholder: "e.g. Jane Smith" },
+          { id: "alt", label: "Description", value: meta.alt, type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", placeholder: "e.g. Omar Quintero hits a 5-wood on the 13th", hint: "What the photo shows. It also makes the photo easy to find." },
+          { id: "caption", label: "Caption", value: meta.caption, placeholder: "e.g. The 13th at El Camaleón" },
+          { id: "credit", label: "Credit", value: meta.credit, placeholder: "e.g. Jane Smith" },
         ], ok: "Add photo" });
       URL.revokeObjectURL(preview);
       if (!v) continue;
       $("libcount").textContent = "Uploading" + which + "…";
-      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, library: true });
+      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, taken: meta.taken, camera: meta.camera, library: true });
     } catch (e) { await confirmModal("That photo could not be added", e.message || "Save it as a JPEG and try again.", "OK"); }
   }
   await loadLibrary(); paintLibrary();
@@ -782,7 +918,7 @@ async function uploadToLibrary(files) {
 async function uploadBlob(blob, w, h, meta = {}) {
   const enc = (x) => encodeURIComponent(x || "");
   const r = await fetch(API + "upload", { method: "POST", body: blob, headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h,
-    "x-editor": enc(EDITOR), "x-photo-alt": enc(meta.alt), "x-photo-caption": enc(meta.caption), "x-photo-credit": enc(meta.credit), ...(meta.library ? { "x-library": "1" } : {}) } });
+    "x-editor": enc(EDITOR), "x-photo-alt": enc(meta.alt), "x-photo-caption": enc(meta.caption), "x-photo-credit": enc(meta.credit), "x-photo-taken": enc(meta.taken), "x-photo-camera": enc(meta.camera), ...(meta.library ? { "x-library": "1" } : {}) } });
   const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
   return j;
 }
@@ -866,6 +1002,7 @@ async function undelete(id, v) {
   } catch (e) { say("err", e.message); }
 }
 $("q").oninput = renderList;
+$("snav").onclick = (e) => { const b = e.target.closest("button"); if (b) goView(b.dataset.v); };
 $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.s;
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
   if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
