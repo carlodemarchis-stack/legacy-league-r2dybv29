@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.14.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit
+export const STUDIO_VERSION = "0.15.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -167,6 +167,11 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .pcard i.sug{display:block;font-style:normal;font-size:12px;line-height:1.35;color:var(--ink);opacity:.85}
 .pcard i.sug::before{content:"✦ ";color:var(--acc)}
 .pcard .pact{display:flex;gap:6px;margin-top:7px}.pcard .pact .btn{padding:3px 9px;font-size:11px}
+.mmeta{margin:-4px 0 16px;font-size:12px}
+.mmeta table{width:100%;border-collapse:collapse}.mmeta td{padding:4px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.mmeta td:first-child{color:var(--dim);width:38%;padding-right:10px}.mmeta td:last-child{word-break:break-word}
+.mmeta details{margin-top:10px}.mmeta summary{cursor:pointer;color:var(--dim);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.mmeta details table{margin-top:6px;font-family:ui-monospace,Menlo,monospace;font-size:11px}
 .mused{font-size:12px;color:var(--dim);margin:-4px 0 14px;line-height:1.5}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px}
@@ -212,11 +217,11 @@ const when = (iso) => iso ? new Date(iso).toLocaleString("en-US", { month: "shor
 /* ------------------------------------------------ the Studio's dialog
    modal({ title, text, img, fields, ok, cancel, danger, extra, validate }) resolves to the fields' values (or true when
    there are none), to { action } for the extra button, or to null when the editor cancels. Enter confirms, Esc cancels. */
-function modal({ title, text = "", img = "", fields = [], ok = "OK", cancel = "Cancel", danger = false, extra = null, validate = null }) {
+function modal({ title, text = "", img = "", html = "", fields = [], ok = "OK", cancel = "Cancel", danger = false, extra = null, validate = null }) {
   return new Promise((resolve) => {
     const back = document.createElement("div"); back.className = "mback";
     back.innerHTML = \`<div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mtitle"><h2 id="mtitle">\${esc(title)}</h2>
-      \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? \`<img class="mimg" src="\${esc(img)}" alt="">\` : ""}
+      \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? \`<img class="mimg" src="\${esc(img)}" alt="">\` : ""}\${html}
       \${fields.map((f) => \`<div class="mf" data-f="\${f.id}"><label for="mf-\${f.id}">\${esc(f.label)}\${f.required ? "" : "<em>optional</em>"}</label>
         \${f.type === "textarea" ? \`<textarea id="mf-\${f.id}" rows="\${f.rows || 2}" placeholder="\${esc(f.placeholder || "")}">\${esc(f.value || "")}</textarea>\`
           : \`<input id="mf-\${f.id}" type="\${f.type || "text"}" value="\${esc(f.value || "")}" placeholder="\${esc(f.placeholder || "")}" autocomplete="off">\`}
@@ -424,7 +429,7 @@ async function linkDialog() {
    XMP, written by Lightroom, Photo Mechanic and most agencies (it carries the IPTC fields too), is read first;
    EXIF, written by the camera, fills what XMP leaves empty. Camera boilerplate ("OLYMPUS DIGITAL CAMERA") is ignored. */
 async function readMeta(file) {
-  const out = {};
+  const out = { all: {} };
   try {
     const u8 = new Uint8Array(await file.slice(0, 1024 * 1024).arrayBuffer());
     const latin = new TextDecoder("latin1").decode(u8);
@@ -446,6 +451,15 @@ async function readMeta(file) {
       out.taken = val("ps", "DateCreated") || val("exif", "DateTimeOriginal") || val("xmp", "CreateDate");
       out.camera = [val("tiff", "Make"), val("tiff", "Model")].filter(Boolean).join(" ");
       out.copyright = val("dc", "rights");
+      // every simple XMP field, as "prefix:name": attributes and plain or listed values
+      for (const d of doc.getElementsByTagNameNS(RDF, "Description")) {
+        for (const at of d.attributes) if (!/^(xmlns|rdf:|xml:)/.test(at.name) && at.value.trim()) out.all[at.name] = at.value.trim();
+        for (const el of d.children) {
+          const lis = el.getElementsByTagNameNS(RDF, "li");
+          const v = lis.length ? [...lis].map((x) => x.textContent.trim()).filter(Boolean).join("; ") : el.children.length ? "" : el.textContent.trim();
+          if (v) out.all[el.tagName] = v;
+        }
+      }
     }
     // EXIF in a JPEG: the APP1 "Exif" block, a small TIFF of its own
     if (u8[0] === 0xff && u8[1] === 0xd8) {
@@ -470,6 +484,7 @@ async function readMeta(file) {
         i += 2 + len;
       }
     }
+    if (u8[0] === 0xff && u8[1] === 0xd8) Object.assign(out.all, exifAll(u8, latin), { ...out.all });
   } catch (e) { /* a file that cannot be read for its data is uploaded without it */ }
   // a credit from the copyright line when nothing better: "© 2026 Jane Smith. All rights reserved." → "Jane Smith"
   // a licence ("Public Domain", "CC-BY-SA") says how it may be used, not who took it: it is never a credit
@@ -479,6 +494,59 @@ async function readMeta(file) {
   out.taken = d ? \`\${d[1]}-\${d[2]}-\${d[3]}\${d[4] ? "T" + d[4] + ":" + d[5] : ""}\` : "";
   for (const k of ["alt", "caption", "credit"]) out[k] = (out[k] || "").replace(/\\s+/g, " ").trim().slice(0, k === "credit" ? 120 : 200);
   return out;
+}
+/* Every EXIF field worth reading, by name: the main block, the camera block and GPS. */
+const EXIF_TAGS = { 0x010e: "ImageDescription", 0x010f: "Make", 0x0110: "Model", 0x0112: "Orientation", 0x0131: "Software", 0x0132: "DateTime",
+  0x013b: "Artist", 0x8298: "Copyright", 0x829a: "ExposureTime", 0x829d: "FNumber", 0x8822: "ExposureProgram", 0x8827: "ISO",
+  0x9003: "DateTimeOriginal", 0x9004: "DateTimeDigitized", 0x9010: "OffsetTime", 0x9204: "ExposureBias", 0x9207: "MeteringMode", 0x9209: "Flash",
+  0x920a: "FocalLength", 0xa002: "PixelWidth", 0xa003: "PixelHeight", 0xa405: "FocalLengthIn35mm", 0xa430: "CameraOwnerName",
+  0xa431: "BodySerialNumber", 0xa433: "LensMake", 0xa434: "LensModel" };
+const GPS_TAGS = { 1: "GPSLatitudeRef", 2: "GPSLatitude", 3: "GPSLongitudeRef", 4: "GPSLongitude", 6: "GPSAltitude" };
+function exifAll(u8, latin) {
+  const all = {};
+  let i = 2;
+  while (i + 4 < u8.length && u8[i] === 0xff) {
+    const marker = u8[i + 1], len = (u8[i + 2] << 8) | u8[i + 3];
+    if (marker === 0xe1 && latin.substr(i + 4, 6) === "Exif\\0\\0") {
+      const t = i + 10, dv = new DataView(u8.buffer, u8.byteOffset + t, Math.min(len - 8, u8.length - t));
+      const le = dv.getUint16(0) === 0x4949, u16 = (o) => dv.getUint16(o, le), u32 = (o) => dv.getUint32(o, le), s32 = (o) => dv.getInt32(o, le);
+      const SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+      const value = (e) => {
+        const type = u16(e + 2), n = u32(e + 4), size = (SIZE[type] || 1) * n, at = size > 4 ? u32(e + 8) : e + 8;
+        if (at + size > dv.byteLength) return null;
+        if (type === 2) { let s = ""; for (let k = 0; k < n - 1; k++) s += String.fromCharCode(dv.getUint8(at + k)); return s.trim(); }
+        const one = (k) => type === 3 ? u16(at + k * 2) : type === 4 ? u32(at + k * 4) : type === 9 ? s32(at + k * 4)
+          : type === 5 ? [u32(at + k * 8), u32(at + k * 8 + 4)] : type === 10 ? [s32(at + k * 8), s32(at + k * 8 + 4)] : null;
+        const vals = [...Array(Math.min(n, 8)).keys()].map(one);
+        return vals.length === 1 ? vals[0] : vals;
+      };
+      const walk = (o, names, depth) => {
+        if (o + 2 > dv.byteLength || depth > 2) return;
+        const n = u16(o);
+        for (let k = 0; k < n; k++) {
+          const e = o + 2 + k * 12; if (e + 12 > dv.byteLength) break;
+          const tag = u16(e);
+          if (tag === 0x8769 || tag === 0x8825) { walk(u32(e + 8), tag === 0x8825 ? GPS_TAGS : EXIF_TAGS, depth + 1); continue; }
+          const name = names[tag]; if (!name) continue;
+          const v = value(e); if (v == null || v === "") continue;
+          all["exif:" + name] = v;
+        }
+      };
+      walk(u32(4), EXIF_TAGS, 0);
+      break;
+    }
+    i += 2 + len;
+  }
+  // rationals and degrees, in words a person reads
+  const r = (x) => Array.isArray(x) && x.length === 2 && typeof x[0] === "number" ? (x[1] ? x[0] / x[1] : 0) : x;
+  const fmt = {};
+  for (const [k, v] of Object.entries(all)) {
+    if (k === "exif:ExposureTime" && Array.isArray(v)) fmt[k] = v[0] && v[1] / v[0] >= 2 ? "1/" + Math.round(v[1] / v[0]) + " s" : r(v) + " s";
+    else if (k === "exif:FNumber" || k === "exif:FocalLength" || k === "exif:ExposureBias" || k === "exif:GPSAltitude") fmt[k] = +r(v).toFixed(2);
+    else if ((k === "exif:GPSLatitude" || k === "exif:GPSLongitude") && Array.isArray(v)) { const [d, m, s] = v.map(r); fmt[k] = +(d + m / 60 + s / 3600).toFixed(6); }
+    else fmt[k] = Array.isArray(v) ? v.map(r).join(", ") : v;
+  }
+  return fmt;
 }
 const metaNote = (m) => (m.caption || m.credit || m.alt || m.taken) ? "Filled in from the photo's own data" + (m.taken ? " (taken " + when(m.taken) + (m.camera ? ", " + m.camera : "") + ")" : "") + ": check it." : "";
 /* photos in the article: shrunk in the browser, kept in the store, described and captioned, placed at the cursor */
@@ -532,7 +600,7 @@ async function addPhoto(file, which = "", at = null) {
     URL.revokeObjectURL(preview);
     if (!t) { say("", "Photo not added."); return false; }
     say("", "Uploading the photo" + which + "…");
-    const j = await uploadBlob(blob, w, h, { alt: t.alt, caption: t.caption, credit: meta.credit, taken: meta.taken, camera: meta.camera });
+    const j = await uploadBlob(blob, w, h, { alt: t.alt, caption: t.caption, credit: meta.credit, taken: meta.taken, camera: meta.camera, all: meta.all });
     const attrs = { src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption };
     if (at != null) ed.chain().focus().insertContentAt(at, { type: "image", attrs }).run();
     else ed.chain().focus().setImage(attrs).run();
@@ -629,7 +697,7 @@ async function newMainPhoto(file) {
     URL.revokeObjectURL(preview);
     if (!v) return;
     say("", "Uploading the photo…");
-    const j = await uploadBlob(blob, w, h, { credit: v.credit, alt: meta.alt, caption: meta.caption, taken: meta.taken, camera: meta.camera });
+    const j = await uploadBlob(blob, w, h, { credit: v.credit, alt: meta.alt, caption: meta.caption, taken: meta.taken, camera: meta.camera, all: meta.all });
     Object.assign(cur, { photo: j.src, photo_w: w, photo_h: h, photo_auto: false, photo_credit: v.credit, mainChanged: true });
     showMain(j.src, v.credit);
     touch(); say("", "New main photo. Save to keep it.");
@@ -856,12 +924,37 @@ function setView(v) {
 }
 function goView(v) { setView(v); }                          // the open story stays as it is underneath, unsaved changes included
 const choosePhoto = (title) => new Promise((resolve) => libraryPage({ pick: true, title, resolve }));
+/* A photo's data in the details: the main facts in plain words, then every field the file carried */
+function photoData(e) {
+  const m = e.meta || {}, g = (k) => m["exif:" + k];
+  const rows = [];
+  const row = (k, v) => { if (v != null && v !== "") rows.push(\`<tr><td>\${esc(k)}</td><td>\${v}</td></tr>\`); };
+  row("Size", e.w ? esc(e.w + " × " + e.h + " px") : "");
+  row("Taken", e.taken_at ? esc(when(e.taken_at)) : "");
+  row("Camera", esc(e.camera || [g("Make"), g("Model")].filter(Boolean).join(" ")));
+  row("Lens", esc(g("LensModel") || m["aux:Lens"] || m["exifEX:LensModel"] || ""));
+  row("Exposure", esc([g("ExposureTime"), g("FNumber") ? "f/" + g("FNumber") : "", g("ISO") ? "ISO " + g("ISO") : "", g("FocalLength") ? g("FocalLength") + " mm" : ""].filter(Boolean).join(" · ")));
+  const lat = g("GPSLatitude"), lon = g("GPSLongitude");
+  if (lat != null && lon != null) {
+    const la = (g("GPSLatitudeRef") === "S" ? -1 : 1) * lat, lo = (g("GPSLongitudeRef") === "W" ? -1 : 1) * lon;
+    row("Location", \`<a href="https://www.openstreetmap.org/?mlat=\${la}&mlon=\${lo}#map=16/\${la}/\${lo}" target="_blank" rel="noopener">\${esc(la.toFixed(5) + ", " + lo.toFixed(5))} ↗</a>\`);
+  }
+  row("Copyright", esc(m["dc:rights"] || g("Copyright") || ""));
+  row("Software", esc(g("Software") || m["xmp:CreatorTool"] || ""));
+  row("File", esc(e.src.split("/").pop()));
+  row("Added", esc([e.added_at ? when(e.added_at) : "", e.added_by && e.added_by !== "store" ? "by " + e.added_by : e.added_by === "store" ? "(was in the store)" : ""].filter(Boolean).join(" ")));
+  if (e.updated_by) row("Changed", esc(when(e.updated_at) + " by " + e.updated_by));
+  const keys = Object.keys(m).sort();
+  return \`<div class="mmeta"><table>\${rows.join("")}</table>\${keys.length
+    ? \`<details><summary>All \${keys.length} fields in the file</summary><table>\${keys.map((k) => \`<tr><td>\${esc(k)}</td><td>\${esc(String(m[k]))}</td></tr>\`).join("")}</table></details>\`
+    : '<p class="hint" style="margin-top:8px">The file carried no other data.</p>'}</div>\`;
+}
 async function editLibraryPhoto(e) {
   const uses = e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title) + " (" + u.how + ")");
   const sug = !e.alt && e.suggested_alt;
   const v = await modal({
-    title: "Photo details", img: pic(e.src),
-    text: (e.taken_at ? "Taken " + when(e.taken_at) + (e.camera ? " with a " + e.camera : "") + ". " : "") + (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
+    title: "Photo details", img: pic(e.src), html: photoData(e),
+    text: (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
     fields: [
       { id: "alt", label: sug ? "Description (suggested)" : "Description", value: e.alt || e.suggested_alt || "", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
       { id: "caption", label: "Caption", value: e.caption, hint: "Shown under the photo when it goes in an article." },
@@ -910,16 +1003,24 @@ async function uploadToLibrary(files) {
       URL.revokeObjectURL(preview);
       if (!v) continue;
       $("libcount").textContent = "Uploading" + which + "…";
-      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, taken: meta.taken, camera: meta.camera, library: true });
+      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, taken: meta.taken, camera: meta.camera, all: meta.all, library: true });
     } catch (e) { await confirmModal("That photo could not be added", e.message || "Save it as a JPEG and try again.", "OK"); }
   }
   await loadLibrary(); paintLibrary();
 }
+const metaJson = (all) => {
+  if (!all) return "";
+  const keep = {};
+  for (const [k, v] of Object.entries(all)) { const t = String(v); if (t.length <= 300 && Object.keys(keep).length < 80) keep[k] = typeof v === "number" ? v : t; }
+  let j = JSON.stringify(keep);
+  while (j.length > 6000) { const ks = Object.keys(keep); delete keep[ks[ks.length - 1]]; j = JSON.stringify(keep); }
+  return Object.keys(keep).length ? j : "";
+};
 /* one upload for every place a photo comes from; the library records it with what is known about it */
 async function uploadBlob(blob, w, h, meta = {}) {
   const enc = (x) => encodeURIComponent(x || "");
   const r = await fetch(API + "upload", { method: "POST", body: blob, headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h,
-    "x-editor": enc(EDITOR), "x-photo-alt": enc(meta.alt), "x-photo-caption": enc(meta.caption), "x-photo-credit": enc(meta.credit), "x-photo-taken": enc(meta.taken), "x-photo-camera": enc(meta.camera), ...(meta.library ? { "x-library": "1" } : {}) } });
+    "x-editor": enc(EDITOR), "x-photo-alt": enc(meta.alt), "x-photo-caption": enc(meta.caption), "x-photo-credit": enc(meta.credit), "x-photo-taken": enc(meta.taken), "x-photo-camera": enc(meta.camera), "x-photo-meta": enc(metaJson(meta.all)), ...(meta.library ? { "x-library": "1" } : {}) } });
   const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
   return j;
 }

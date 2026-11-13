@@ -731,7 +731,7 @@ async function editorApi(request, env, path) {
       const up = await storePhoto(env, request, request.headers.get("x-library") ? "library" : "article");
       if (up.error) return json({ error: up.error }, up.status);
       await registerPhoto(env, up, { alt: header(request, "x-photo-alt", 200), caption: header(request, "x-photo-caption", 200), credit: header(request, "x-photo-credit", 120),
-        taken: header(request, "x-photo-taken", 20), camera: header(request, "x-photo-camera", 60) }, who);
+        taken: header(request, "x-photo-taken", 20), camera: header(request, "x-photo-camera", 60), all: header(request, "x-photo-meta", 8000) }, who);
       return json({ ok: true, ...up });
     }
     if (path === "libsave") {                                 // a photo's description, caption and credit
@@ -881,6 +881,13 @@ async function registerPhoto(env, up, meta, by) {
     for (const k of ["alt", "caption", "credit"]) if (meta[k]) e[k] = meta[k];
     if (/^\d{4}-\d{2}-\d{2}/.test(meta.taken || "")) e.taken_at = meta.taken.slice(0, 16);
     if (meta.camera) e.camera = meta.camera.slice(0, 60);
+    if (meta.all) {                                           // every field the file carried, as the Studio read it
+      try {
+        const all = JSON.parse(meta.all), keep = {};
+        for (const [k, v] of Object.entries(all).slice(0, 80)) if (/^[\w:.-]{1,60}$/.test(k) && ["string", "number"].includes(typeof v)) keep[k] = typeof v === "string" ? v.slice(0, 300) : v;
+        if (Object.keys(keep).length) e.meta = keep;
+      } catch (err) { /* unreadable: kept without it */ }
+    }
     delete e.hidden;
     return e;
   });
