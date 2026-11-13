@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.16.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were
+export const STUDIO_VERSION = "0.17.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -317,10 +317,11 @@ async function pick(id) {
 }
 function remember() {
   const on = document.querySelector("#snav button.on"), v = on ? on.dataset.v : "stories";
-  const h = v !== "stories" ? "#" + v : cur && cur.id ? "#story/" + cur.id : "";
+  const h = v !== "stories" ? "#" + v : cur && cur.id ? "#story/" + cur.id : cur && dirty ? "#new" : "";
   if (location.hash !== h) history.replaceState(null, "", location.pathname + location.search + h);
 }
 function show(id, quiet) {
+  setTimeout(() => { if (cur && cur.id === id) offerLocal(id); }, 0);
   closeLibrary(); closeSoon(); document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === "stories"));
   closeAI(); aiChat = []; aiChatId = null;
   const found = stories.find((s) => s.id === id);
@@ -757,11 +758,48 @@ function dropPlayer(id) { cur.players = cur.players.filter((x) => x !== id); pai
 async function discard() {
   if (dirty && !(await confirmModal(cur.id ? "Throw away your changes?" : "Throw away this new story?",
     cur.id ? "The story goes back to how it was last saved." : "It has not been saved, so nothing of it is kept.", cur.id ? "Throw away changes" : "Throw away", true))) return;
-  dirty = false;
+  dropLocal(cur.id); dirty = false;
   if (cur.id) { show(cur.id, true); say("", "Changes thrown away."); }
   else { cur = null; renderList(); renderForm(); }
 }
-function touch() { dirty = true; if ($("discard")) $("discard").hidden = false; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); }
+function touch() { dirty = true; if ($("discard")) $("discard").hidden = false; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); keepLocal(); remember(); }
+/* Unsaved work is kept in this browser as it is typed (studio-draft:<id>, or :new for a story not saved yet), so a reload,
+   a crash or a closed tab loses nothing: the story offers it back the next time it opens. Save and Discard clear it. */
+const draftKey = (id) => "studio-draft:" + (id || "new");
+let keepTimer = null;
+function keepLocal() {
+  clearTimeout(keepTimer);
+  keepTimer = setTimeout(() => {
+    if (!cur || !dirty || !$("title")) return;
+    try { localStorage.setItem(draftKey(cur.id), JSON.stringify({ at: new Date().toISOString(), base: cur.stamp || null, fields: fields(), main: cur.mainChanged ? { photo: cur.photo, w: cur.photo_w, h: cur.photo_h } : null })); } catch (e) {}
+  }, 400);
+}
+function dropLocal(id) { clearTimeout(keepTimer); try { localStorage.removeItem(draftKey(id)); } catch (e) {} }
+function readLocal(id) { try { return JSON.parse(localStorage.getItem(draftKey(id)) || "null"); } catch (e) { return null; } }
+async function offerLocal(id) {
+  const d = readLocal(id); if (!d || !d.fields) return;
+  const changed = id && d.base && cur.stamp && d.base !== cur.stamp;
+  const ok = await modal({ title: "Restore your unsaved changes?",
+    text: \`You were editing \${id ? "this story" : "a new story"} on \${when(d.at)} and did not save. \` + (d.fields.title ? \`Headline: “\${d.fields.title}”. \` : "") +
+      (changed ? "Someone has saved the story since: if you restore, Save will ask you to reload their version first." : ""),
+    ok: "Restore", cancel: "Discard them", });
+  if (!ok) { dropLocal(id); return; }
+  applyLocal(d);
+}
+function applyLocal(d) {
+  const f = d.fields;
+  $("title").value = f.title || ""; $("dek").value = f.dek || ""; $("topic").value = f.topic || "league";
+  if (f.kind && [...$("kind").options].some((o) => o.value === f.kind)) { $("kind").value = f.kind; paintKind(); }
+  if ($("dur") && f.dur != null) $("dur").value = f.dur; if ($("count") && f.count != null) $("count").value = f.count;
+  $("author").value = f.author || ""; if (f.at) $("at").value = f.at;
+  document.querySelectorAll("#cities button").forEach((b) => b.classList.toggle("on", (f.cities || []).includes(b.dataset.id)));
+  document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", (f.events || []).includes(b.dataset.id)));
+  cur.players = (f.players || []).filter((id) => PLAYER[id]); paintPlayers();
+  ed.commands.setContent(TT.fromMd(String(f.body || "").split(/\\n\\s*\\n/).filter(Boolean)));
+  if (d.main) { Object.assign(cur, { photo: d.main.photo, photo_w: d.main.w, photo_h: d.main.h, photo_auto: false, mainChanged: true }); showMain(d.main.photo, f.photo_credit || ""); }
+  if (f.photo_credit != null) { cur.photo_credit = f.photo_credit; cur.creditChanged = true; if ($("maincredit")) $("maincredit").textContent = f.photo_credit ? "Photo: " + f.photo_credit : ""; }
+  touch(); say("", "Unsaved changes restored. Save to keep them.");
+}
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
@@ -784,7 +822,7 @@ function save() {
   const live = cur.id && statusOf(cur) === "published";
   run(async () => {
     const j = await call("save", { id: cur.id, stamp: cur.stamp, fields: fields(), ai_chat: aiChatId });
-    dirty = false; await load(j.story.id); renderForm(["ok", live ? "Saved. The site shows the change on its next load." : "Draft saved."]);
+    dropLocal(cur.id); dirty = false; await load(j.story.id); renderForm(["ok", live ? "Saved. The site shows the change on its next load." : "Draft saved."]);
   }, "Saving…");
 }
 async function act(what) {
@@ -800,7 +838,7 @@ async function act(what) {
 }
 async function del() {
   if (!(await confirmModal("Delete this story?", (statusOf(cur) === "published" ? "It leaves the site and the app at once. " : "") + "It can be brought back from Deleted.", "Delete", true))) return;
-  run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
+  run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); dropLocal(cur.id); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
 }
 /* ------------------------------------------------ draft with AI */
 let aiChat = [], aiChatId = null;                            // the chat's id ties its cost to the story it becomes
@@ -1188,6 +1226,7 @@ addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.ret
     if (saved !== "all") { const b = document.querySelector(\`#seg [data-s="\${saved}"]\`); if (b) b.click(); }
     const h = location.hash, m = h.match(/^#story\\/([a-z]\\d+)$/);
     if (m && stories.find((s) => s.id === m[1])) show(m[1]);
+    else if (h === "#new" && readLocal(null)) { cur = blank(); dirty = false; renderList(); renderForm(); offerLocal(null); }
     else if (/^#(photos|videos|shorts)$/.test(h)) setView(h.slice(1));
   } catch (e) { $("main").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
 })();
