@@ -691,7 +691,9 @@ async function editorApi(request, env, path, signedIn) {
     if (request.method === "GET" && path === "stories") {
       const stories = (await readJson(env, RECORDS)).data || [];
       stories.sort((a, b) => ((a.at || "") < (b.at || "") ? 1 : -1));
-      return json({ site: SITE_ROOT, stories: await Promise.all(stories.map(withStamp)) });
+      // now: the league's time for a new story, the demo's clock while there is one (desk/config.json), as Claude's drafts use
+      const now = ((await readJson(env, "desk/config.json")).data || {}).now || null;
+      return json({ site: SITE_ROOT, now, stories: await Promise.all(stories.map(withStamp)) });
     }
     if (request.method === "GET" && path === "history") {
       const id = new URL(request.url).searchParams.get("id") || "";
@@ -798,7 +800,20 @@ async function editorApi(request, env, path, signedIn) {
       if (!b.id && (!KINDS[kind] || kind === "result")) fail("Kind must be article, video, gallery or quote.");
       if (f.topic && !TOPICS.includes(f.topic)) fail(`Topic must be one of ${TOPICS.join(", ")}.`);
       if (kind === "video" && !f.dur) fail("A video needs its length, e.g. 2:14.");
-      if (kind === "gallery" && !f.count) fail("A gallery needs its number of pictures.");
+      // a gallery's photos, in order, from the store (the Studio sends them); the count follows, the first is the cover
+      const gallery = Array.isArray(f.photos) ? f.photos.filter((x) => typeof x === "string" && /^content\/photos\/[\w./-]+$/.test(x)).slice(0, 60) : null;
+      if (kind === "gallery" && gallery && gallery.length < 2) fail("A gallery needs at least two photos.");
+      if (kind === "gallery" && !gallery && !f.count) fail("A gallery needs its number of pictures.");
+      const lib = kind === "gallery" && gallery ? (await readJson(env, LIBRARY)).data || [] : [];
+      const setGallery = (s) => {
+        s.photos = [...new Set(gallery)]; s.count = s.photos.length;
+        if (s.photo !== s.photos[0]) {
+          const e = lib.find((x) => x.src === s.photos[0]) || {};
+          s.photo = s.photos[0]; delete s.photo_auto;
+          if (e.w && e.h) { s.photo_w = e.w; s.photo_h = e.h; } else { delete s.photo_w; delete s.photo_h; }
+          if (e.credit) s.photo_credit = e.credit; else delete s.photo_credit;
+        }
+      };
       const cids = (f.cities || []).filter((id) => ref.city[id]), pids = (f.players || []).filter((id) => ref.player[id]);
       const eventIds = (f.events || []).filter((id) => ref.event[id]);
       const now = ((await readJson(env, "desk/config.json")).data || {}).now || nowIso().slice(0, 16);
@@ -808,6 +823,7 @@ async function editorApi(request, env, path, signedIn) {
           const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, who);
           if (main && f.photo_w && f.photo_h) { st.photo_w = +f.photo_w; st.photo_h = +f.photo_h; }
           if (main && typeof f.photo_credit === "string" && f.photo_credit.trim()) st.photo_credit = f.photo_credit.trim().slice(0, 120);
+          if (kind === "gallery" && gallery) setGallery(st);
           linkChat(st, b.ai_chat);
           return st;
         }
@@ -823,7 +839,7 @@ async function editorApi(request, env, path, signedIn) {
         const body = paras(f.body || "");
         if (body.length) s.body = body; else delete s.body;
         if (s.kind === "video") s.dur = f.dur; else delete s.dur;
-        if (s.kind === "gallery") s.count = +f.count; else delete s.count;
+        if (s.kind === "gallery") { if (gallery) setGallery(s); else s.count = +f.count; } else { delete s.count; delete s.photos; }
         if (f.photo && /^content\/photos\//.test(f.photo) && f.photo !== s.photo) {     // "Use as main photo"
           s.photo = f.photo; delete s.photo_auto; delete s.photo_credit;
           if (f.photo_w && f.photo_h) { s.photo_w = +f.photo_w; s.photo_h = +f.photo_h; } else { delete s.photo_w; delete s.photo_h; }

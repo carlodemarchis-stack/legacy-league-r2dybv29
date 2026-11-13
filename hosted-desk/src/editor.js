@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.19.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name)
+export const STUDIO_VERSION = "0.20.1";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one)
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -189,6 +189,14 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .photo img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;display:block;background:#000}
 .photo .btn{margin-top:8px}
 .mainwrap{position:relative}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:2px 0 8px}
+.gal figure{margin:0;position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--line)}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
+.gal .gb{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:10px 2px 2px}
+.gal .gb button{background:none;border:0;color:#fff;cursor:pointer;font:inherit;font-size:13px;padding:2px 7px}.gal .gb button:disabled{opacity:.3;cursor:default}
+.gal figure.cover::after{content:"Cover";position:absolute;top:5px;left:5px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--acc);color:var(--on-acc);padding:1px 7px;border-radius:999px}
+.galempty{border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:18px 12px;margin:2px 0 8px}
+.galbtns{display:flex;gap:6px;flex-wrap:wrap}
 .mainwrap .mainph{display:grid;place-items:center;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:16px}
 .mainwrap .ph-more.lone{position:static;margin-top:8px;width:auto;padding:0 12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:12px}
 .photo.drop img{outline:3px dashed var(--acc);outline-offset:3px}
@@ -223,7 +231,10 @@ const statusOf = (s) => s.status || "published";
 // a headline can stand for names, as the site shows it: {p0} the first tagged player, {c0} the first city
 const shown = (s, t) => String(t || "").replace(/\{p0\}/g, PLAYER[(s.players || [])[0]] ? PLAYER[s.players[0]].name : "")
   .replace(/\{c0\}/g, CITY[(s.cities || [])[0]] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
-const when = (iso) => iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+// the Desk's own stamps (made, changed, uploaded, AI requests) are UTC to the second without a zone; a story's time is as typed
+const when = (iso) => iso ? new Date(/^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d$/.test(iso) ? iso + "Z" : iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+let LEAGUE_NOW = null;                                             // the demo clock, from the Desk; the real time when there is none
+const localNow = () => { if (LEAGUE_NOW) return LEAGUE_NOW.slice(0, 16); const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 /* ------------------------------------------------ the Studio's dialog
    modal({ title, text, img, fields, ok, cancel, danger, extra, validate }) resolves to the fields' values (or true when
    there are none), to { action } for the extra button, or to null when the editor cancels. Enter confirms, Esc cancels. */
@@ -296,7 +307,7 @@ async function call(path, body) {
 }
 async function load(keep) {
   const j = await call("stories");
-  stories = j.stories;
+  stories = j.stories; LEAGUE_NOW = j.now || null;
   renderList();
   if (keep) { const s = stories.find((x) => x.id === keep); if (s) show(s.id, true); }
 }
@@ -336,7 +347,7 @@ function show(id, quiet) {
 }
 function blank() {
   const live = ref.events.find((e) => e.status === "live");          // a new story is about the event on now, until untagged
-  return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "" };
+  return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "", at: localNow() };
 }
 function renderForm(msg) {
   remember();
@@ -367,7 +378,7 @@ function renderForm(msg) {
         <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button for the library, or paste or drop a picture). The site and the app set the style.</div></div>
     </div>
     <div>
-      <div class="f photo"><label>Main photo</label>
+      <div class="f photo" id="mainblock"><label>Main photo</label>
         <div class="mainwrap" id="mainwrap">\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="mainph" id="mainph">A golf photo from the library is given to a new story when it is saved.</div>'}
           <button type="button" class="ph-more" id="mainmore" title="Main photo options" onclick="mainMenu(this)">⋯</button></div>
         \${s.photo_auto || !s.id ? '<div class="hint" id="mainauto">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
@@ -750,9 +761,48 @@ function mainFromPhoto() {
 }
 function paintKind() {
   const k = $("kind").value, s = cur;
+  if ($("mainblock")) $("mainblock").hidden = k === "gallery";
   $("kindx").innerHTML = k === "video" ? \`<label for="dur">Video length</label><input id="dur" value="\${esc(s.dur || "")}" placeholder="2:14">\` :
-    k === "gallery" ? \`<label for="count">Number of pictures</label><input id="count" type="number" min="2" value="\${esc(s.count || "")}">\` : "";
-  ["dur", "count"].forEach((id) => $(id) && $(id).addEventListener("input", touch));
+    k === "gallery" ? \`<label>Gallery photos</label><div id="galgrid"></div>
+      <div class="galbtns"><button type="button" class="btn" onclick="galFromLibrary()">+ From the library</button><button type="button" class="btn" onclick="$('galfile').click()">+ Upload photos</button>
+      <input type="file" id="galfile" accept="image/*" multiple hidden></div>
+      <div class="hint">In the order fans see them. The first is the cover, on the tile and in link previews. At least two.</div>\` : "";
+  ["dur"].forEach((id) => $(id) && $(id).addEventListener("input", touch));
+  if (k === "gallery") {
+    if (!cur.gallery) cur.gallery = (s.photos && s.photos.length ? s.photos : s.photo ? [s.photo] : []).slice();
+    $("galfile").onchange = (e) => { const files = [...e.target.files]; e.target.value = ""; galUpload(files); };
+    paintGallery();
+  }
+}
+/* the gallery's photos, in order: move them left or right, take one out, add from the library or upload several at once */
+function paintGallery() {
+  const g = cur.gallery || [], el = $("galgrid"); if (!el) return;
+  el.innerHTML = g.length ? \`<div class="gal">\${g.map((src, i) => \`<figure class="\${i ? "" : "cover"}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
+      <button type="button" title="Move earlier" onclick="galMove(\${i},-1)" \${i ? "" : "disabled"}>←</button><button type="button" title="Take out of the gallery" onclick="galDrop(\${i})">✕</button>
+      <button type="button" title="Move later" onclick="galMove(\${i},1)" \${i < g.length - 1 ? "" : "disabled"}>→</button></div></figure>\`).join("")}</div>\`
+    : '<div class="galempty">No photos yet. Add them from the library or upload them.</div>';
+}
+function galMove(i, d) { const g = cur.gallery, j = i + d; if (j < 0 || j >= g.length) return; [g[i], g[j]] = [g[j], g[i]]; paintGallery(); touch(); }
+function galDrop(i) { cur.gallery.splice(i, 1); paintGallery(); touch(); }
+async function galFromLibrary() {
+  const r = await choosePhoto("Add a photo to the gallery");
+  if (!r) return;
+  if (r.file) return galUpload([r.file]);
+  if (cur.gallery.includes(r.entry.src)) { say("err", "That photo is already in the gallery."); return; }
+  cur.gallery.push(r.entry.src); paintGallery(); touch(); say("", "Added. Save to keep it.");
+}
+async function galUpload(files) {
+  let done = 0;
+  for (const file of files) {
+    say("", \`Uploading \${done + 1} of \${files.length}…\`);
+    try {
+      const meta = await readMeta(file);
+      const { blob, w, h } = await shrink(file);
+      const j = await uploadBlob(blob, w, h, { credit: meta.credit, alt: meta.alt, caption: meta.caption, taken: meta.taken, camera: meta.camera, all: meta.all });
+      cur.gallery.push(j.src); done++; paintGallery(); touch();
+    } catch (e) { say("err", (file.name || "A picture") + ": " + (e.message || "could not be read. Save it as a JPEG and try again.")); return; }
+  }
+  say("", \`\${done} photo\${done === 1 ? "" : "s"} added to the gallery and the library. Save to keep them.\`);
 }
 function paintPlayers() {
   $("pchips").innerHTML = (cur.players || []).map((id) => { const p = PLAYER[id] || { name: id }; const c = CITY[p.city];
@@ -795,7 +845,8 @@ function applyLocal(d) {
   const f = d.fields;
   $("title").value = f.title || ""; $("dek").value = f.dek || ""; $("topic").value = f.topic || "league";
   if (f.kind && [...$("kind").options].some((o) => o.value === f.kind)) { $("kind").value = f.kind; paintKind(); }
-  if ($("dur") && f.dur != null) $("dur").value = f.dur; if ($("count") && f.count != null) $("count").value = f.count;
+  if ($("dur") && f.dur != null) $("dur").value = f.dur;
+  if (Array.isArray(f.photos)) { cur.gallery = f.photos.slice(); paintGallery(); }
   $("author").value = f.author || ""; if (f.at) $("at").value = f.at;
   document.querySelectorAll("#cities button").forEach((b) => b.classList.toggle("on", (f.cities || []).includes(b.dataset.id)));
   document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", (f.events || []).includes(b.dataset.id)));
@@ -808,7 +859,7 @@ function applyLocal(d) {
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
-    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, count: $("count") ? $("count").value : undefined,
+    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, photos: $("kind").value === "gallery" ? (cur.gallery || []).slice() : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
     events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id),
     ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}),
