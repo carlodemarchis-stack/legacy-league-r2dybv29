@@ -38,6 +38,20 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .f{margin-bottom:16px}
 .f input,.f select,.f textarea{width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
 .f textarea{resize:vertical;line-height:1.5}
+/* the article field: Tiptap, with only subheadings, bold, italic, links and lists */
+.rte{border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.rte:focus-within{border-color:color-mix(in srgb,var(--acc) 60%,var(--line))}
+.tb{display:flex;gap:2px;padding:5px;border-bottom:1px solid var(--line);flex-wrap:wrap;position:sticky;top:30px;background:var(--panel);border-radius:8px 8px 0 0;z-index:1}
+.tb button{min-width:32px;height:30px;padding:0 8px;border:0;border-radius:6px;background:none;cursor:pointer;color:var(--dim);font-size:13px}
+.tb button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink)}
+.tb button.on{background:color-mix(in srgb,var(--acc) 22%,transparent);color:var(--ink)}
+.tb i.sep{width:1px;margin:5px 4px;background:var(--line)}
+.tiptap{min-height:320px;padding:12px 14px;outline:none;line-height:1.6}
+.tiptap>*:first-child{margin-top:0}.tiptap p{margin:0 0 .8em}
+.tiptap h2{font-size:17px;margin:1.2em 0 .5em}
+.tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
+.tiptap a{color:var(--acc);text-decoration:underline}
+.tiptap p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:var(--dim);float:left;height:0;pointer-events:none}
 #title{font-size:20px;font-weight:700}
 .hint{font-size:11px;color:var(--dim);margin-top:4px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -64,6 +78,7 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
   </aside>
   <main id="main"><div class="empty">Pick a story on the left, or make a new one.</div></main>
 </div>
+<script src="editor/app.js"></script>
 <script>
 const SITE = ${JSON.stringify(site)};
 const API = location.pathname.replace(/\\/editor\\/?$/, "") + "/editor/api/";
@@ -125,7 +140,12 @@ function renderForm(msg) {
     <div>
       <div class="f"><label for="title">Headline</label><input id="title" value="\${esc(s.title)}">\${/\{(p0|c0|author)\}/.test(s.title) ? \`<div class="hint">Shows on the site as: \${esc(shown(s, s.title))}</div>\` : ""}</div>
       <div class="f"><label for="dek">Summary</label><textarea id="dek" rows="2">\${esc(s.dek)}</textarea><div class="hint">One or two sentences, shown under the headline on the tile and in the reader.</div></div>
-      <div class="f"><label for="body">Article</label><textarea id="body" rows="14">\${esc((s.body || []).join("\\n\\n"))}</textarea><div class="hint">Leave a blank line between paragraphs.</div></div>
+      <div class="f"><label>Article</label><div class="rte"><div class="tb" id="tb">
+          <button type="button" data-c="h" title="Subheading">H</button><button type="button" data-c="b" title="Bold (⌘B)"><b>B</b></button><button type="button" data-c="i" title="Italic (⌘I)"><i>I</i></button>
+          <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
+          <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button></div>
+          <div id="body"></div></div>
+        <div class="hint">Subheadings, bold, italic, links and lists. The site and the app set the style.</div></div>
     </div>
     <div>
       <div class="f photo"><label>Photo</label>\${s.photo ? \`<img src="\${esc(pic(s.photo))}" alt="">\` : '<div class="hint">A golf photo from the library is given to a new story.</div>'}
@@ -155,8 +175,41 @@ function renderForm(msg) {
     }
     $("padd").value = "";
   };
-  ["title", "dek", "body", "topic", "author", "at"].forEach((id) => $(id).addEventListener("input", touch));
+  ["title", "dek", "topic", "author", "at"].forEach((id) => $(id).addEventListener("input", touch));
+  mountBody(s.body || []);
   if (msg) say(msg[0], msg[1]);
+}
+/* the article field */
+let ed = null;
+function mountBody(blocks) {
+  if (ed) ed.destroy();
+  ed = TT.makeEditor($("body"), blocks, touch);
+  const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
+    { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
+  ed.on("transaction", paint); paint();
+  $("tb").onmousedown = (e) => e.preventDefault();            // keep the text selected while a button is pressed
+  $("tb").onclick = (e) => { const b = e.target.closest("button"); if (b) command(b.dataset.c); };
+  ed.view.dom.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); command("a"); } });
+}
+function command(c) {
+  const ch = ed.chain().focus();
+  if (c === "h") ch.toggleHeading({ level: 2 }).run();
+  else if (c === "b") ch.toggleBold().run();
+  else if (c === "i") ch.toggleItalic().run();
+  else if (c === "ul") ch.toggleBulletList().run();
+  else if (c === "ol") ch.toggleOrderedList().run();
+  else if (c === "a") {
+    const was = ed.getAttributes("link").href || "";
+    let url = prompt("Link address (https://…). Leave empty to remove the link.", was);
+    if (url === null) return;
+    url = url.trim();
+    if (!url) { ch.extendMarkRange("link").unsetLink().run(); return; }
+    if (/^www\./i.test(url)) url = "https://" + url;
+    if (/^[^\s@:\/]+@[^\s@]+\.[^\s@]+$/.test(url)) url = "mailto:" + url;
+    if (!TT.okUrl(url)) { alert("Links must start with https:// (or be an email address, or a /stories/ address on this site)."); return; }
+    if (ed.state.selection.empty && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
+    else ch.extendMarkRange("link").setLink({ href: url }).run();
+  }
 }
 function paintKind() {
   const k = $("kind").value, s = cur;
@@ -172,7 +225,7 @@ function dropPlayer(id) { cur.players = cur.players.filter((x) => x !== id); pai
 function touch() { dirty = true; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); }
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
-  return { title: $("title").value, dek: $("dek").value, body: $("body").value, kind: $("kind").value, topic: $("topic").value,
+  return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
     author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, count: $("count") ? $("count").value : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [] };
 }

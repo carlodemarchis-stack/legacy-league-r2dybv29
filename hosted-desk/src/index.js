@@ -15,6 +15,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
 import { editorPage } from "./editor.js";
+import TIPTAP from "./tiptap.bundle.txt";                   // the article field (Tiptap), see editor-src/
 
 const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
 const TOPICS = ["league", "city", "mission"];
@@ -50,6 +51,9 @@ async function nameStories(env, stories) {
     s.slug = slug; taken.add(slug);
   }
 }
+/* An article is plain text with a little Markdown: "## " subheadings, "- " and "1. " lists, **bold**, *italic*,
+   [words](https://…). This takes it back to the words alone. */
+const plain = (t) => String(t).replace(/\[([^\]]+)\]\([^)\s]+\)/g, "$1").replace(/\*+/g, "").replace(/^(##\s+|[-*]\s+|\d+[.)]\s+)/gm, "");
 const paras = (text) => text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 const nowIso = () => new Date().toISOString().slice(0, 19);
 const isLive = (s) => (s.status || "published") === "published";
@@ -94,7 +98,7 @@ async function publishIndex(env, stories) {
     const s = { cities: [], players: [], photos: [], ...full };
     const lead = s.photo || s.photos[0];
     if (!(s.photo_w && s.photo_h) && sizes[lead]) [s.photo_w, s.photo_h] = sizes[lead];
-    s.words = [s.dek || "", ...(s.body || [])].join(" ").split(/\s+/).filter(Boolean).length;
+    s.words = plain([s.dek || "", ...(s.body || [])].join(" ")).split(/\s+/).filter(Boolean).length;
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
     if (Object.keys(body).length) {
@@ -203,6 +207,7 @@ function createServer(env, door) {
   server.registerTool("draft_story", {
     description:
       "Create a DRAFT story. body = the article text, paragraphs separated by blank lines (2–4 short paragraphs; the " +
+      "body may use only: '## ' subheadings, **bold**, *italic*, [words](https://…) links, and '- ' or '1. ' lists; the " +
       "collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and " +
       "players may be names or ids. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
       "from the library is picked. at = ISO time in the demo's event timeline (default: the demo's current time, " +
@@ -232,7 +237,7 @@ function createServer(env, door) {
   server.registerTool("update_story", {
     description:
       "Change fields of a story (draft or published). body replaces the article text (paragraphs separated by blank " +
-      "lines). A change to a published story is public at once.",
+      "lines; the same small Markdown as draft_story). A change to a published story is public at once.",
     inputSchema: z.object({
       id: z.string(), title: z.string().optional(), dek: z.string().optional(),
       cities: z.array(z.string()).optional(), players: z.array(z.string()).optional(), size: z.string().optional(),
@@ -535,13 +540,14 @@ export default {
     const url = new URL(request.url);
     const handshake = signIn(request, url);
     if (handshake) return handshake;
-    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+|\/editor(?:\/api\/[a-z]+)?)$/) || [];
+    const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+|\/editor(?:\/api\/[a-z]+|\/app\.js)?)$/) || [];
     if (!env.DESK_KEY || !key || key.length !== env.DESK_KEY.length || !rest) return new Response("Not found", { status: 404 });
     let diff = 0;                                              // compare the whole key every time, whatever was sent
     for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.DESK_KEY.charCodeAt(i);
     if (diff) return new Response("Not found", { status: 404 });
     if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length));
     if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length));
+    if (rest === "/editor/app.js") return new Response(TIPTAP, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-cache" } });
     if (rest === "/editor") return new Response(editorPage(SITE_ROOT), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
     const door = `${url.origin}/${key}`;
     url.pathname = rest;

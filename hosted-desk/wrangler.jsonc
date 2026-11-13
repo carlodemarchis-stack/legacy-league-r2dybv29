@@ -7,5 +7,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "observability": { "enabled": true },
+  // the editor's article field (Tiptap), bundled by npm run build:editor and served as /<key>/editor/app.js
+  "rules": [{ "type": "Text", "globs": ["**/*.bundle.txt"], "fallthrough": true }],
   "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }]
 }

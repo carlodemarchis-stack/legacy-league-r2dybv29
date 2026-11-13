@@ -8,6 +8,21 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tiptap/core": "3.32.1",
+    "@tiptap/extension-bold": "3.32.1",
+    "@tiptap/extension-document": "3.32.1",
+    "@tiptap/extension-heading": "3.32.1",
+    "@tiptap/extension-italic": "3.32.1",
+    "@tiptap/extension-link": "3.32.1",
+    "@tiptap/extension-list": "3.32.1",
+    "@tiptap/extension-paragraph": "3.32.1",
+    "@tiptap/extension-text": "3.32.1",
+    "@tiptap/extensions": "3.32.1",
+    "@tiptap/pm": "3.32.1",
+    "esbuild": "0.25.10",
     "wrangler": "^4.105.0"
+  },
+  "scripts": {
+    "build:editor": "esbuild editor-src/tiptap-entry.js --bundle --minify --format=iife --global-name=TT --legal-comments=none --outfile=src/tiptap.bundle.txt"
   }
 }
