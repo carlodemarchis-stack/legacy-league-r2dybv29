@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.15.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown
+export const STUDIO_VERSION = "0.16.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -146,6 +146,16 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .mbox .mf .hint{margin-top:5px}.mbox .mf .merr{font-size:12px;color:var(--bad);margin-top:5px}
 .mbox .mbtns{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:8px}
 .mbox .mbtns .btn{padding:8px 16px;font-size:13px}.mbox .mbtns .left{margin-right:auto}
+/* on a wide, landscape screen a dialog with a photo sits side by side: the photo and its data on the left,
+   what is edited on the right, each scrolling on its own, so the whole dialog fits the screen */
+@media (min-width:900px) and (orientation:landscape){
+  .mbox.split{width:min(1120px,100%);height:min(calc(100dvh - 32px),780px);display:flex;flex-direction:column;overflow:hidden}
+  .mbox.split .msplit{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,1fr);gap:26px}
+  .mbox.split .mleft,.mbox.split .mright{min-height:0;overflow-y:auto;padding-right:4px}
+  .mbox.split .mright{display:flex;flex-direction:column}
+  .mbox.split .mright .mbtns{margin-top:auto;padding-top:12px;position:sticky;bottom:0;background:var(--panel)}
+  .mbox.split .mimg{max-height:min(52dvh,460px);margin-top:0}
+}
 .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
 /* the photo library: a page of its own over the Studio, also used to choose a photo */
 .lib{position:fixed;left:0;right:0;bottom:0;top:49px;z-index:25;background:var(--bg);display:flex;flex-direction:column}
@@ -217,30 +227,33 @@ const when = (iso) => iso ? new Date(iso).toLocaleString("en-US", { month: "shor
 /* ------------------------------------------------ the Studio's dialog
    modal({ title, text, img, fields, ok, cancel, danger, extra, validate }) resolves to the fields' values (or true when
    there are none), to { action } for the extra button, or to null when the editor cancels. Enter confirms, Esc cancels. */
-function modal({ title, text = "", img = "", html = "", fields = [], ok = "OK", cancel = "Cancel", danger = false, extra = null, validate = null }) {
+function modal({ title, text = "", img = "", html = "", fields = [], custom = null, ok = "OK", cancel = "Cancel", danger = false, extra = null, validate = null }) {
   return new Promise((resolve) => {
     const back = document.createElement("div"); back.className = "mback";
-    back.innerHTML = \`<div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mtitle"><h2 id="mtitle">\${esc(title)}</h2>
-      \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? \`<img class="mimg" src="\${esc(img)}" alt="">\` : ""}\${html}
+    back.innerHTML = \`<div class="mbox\${img ? " split" : ""}" role="dialog" aria-modal="true" aria-labelledby="mtitle"><h2 id="mtitle">\${esc(title)}</h2>
+      \${img ? \`<div class="msplit"><div class="mleft"><img class="mimg" src="\${esc(img)}" alt="">\${html}</div><div class="mright">\` : ""}
+      \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? "" : html}
       \${fields.map((f) => \`<div class="mf" data-f="\${f.id}"><label for="mf-\${f.id}">\${esc(f.label)}\${f.required ? "" : "<em>optional</em>"}</label>
         \${f.type === "textarea" ? \`<textarea id="mf-\${f.id}" rows="\${f.rows || 2}" placeholder="\${esc(f.placeholder || "")}">\${esc(f.value || "")}</textarea>\`
           : \`<input id="mf-\${f.id}" type="\${f.type || "text"}" value="\${esc(f.value || "")}" placeholder="\${esc(f.placeholder || "")}" autocomplete="off">\`}
         \${f.hint ? \`<div class="hint">\${esc(f.hint)}</div>\` : ""}<div class="merr" hidden></div></div>\`).join("")}
+      \${custom ? custom.html : ""}
       <div class="mbtns">\${extra ? \`<button type="button" class="btn left\${extra.danger ? " bad" : ""}" data-b="extra">\${esc(extra.label)}</button>\` : ""}
         <button type="button" class="btn" data-b="cancel">\${esc(cancel)}</button>
-        <button type="button" class="btn \${danger ? "danger" : "pri"}" data-b="ok">\${esc(ok)}</button></div></div>\`;
+        <button type="button" class="btn \${danger ? "danger" : "pri"}" data-b="ok">\${esc(ok)}</button></div>\${img ? "</div></div>" : ""}</div>\`;
     document.body.appendChild(back);
+    if (custom && custom.wire) custom.wire(back);
     const before = document.activeElement;
     const done = (v) => { back.parentNode && back.parentNode.removeChild(back); removeEventListener("keydown", keys, true); if (before && before.focus) before.focus(); resolve(v); };
     const values = () => Object.fromEntries(fields.map((f) => [f.id, back.querySelector(\`#mf-\${f.id}\`).value.trim()]));
     const showErr = (id, msg) => { const box = back.querySelector(\`[data-f="\${id}"]\`); box.classList.add("bad"); const e = box.querySelector(".merr"); e.textContent = msg; e.hidden = false; box.querySelector("input,textarea").focus(); };
     const confirmIt = () => {
-      back.querySelectorAll(".mf").forEach((b) => { b.classList.remove("bad"); b.querySelector(".merr").hidden = true; });
+      back.querySelectorAll(".mf[data-f]").forEach((b) => { b.classList.remove("bad"); b.querySelector(".merr").hidden = true; });
       const v = values();
       const missing = fields.find((f) => f.required && !v[f.id]);
       if (missing) return showErr(missing.id, missing.requiredText || "This is needed.");
       if (validate) { const r = validate(v); if (r) return showErr(r.field, r.message); }
-      done(fields.length ? v : true);
+      done(fields.length || custom ? { ...v, ...(custom ? custom.read(back) : {}) } : true);
     };
     const keys = (e) => {
       if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); done(null); }
@@ -883,12 +896,12 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
   window.paintLibrary = () => {
     const words = $("libq").value.toLowerCase().split(/\\s+/).filter(Boolean);
     const rows = libPhotos.filter((e) => (filter === "all" || (filter === "nodesc" && !e.alt) || (filter === "unused" && !e.used_in.length) || (filter === "review" && e.suggested_alt)) &&
-      words.every((w) => [e.alt, e.suggested_alt, e.caption, e.credit, e.src, ...(e.terms || []), ...(e.suggested_terms || []), ...e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title))].join(" ").toLowerCase().includes(w)));
+      words.every((w) => [e.alt, e.suggested_alt, e.caption, e.credit, e.src, ...tagNames(e), ...(e.terms || []), ...(e.suggested_terms || []), ...e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title))].join(" ").toLowerCase().includes(w)));
     const toReview = libPhotos.filter((e) => e.suggested_alt).length;
     if ($("liball")) { $("liball").hidden = !toReview; $("liball").textContent = "Accept all suggestions (" + toReview + ")"; }
     $("libcount").textContent = rows.length + " of " + libPhotos.length + " photos";
     $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}"><img src="\${esc(pic(e.src))}" alt="" loading="lazy">
-      <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : e.suggested_alt ? \`<i class="sug">\${esc(e.suggested_alt)}</i>\` : '<b class="none">No description yet</b>'}<small>\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small>
+      <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : e.suggested_alt ? \`<i class="sug">\${esc(e.suggested_alt)}</i>\` : '<b class="none">No description yet</b>'}<small>\${tagNames(e).length ? esc(tagNames(e).slice(0, 3).join(", ")) + " · " : ""}\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small>
       \${pick || e.alt ? "" : \`<span class="pact">\${e.suggested_alt ? \`<span class="btn pri" data-act="accept">Accept</span>\` : \`<span class="btn" data-act="suggest">✦ Suggest</span>\`}</span>\`}</span></button>\`).join("") ||
       '<div class="empty" style="grid-column:1/-1">No photo matches.</div>';
   };
@@ -924,6 +937,38 @@ function setView(v) {
 }
 function goView(v) { setView(v); }                          // the open story stays as it is underneath, unsaved changes included
 const choosePhoto = (title) => new Promise((resolve) => libraryPage({ pick: true, title, resolve }));
+/* Events, cities and players for a photo: the same chips as on a story, inside a dialog */
+function tagPicker(sel) {
+  const has = (k, id) => (sel[k] || []).includes(id);
+  return {
+    html: \`<div class="mf"><label>Events<em>optional</em></label><div class="events" data-k="events">\${ref.events.map((e) => \`<button type="button" class="\${has("events", e.id) ? "on" : ""}" data-id="\${e.id}">\${esc(e.name)}\${e.status === "live" ? "<small>live</small>" : ""}</button>\`).join("")}</div></div>
+      <div class="mf"><label>Cities<em>optional</em></label><div class="cities" data-k="cities">\${ref.cities.map((c) => \`<button type="button" style="--c:\${c.color}" class="\${has("cities", c.id) ? "on" : ""}" data-id="\${c.id}" title="\${esc(c.name)}">\${c.short}</button>\`).join("")}</div></div>
+      <div class="mf"><label>Players<em>optional</em></label><input class="mpadd" list="mplist" placeholder="Type a name to add" autocomplete="off"><datalist id="mplist">\${ref.players.map((pl) => \`<option value="\${esc(pl.name)}">\${CITY[pl.city] ? CITY[pl.city].short : ""}</option>\`).join("")}</datalist><div class="chips mpchips"></div>
+        <div class="hint">Only who is clearly in the photo. A player brings their city.</div></div>\`,
+    wire(back) {
+      let players = [...(sel.players || [])];
+      const paint = () => { back.querySelector(".mpchips").innerHTML = players.map((id) => { const pl = PLAYER[id] || { name: id }, c = CITY[pl.city];
+        return \`<span class="chip" style="--c:\${c ? c.color : "var(--dim)"}"><i></i>\${esc(pl.name)}<button type="button" data-drop="\${id}" title="Remove">×</button></span>\`; }).join(""); };
+      back.querySelectorAll(".events,.cities").forEach((g) => g.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) b.classList.toggle("on"); }));
+      back.querySelector(".mpchips").addEventListener("click", (e) => { const b = e.target.closest("[data-drop]"); if (b) { players = players.filter((x) => x !== b.dataset.drop); paint(); } });
+      const input = back.querySelector(".mpadd");
+      input.addEventListener("change", () => {
+        const pl = ref.players.find((x) => x.name.toLowerCase() === input.value.trim().toLowerCase());
+        if (pl && !players.includes(pl.id)) { players.push(pl.id); const cb = back.querySelector(\`.cities [data-id="\${pl.city}"]\`); if (cb) cb.classList.add("on"); paint(); }
+        input.value = "";
+      });
+      back._players = () => players;
+      paint();
+    },
+    read: (back) => ({
+      events: [...back.querySelectorAll(".events button.on")].map((b) => b.dataset.id),
+      cities: [...back.querySelectorAll(".cities button.on")].map((b) => b.dataset.id),
+      players: back._players(),
+    }),
+  };
+}
+const tagNames = (e) => [...(e.events || []).map((id) => (ref.events.find((x) => x.id === id) || {}).name),
+  ...(e.cities || []).map((id) => CITY[id] && CITY[id].name), ...(e.players || []).map((id) => PLAYER[id] && PLAYER[id].name)].filter(Boolean);
 /* A photo's data in the details: the main facts in plain words, then every field the file carried */
 function photoData(e) {
   const m = e.meta || {}, g = (k) => m["exif:" + k];
@@ -952,9 +997,14 @@ function photoData(e) {
 async function editLibraryPhoto(e) {
   const uses = e.used_in.map((u) => shown(stories.find((s) => s.id === u.id) || {}, u.title) + " (" + u.how + ")");
   const sug = !e.alt && e.suggested_alt;
-  const v = await modal({
+  const tagged = (e.events || []).length || (e.cities || []).length || (e.players || []).length;
+  const fromStories = (k) => [...new Set(e.used_in.flatMap((u) => ((stories.find((s) => s.id === u.id) || {})[k]) || []))];
+  const sel = tagged ? { events: e.events, cities: e.cities, players: e.players }
+    : { events: fromStories("events"), cities: fromStories("cities"), players: fromStories("players") };
+  const preTagged = !tagged && (sel.events.length || sel.cities.length || sel.players.length);
+  const v = await modal({ custom: tagPicker(sel),
     title: "Photo details", img: pic(e.src), html: photoData(e),
-    text: (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
+    text: (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (preTagged ? " Tags taken from the stories that use it: check them and save." : "") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
     fields: [
       { id: "alt", label: sug ? "Description (suggested)" : "Description", value: e.alt || e.suggested_alt || "", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
       { id: "caption", label: "Caption", value: e.caption, hint: "Shown under the photo when it goes in an article." },
@@ -994,7 +1044,8 @@ async function uploadToLibrary(files) {
       const meta = await readMeta(files[i]);
       const { blob, w, h } = await shrink(files[i]);
       const preview = URL.createObjectURL(blob);
-      const v = await modal({ title: "Add to the library" + which, img: preview, text: metaNote(meta),
+      const live = ref.events.find((x) => x.status === "live");
+      const v = await modal({ title: "Add to the library" + which, img: preview, text: metaNote(meta), custom: tagPicker({ events: live ? [live.id] : [] }),
         fields: [
           { id: "alt", label: "Description", value: meta.alt, type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", placeholder: "e.g. Omar Quintero hits a 5-wood on the 13th", hint: "What the photo shows. It also makes the photo easy to find." },
           { id: "caption", label: "Caption", value: meta.caption, placeholder: "e.g. The 13th at El Camaleón" },
@@ -1003,7 +1054,8 @@ async function uploadToLibrary(files) {
       URL.revokeObjectURL(preview);
       if (!v) continue;
       $("libcount").textContent = "Uploading" + which + "…";
-      await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, taken: meta.taken, camera: meta.camera, all: meta.all, library: true });
+      const j = await uploadBlob(blob, w, h, { alt: v.alt, caption: v.caption, credit: v.credit, taken: meta.taken, camera: meta.camera, all: meta.all, library: true });
+      if (v.events.length || v.cities.length || v.players.length) await call("libsave", { src: j.src, alt: v.alt, caption: v.caption, credit: v.credit, events: v.events, cities: v.cities, players: v.players });
     } catch (e) { await confirmModal("That photo could not be added", e.message || "Save it as a JPEG and try again.", "OK"); }
   }
   await loadLibrary(); paintLibrary();

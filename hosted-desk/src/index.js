@@ -462,18 +462,22 @@ function createServer(env, door) {
 
   server.registerTool("search_photos", {
     description: "Search the league's photo library: every editorial photo, used in a story or not, by description, caption, " +
-      "credit, file name or the headlines of the stories that use it. Each result has photo_url (pass it to draft_story " +
+      "credit, event, city, player, file name or the headlines of the stories that use it. Each result has photo_url (pass it to draft_story " +
       "or update_story as the main photo) and markdown (put it in a body as a paragraph of its own to show it inside the " +
       "article). Prefer a photo from the library before asking the editor to upload one. Empty query = the newest photos.",
     inputSchema: z.object({ query: z.string().default(""), limit: z.number().int().default(12) }),
   }, tool(async ({ query, limit }) => {
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const ref = await reference(env);
+    const names = (e) => [...(e.events || []).map((id) => ref.event[id] && ref.event[id].name), ...(e.cities || []).map((id) => ref.city[id] && ref.city[id].name),
+      ...(e.players || []).map((id) => ref.player[id] && ref.player[id].name)].filter(Boolean);
     const hits = (await library(env)).filter((e) => {
-      const hay = [e.alt, e.caption, e.credit, e.src, ...(e.terms || []), ...e.used_in.map((u) => u.title)].join(" ").toLowerCase();
+      const hay = [e.alt, e.caption, e.credit, e.src, ...names(e), ...(e.terms || []), ...e.used_in.map((u) => u.title)].join(" ").toLowerCase();
       return words.every((w) => hay.includes(w));
     });
     return { found: hits.length, photos: hits.slice(0, Math.min(limit, 40)).map((e) => ({
       photo_url: e.src, size: e.w ? `${e.w}x${e.h}` : null, description: e.alt || null, caption: e.caption || null, credit: e.credit || null,
+      tags: names(e),
       used_in: e.used_in.map((u) => `${u.id} (${u.how})`), markdown: libraryMd(e),
       note: e.alt ? undefined : "No description yet: ask the editor for one before putting it in an article." })) };
   }));
@@ -734,11 +738,14 @@ async function editorApi(request, env, path) {
         taken: header(request, "x-photo-taken", 20), camera: header(request, "x-photo-camera", 60), all: header(request, "x-photo-meta", 8000) }, who);
       return json({ ok: true, ...up });
     }
-    if (path === "libsave") {                                 // a photo's description, caption and credit
+    if (path === "libsave") {                                 // a photo's description, caption, credit and tags
       const b = await request.json();
+      const ref = b.events || b.cities || b.players ? await reference(env) : null;
       const e = await changeLibrary(env, (list) => {
         const x = list.find((y) => y.src === b.src) || fail("No such photo in the library.");
         for (const k of ["alt", "caption", "credit"]) { const v = String(b[k] || "").trim().slice(0, k === "credit" ? 120 : 200); if (v) x[k] = v; else delete x[k]; }
+        if (ref) for (const [k, known] of [["events", ref.event], ["cities", ref.city], ["players", ref.player]])
+          if (Array.isArray(b[k])) { const ids = b[k].filter((id) => known[id]); if (ids.length) x[k] = ids; else delete x[k]; }
         if (b.alt && x.suggested_terms) x.terms = x.suggested_terms;  // the words that came with the suggestion help search
         if (b.alt || b.dismiss) { delete x.suggested_alt; delete x.suggested_terms; delete x.suggested_at; }
         x.updated_by = who; x.updated_at = nowIso();
