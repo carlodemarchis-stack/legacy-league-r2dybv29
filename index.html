@@ -1166,7 +1166,8 @@ let storeRev = null;
    Opening a story puts its address in the address bar; closing it puts the card's address back. */
 const storyKey = s => s.slug || s.id;
 const findStory = key => LEAGUE.stories.find(x => x.slug === key || x.id === key);
-const pretty = () => storeRev !== null && !STORE_AT;      // this site answers /stories/<name>
+const PATHS = !!document.querySelector('meta[name="ll-paths"]');
+const pretty = () => PATHS && !STORE_AT;                   // this site answers /stories/<name>, /cities/<name> and the rest
 const onStoryPath = () => /\/stories\/[^/]+\/?$/.test(location.pathname);
 const storyUrl = s => pretty() || STORE_AT ? `${STORE_AT || location.origin + "/"}stories/${storyKey(s)}`
   : `${location.origin}${location.pathname}#story/${storyKey(s)}`;
@@ -1176,9 +1177,32 @@ function showStoryAddress(s) {
   try { history.replaceState(null, "", pretty() ? `/stories/${storyKey(s)}` : `#story/${storyKey(s)}`); } catch (e) {}
 }
 function showCardAddress() {
-  document.title = PAGE_TITLE;
-  try { history.replaceState(null, "", (onStoryPath() ? "/" : location.pathname + location.search) + (cur ? "#" + (cur + 1) : "")); } catch (e) {}
+  document.title = cardTitle(cur);
+  try { history.replaceState(null, "", pretty() ? cardPath(cur) : (onStoryPath() ? "/" : location.pathname + location.search) + (cur ? "#" + (cur + 1) : "")); } catch (e) {}
 }
+/* Every card's own address, readable: /live, /stories, /cities/boston, /players/omar-quintero, /season,
+   /events/mayakoba-2027, /league, /sign-up (and /stories/<name> for a story). The worker answers the same names. */
+const nameSlug = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/['’‘]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+let PATH_OF = null, CARD_OF = null;
+function cardPaths() {
+  if (PATH_OF) return;
+  PATH_OF = CARDS.map((c, n) => n === 0 ? "/" : n === SEC.live ? "/live" : c.k === "stories" ? "/stories" : c.k === "season" ? "/season" :
+    c.k === "mission" ? "/league" : c.k === "capture" ? "/sign-up" : c.k === "city" ? "/cities/" + nameSlug(CITY[c.id].name) :
+    c.k === "player" ? "/players/" + nameSlug(PLAYER[c.id].name) : c.k === "event" ? "/events/" + c.id : "/");
+  const seen = {};                                         // two players with one name: the second keeps its id
+  PATH_OF = PATH_OF.map((p, n) => { if (p !== "/" && seen[p]) return p + "-" + CARDS[n].id; seen[p] = 1; return p; });
+  CARD_OF = {};
+  PATH_OF.forEach((p, n) => { if (!(p in CARD_OF)) CARD_OF[p] = n; });
+  CARDS.forEach((c, n) => { if (c.k === "city" || c.k === "player") CARD_OF["/" + (c.k === "city" ? "cities" : "players") + "/" + c.id] = n; });
+}
+const cardPath = n => { cardPaths(); return PATH_OF[n] || "/"; };
+const cardFromPath = path => { cardPaths(); const p = "/" + String(path || "").replace(/^\/+|\/+$/g, ""); return p in CARD_OF ? CARD_OF[p] : null; };
+const cardTitle = n => {
+  const c = CARDS[n]; if (!c || n === 0) return PAGE_TITLE;
+  const name = n === SEC.live ? t("Live") : c.k === "stories" ? t("Stories") : c.k === "season" ? t("Season") : c.k === "mission" ? t("The league") : c.k === "capture" ? t("Sign up")
+    : c.k === "city" ? CITY[c.id].name : c.k === "player" ? PLAYER[c.id].name : c.k === "event" ? L(LEAGUE.schedule.find(e => e.id === c.id), "name") : "";
+  return name ? `${name} · Legacy League Golf` : PAGE_TITLE;
+};
 function shareStory(id) {
   const s = LEAGUE.stories.find(x => x.id === id), url = storyUrl(s);
   if (navigator.share) return navigator.share({ title: sTitle(s), url }).catch(() => {});
@@ -1801,6 +1825,7 @@ const place = () => {
   film.children[HOME].style.transform = front ? `translateX(${(SEC.live - HOME) * innerWidth}px)` : "";
 };
 addEventListener("resize", () => { film.style.transition = "none"; place(); });
+let fromHistory = false;                                    // a move made by Back or Forward writes no new address
 function go(n) {
   const target = Math.max(0, Math.min(total - 1, n));
   // a long jump (tab, chip, hash) cuts straight there: sliding across seventy
@@ -1816,7 +1841,10 @@ function go(n) {
   document.getElementById("tb-ctx").textContent = k === "story" ? t("· 2027 season") : liveEv ? t("· Mayakoba · live") : k === "stories" ? t("· Stories") :
     k === "city" ? `· ${t("City hubs")} · ${cur - SEC.cities + 1} / ${cityOrder.length}` : k === "player" ? `· ${t("Players")} · ${cur - SEC.players + 1} / ${playerOrder.length}` :
     k === "event" ? `· ${t("Season")} · ${L(LEAGUE.schedule.find(e => e.id === CARDS[cur].id), "name")}` : k === "season" ? t("· Season") : `· ${t("League")}`;
-  location.hash = cur ? "#" + (cur + 1) : "";
+  if (pretty()) {
+    document.title = cardTitle(cur);
+    if (!fromHistory && !onStoryPath() && location.pathname !== cardPath(cur)) try { history.pushState(null, "", cardPath(cur)); } catch (e) {}
+  } else location.hash = cur ? "#" + (cur + 1) : "";
   film.children[cur === SEC.live ? HOME : cur].querySelector(".inner").scrollTop = 0;
 }
 const next = () => go(cur + 1 >= total ? 0 : cur + 1), prev = () => go(cur - 1);
@@ -1872,6 +1900,14 @@ addEventListener("touchstart", e => { tx = e.touches[0].clientX; ty = e.touches[
 addEventListener("touchend", e => { const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
   if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) dx < 0 ? next() : prev(); }, { passive: true });
 const storyInAddress = () => { const m = location.pathname.match(/\/stories\/([^/]+)\/?$/) || location.hash.match(/^#story\/(.+)$/); return m ? decodeURIComponent(m[1]) : null; };
+addEventListener("popstate", () => {
+  if (!pretty()) return;
+  const key = storyInAddress();
+  if (key) return openStoryByKey(key);
+  if (document.getElementById("smodal").classList.contains("on")) closeModal("smodal");
+  const n = cardFromPath(location.pathname);
+  if (n != null && n !== cur) { fromHistory = true; go(n); fromHistory = false; }
+});
 addEventListener("hashchange", () => {
   if (location.hash.startsWith("#story/")) return openStoryByKey(storyInAddress());
   const n = parseInt(location.hash.slice(1), 10); if (n && n - 1 !== cur) go(n - 1);
@@ -1881,7 +1917,10 @@ refresh();
 consentStatus();
 leaderboard().forEach(x => lastPos[x.c.id] = `${x.tied ? "T" : ""}${x.pos}`);
 const start = parseInt(location.hash.slice(1), 10), startStory = storyInAddress();
-go(startStory ? SEC.stories : start ? start - 1 : 0);
+const startCard = pretty() && !startStory ? cardFromPath(location.pathname) : null;
+fromHistory = true;                                         // the address it opened on is kept as it is
+go(startStory ? SEC.stories : startCard != null ? startCard : start ? start - 1 : 0);
+fromHistory = false;
 if (startStory) openStoryByKey(startStory);
 (window.requestIdleCallback || setTimeout)(warmMenu);
 /* The page carries the newest stories. Older ones arrive once the first screen is up. */
