@@ -4,8 +4,8 @@
 /* The Content Studio's version, shown in its top bar. Raise it with every change editors can see:
    0.1 stories editor · 0.2 formatting · 0.3 events, history, cancel · 0.4 photos in the article · 0.5 Draft with AI ·
    0.6 photo menu on the photo, the name Content Studio and this number · 0.7 your name on changes, AI usage log ·
-   0.8 paste or drop photos into the article */
-export const STUDIO_VERSION = "0.8.0";
+   0.8 paste or drop photos into the article · 0.9 the Studio's own dialogs instead of the browser's */
+export const STUDIO_VERSION = "0.9.0";
 
 export function editorPage(site) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -116,6 +116,24 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .hist-inline img{width:100%;max-height:280px;object-fit:cover;border-radius:10px;margin-bottom:12px}.hist-inline .tags{font-size:12px;color:var(--dim)}
 .hist .vp .tags{font-size:12px;color:var(--dim);margin:12px 0}
 @media(max-width:860px){.hist{grid-template-columns:1fr;grid-template-rows:auto 38dvh minmax(0,1fr)}.hist .vl{border-right:0;border-bottom:1px solid var(--line)}}
+/* the Studio's own dialog: one design for questions, confirmations and the photo's description */
+.mback{position:fixed;inset:0;z-index:50;background:rgba(5,8,10,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;animation:mfade .12s ease-out}
+@keyframes mfade{from{opacity:0}to{opacity:1}}
+.mbox{width:min(520px,100%);max-height:calc(100dvh - 32px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);padding:22px 22px 18px;animation:mrise .16s ease-out}
+@keyframes mrise{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}
+.mbox h2{margin:0 0 6px;font-size:17px;letter-spacing:-.01em}
+.mbox .mtext{margin:0 0 14px;color:var(--dim);line-height:1.5;font-size:13.5px}
+.mbox .mimg{display:block;width:100%;max-height:260px;object-fit:contain;background:#000;border-radius:10px;margin:4px 0 16px}
+.mbox .mf{margin-bottom:14px}.mbox .mf label{display:flex;justify-content:space-between;align-items:baseline}
+.mbox .mf label em{font-style:normal;text-transform:none;letter-spacing:0;font-size:11px;color:var(--dim)}
+.mbox .mf input,.mbox .mf textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);line-height:1.45}
+.mbox .mf input:focus,.mbox .mf textarea:focus{outline:none;border-color:color-mix(in srgb,var(--acc) 70%,var(--line))}
+.mbox .mf.bad input,.mbox .mf.bad textarea{border-color:var(--bad)}
+.mbox .mf .hint{margin-top:5px}.mbox .mf .merr{font-size:12px;color:var(--bad);margin-top:5px}
+.mbox .mbtns{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:8px}
+.mbox .mbtns .btn{padding:8px 16px;font-size:13px}.mbox .mbtns .left{margin-right:auto}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}.chip button{border:0;background:none;cursor:pointer;color:var(--dim);font-size:14px;line-height:1}
@@ -152,14 +170,58 @@ const statusOf = (s) => s.status || "published";
 const shown = (s, t) => String(t || "").replace(/\{p0\}/g, PLAYER[(s.players || [])[0]] ? PLAYER[s.players[0]].name : "")
   .replace(/\{c0\}/g, CITY[(s.cities || [])[0]] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
 const when = (iso) => iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+/* ------------------------------------------------ the Studio's dialog
+   modal({ title, text, img, fields, ok, cancel, danger, extra, validate }) resolves to the fields' values (or true when
+   there are none), to { action } for the extra button, or to null when the editor cancels. Enter confirms, Esc cancels. */
+function modal({ title, text = "", img = "", fields = [], ok = "OK", cancel = "Cancel", danger = false, extra = null, validate = null }) {
+  return new Promise((resolve) => {
+    const back = document.createElement("div"); back.className = "mback";
+    back.innerHTML = \`<div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mtitle"><h2 id="mtitle">\${esc(title)}</h2>
+      \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? \`<img class="mimg" src="\${esc(img)}" alt="">\` : ""}
+      \${fields.map((f) => \`<div class="mf" data-f="\${f.id}"><label for="mf-\${f.id}">\${esc(f.label)}\${f.required ? "" : "<em>optional</em>"}</label>
+        \${f.type === "textarea" ? \`<textarea id="mf-\${f.id}" rows="\${f.rows || 2}" placeholder="\${esc(f.placeholder || "")}">\${esc(f.value || "")}</textarea>\`
+          : \`<input id="mf-\${f.id}" type="\${f.type || "text"}" value="\${esc(f.value || "")}" placeholder="\${esc(f.placeholder || "")}" autocomplete="off">\`}
+        \${f.hint ? \`<div class="hint">\${esc(f.hint)}</div>\` : ""}<div class="merr" hidden></div></div>\`).join("")}
+      <div class="mbtns">\${extra ? \`<button type="button" class="btn left\${extra.danger ? " bad" : ""}" data-b="extra">\${esc(extra.label)}</button>\` : ""}
+        <button type="button" class="btn" data-b="cancel">\${esc(cancel)}</button>
+        <button type="button" class="btn \${danger ? "danger" : "pri"}" data-b="ok">\${esc(ok)}</button></div></div>\`;
+    document.body.appendChild(back);
+    const before = document.activeElement;
+    const done = (v) => { back.parentNode && back.parentNode.removeChild(back); removeEventListener("keydown", keys, true); if (before && before.focus) before.focus(); resolve(v); };
+    const values = () => Object.fromEntries(fields.map((f) => [f.id, back.querySelector(\`#mf-\${f.id}\`).value.trim()]));
+    const showErr = (id, msg) => { const box = back.querySelector(\`[data-f="\${id}"]\`); box.classList.add("bad"); const e = box.querySelector(".merr"); e.textContent = msg; e.hidden = false; box.querySelector("input,textarea").focus(); };
+    const confirmIt = () => {
+      back.querySelectorAll(".mf").forEach((b) => { b.classList.remove("bad"); b.querySelector(".merr").hidden = true; });
+      const v = values();
+      const missing = fields.find((f) => f.required && !v[f.id]);
+      if (missing) return showErr(missing.id, missing.requiredText || "This is needed.");
+      if (validate) { const r = validate(v); if (r) return showErr(r.field, r.message); }
+      done(fields.length ? v : true);
+    };
+    const keys = (e) => {
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); done(null); }
+      else if (e.key === "Enter" && !(e.target.tagName === "TEXTAREA" && !(e.metaKey || e.ctrlKey)) && e.target.dataset.b !== "cancel" && e.target.dataset.b !== "extra") { e.preventDefault(); confirmIt(); }
+    };
+    addEventListener("keydown", keys, true);
+    back.addEventListener("mousedown", (e) => { if (e.target === back) done(null); });
+    back.querySelector('[data-b="ok"]').onclick = confirmIt;
+    back.querySelector('[data-b="cancel"]').onclick = () => done(null);
+    if (extra) back.querySelector('[data-b="extra"]').onclick = () => done({ action: extra.value });
+    setTimeout(() => (back.querySelector(".mf input,.mf textarea") || back.querySelector('[data-b="ok"]')).focus(), 20);
+  });
+}
+const confirmModal = (title, text, ok, danger = false) => modal({ title, text, ok, danger });
+const leaveUnsaved = () => !dirty ? Promise.resolve(true) : confirmModal("Leave without saving?", "Your changes to this story are not saved yet. They will be lost.", "Leave without saving", true);
+
 /* who is working: asked once, kept in this browser; replaced by the sign-in once the Studio has one */
 let EDITOR = "";
 try { EDITOR = localStorage.getItem("studio-editor") || ""; } catch (e) {}
 function paintWho() { $("whobtn").textContent = EDITOR ? "👤 " + EDITOR : "👤 Your name"; }
-function askName() {
-  const n = prompt("Your name, as it should appear on the changes you make and the AI you use:", EDITOR);
-  if (n === null) return;
-  EDITOR = n.trim().slice(0, 60);
+async function askName() {
+  const v = await modal({ title: EDITOR ? "Your name" : "Welcome to the Content Studio", text: "Your name goes on the changes you make and the AI requests you send, so the team can see who did what.",
+    fields: [{ id: "name", label: "Name", value: EDITOR, required: true, placeholder: "e.g. Carlo De Marchis", requiredText: "Type your name." }], ok: "Save" });
+  if (!v) return;
+  EDITOR = v.name.slice(0, 60);
   try { localStorage.setItem("studio-editor", EDITOR); } catch (e) {}
   paintWho();
 }
@@ -192,8 +254,8 @@ function renderList() {
     <span><b>\${esc(shown(s, s.title))}</b><small><span class="st \${statusOf(s)}">\${statusOf(s)}</span>\${esc(s.kind)} · \${esc(when(s.at))}</small></span></button>\`).join("") ||
     '<div class="empty">No story matches.</div>';
 }
-function pick(id) {
-  if (dirty && !confirm("Leave this story without saving your changes?")) return;
+async function pick(id) {
+  if (!(await leaveUnsaved())) return;
   show(id);
 }
 function show(id, quiet) {
@@ -292,17 +354,28 @@ function command(c) {
   else if (c === "ol") ch.toggleOrderedList().run();
   else if (c === "img") $("pfile").click();
   else if (c === "a") {
-    const was = ed.getAttributes("link").href || "";
-    let url = prompt("Link address (https://…). Leave empty to remove the link.", was);
-    if (url === null) return;
-    url = url.trim();
-    if (!url) { ch.extendMarkRange("link").unsetLink().run(); return; }
-    if (/^www\./i.test(url)) url = "https://" + url;
-    if (/^[^\s@:\/]+@[^\s@]+\.[^\s@]+$/.test(url)) url = "mailto:" + url;
-    if (!TT.okUrl(url)) { alert("Links must start with https:// (or be an email address, or a /stories/ address on this site)."); return; }
-    if (ed.state.selection.empty && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
-    else ch.extendMarkRange("link").setLink({ href: url }).run();
+    linkDialog();
   }
+}
+/* a link: the address, made right (www. gets https://, an email address becomes mailto:), checked before it goes in */
+async function linkDialog() {
+  const was = ed.getAttributes("link").href || "";
+  const { from, to } = ed.state.selection;
+  const fix = (u) => /^www\\./i.test(u) ? "https://" + u : /^[^\\s@:\\/]+@[^\\s@]+\\.[^\\s@]+$/.test(u) ? "mailto:" + u : u;
+  const v = await modal({
+    title: was ? "Edit the link" : "Add a link",
+    text: from === to && !was ? "No words are selected, so the address itself becomes the link text." : "",
+    fields: [{ id: "url", label: "Address", value: was, required: true, placeholder: "https://…", requiredText: "Type the address.",
+      hint: "A web address, an email address, or /stories/<name> for another league story." }],
+    ok: was ? "Update link" : "Add link", extra: was ? { label: "Remove link", value: "remove", danger: true } : null,
+    validate: (x) => TT.okUrl(fix(x.url)) ? null : { field: "url", message: "Links must start with https://, be an email address, or a /stories/ address on this site." },
+  });
+  const ch = ed.chain().focus().setTextSelection({ from, to });
+  if (!v) return;
+  if (v.action === "remove") { ch.extendMarkRange("link").unsetLink().run(); return; }
+  const url = fix(v.url);
+  if (from === to && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
+  else ch.extendMarkRange("link").setLink({ href: url }).run();
 }
 /* photos in the article: shrunk in the browser, kept in the store, described and captioned, placed at the cursor */
 async function shrink(file) {
@@ -312,11 +385,16 @@ async function shrink(file) {
   cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
   return { blob: await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.82)), w: cv.width, h: cv.height };
 }
-function askText(alt, caption, which = "") {
-  let a = alt || "";
-  do { a = prompt("Describe the photo" + which + " for people who cannot see it (required):", a); if (a === null) return null; a = a.trim(); } while (!a);
-  const c = prompt("Caption, with the credit if you have one (optional):", caption || "");
-  return { alt: a, caption: (c || "").trim() };
+function askText(alt, caption, which = "", img = "") {
+  return modal({
+    title: (alt ? "Edit the photo's text" : "Describe the photo") + which, img,
+    fields: [
+      { id: "alt", label: "Description", value: alt, required: true, type: "textarea", rows: 2, requiredText: "Describe the photo: it is read aloud to people who cannot see it.",
+        placeholder: "e.g. Omar Quintero hits a 5-wood to six feet on the 13th", hint: "What the photo shows, for people who cannot see it. Not shown on the page." },
+      { id: "caption", label: "Caption", value: caption, placeholder: "e.g. The 13th at El Camaleón · Photo: Jane Smith", hint: "Shown under the photo. Add the credit here." },
+    ],
+    ok: alt ? "Save" : "Add photo",
+  }).then((v) => v && { alt: v.alt, caption: v.caption });
 }
 /* photos pasted or dropped in: one after the other, each described, each placed where it landed */
 async function addPhotos(files, pos) {
@@ -331,9 +409,14 @@ async function addPhoto(file, which = "", at = null) {
   say("", "Uploading the photo" + which + "…");
   try {
     const { blob, w, h } = await shrink(file);
+    const preview = URL.createObjectURL(blob);
+    say("", "");
+    const t = await askText("", "", which, preview);           // described first: a photo given up is never uploaded
+    URL.revokeObjectURL(preview);
+    if (!t) { say("", "Photo not added."); return false; }
+    say("", "Uploading the photo" + which + "…");
     const r = await fetch(API + "upload", { method: "POST", headers: { "content-type": "image/jpeg", "x-photo-size": w + "x" + h }, body: blob });
     const j = await r.json(); if (!r.ok) throw new Error(j.error || "The upload failed.");
-    const t = askText("", "", which); if (!t) { say("", "Photo not added."); return false; }
     const attrs = { src: SITE + "/" + j.src + "#" + w + "x" + h, alt: t.alt, title: t.caption };
     if (at != null) ed.chain().focus().insertContentAt(at, { type: "image", attrs }).run();
     else ed.chain().focus().setImage(attrs).run();
@@ -365,8 +448,10 @@ addEventListener("photo-menu", (e) => {
 });
 addEventListener("mousedown", (ev) => { if ($("pmenu") && !ev.target.closest("#pmenu") && !ev.target.closest(".ph-more")) closePhotoMenu(); });
 addEventListener("keydown", (e) => { if (e.key === "Escape") closePhotoMenu(); });
-function editPhoto() {
-  const a = ed.getAttributes("image"); const t = askText(a.alt, a.title); if (!t) return;
+async function editPhoto() {
+  const sel = ed.state.selection;
+  const a = ed.getAttributes("image"); const t = await askText(a.alt, a.title, "", a.src); if (!t) return;
+  ed.chain().setNodeSelection(sel.from).run();
   ed.chain().focus().updateAttributes("image", { alt: t.alt, title: t.caption }).run();
 }
 function mainFromPhoto() {
@@ -388,8 +473,9 @@ function paintPlayers() {
 }
 function dropPlayer(id) { cur.players = cur.players.filter((x) => x !== id); paintPlayers(); touch(); }
 /* a new story not saved yet goes away; a story with unsaved changes goes back to how it was saved */
-function discard() {
-  if (dirty && !confirm(cur.id ? "Throw away your unsaved changes?" : "Throw away this new story?")) return;
+async function discard() {
+  if (dirty && !(await confirmModal(cur.id ? "Throw away your changes?" : "Throw away this new story?",
+    cur.id ? "The story goes back to how it was last saved." : "It has not been saved, so nothing of it is kept.", cur.id ? "Throw away changes" : "Throw away", true))) return;
   dirty = false;
   if (cur.id) { show(cur.id, true); say("", "Changes thrown away."); }
   else { cur = null; renderList(); renderForm(); }
@@ -419,17 +505,19 @@ function save() {
     dirty = false; await load(j.story.id); renderForm(["ok", live ? "Saved. The site shows the change on its next load." : "Draft saved."]);
   }, "Saving…");
 }
-function act(what) {
+async function act(what) {
   if (dirty) { say("err", "Save your changes first."); return; }
-  const q = what === "publish" ? "Publish this story? It is public on the site and in the app at once." : "Take this story off the site? It goes back to drafts.";
-  if (!confirm(q)) return;
+  const ok = what === "publish"
+    ? await confirmModal("Publish this story?", "It is public on the site and in the app at once.", "Publish")
+    : await confirmModal("Take this story off the site?", "It leaves the site and the app at once and goes back to drafts.", "Unpublish", true);
+  if (!ok) return;
   run(async () => {
     await call(what, { id: cur.id, stamp: cur.stamp });
     await load(cur.id); renderForm(["ok", what === "publish" ? "Published. It is on the site now." : "Back in drafts, off the site."]);
   }, what === "publish" ? "Publishing…" : "Taking it off the site…");
 }
-function del() {
-  if (!confirm("Delete this story for good?" + (statusOf(cur) === "published" ? " It also leaves the site at once." : "") + " It can be brought back from Deleted.")) return;
+async function del() {
+  if (!(await confirmModal("Delete this story?", (statusOf(cur) === "published" ? "It leaves the site and the app at once. " : "") + "It can be brought back from Deleted.", "Delete", true))) return;
   run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
 }
 /* ------------------------------------------------ draft with AI */
@@ -540,7 +628,7 @@ async function pickVersion(v) {
     <button class="btn pri" onclick="restore('\${v}')">Restore this version</button></div>\` + versionHtml(story);
 }
 async function restore(v) {
-  if (!confirm("Make this version the story again?" + (statusOf(cur) === "published" ? " The site shows it at once." : "") + " The current version is kept in the history."))
+  if (!(await confirmModal("Restore this version?", (statusOf(cur) === "published" ? "The site shows it at once. " : "") + "The version it replaces is kept in the history.", "Restore")))
     return;
   try {
     const j = await call("restore", { id: cur.id, version: v, stamp: cur.stamp });
@@ -568,7 +656,7 @@ $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return
   document.querySelectorAll("#seg button").forEach((x) => x.classList.toggle("on", x === b));
   if (filter === "deleted") { $("list").innerHTML = '<div class="empty">Loading…</div>'; call("deleted").then((j) => { deleted = j.deleted; renderList(); }); }
   else renderList(); };
-$("new").onclick = () => { if (dirty && !confirm("Leave this story without saving your changes?")) return; closeAI(); aiChat = []; aiChatId = null; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
+$("new").onclick = async () => { if (!(await leaveUnsaved())) return; closeAI(); aiChat = []; aiChatId = null; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {
   paintWho();
