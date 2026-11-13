@@ -99,9 +99,11 @@ export function aiError(e) {
 
 /* ------------------------------------------------------------------ photo descriptions */
 
-/* A suggested description for a library photo: Claude Opus 5.5 looks at the picture and writes the alt text an editor
+/* A suggested description for a library photo: Claude Haiku 5.5 (a small, cheap job; Carlo's choice) looks at the picture and writes the alt text an editor
    then accepts, edits or ignores. It never names a person from their face: who is in a photo is the editor's call. */
 import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
+const DESCRIBE_MODEL = "claude-haiku-5-5";
+const DESCRIBE_PRICE = { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125 };   // US$ per million tokens, Claude Haiku 5.5
 
 const DESCRIBE = `You write the description (alt text) of a photo for the Legacy League Golf website, a golf league of retired professional athletes playing for their cities.
 Write one sentence, at most 25 words, saying what the photo shows for someone who cannot see it: the scene, the action, the setting, what stands out. Start with the subject, not "A photo of" or "An image of".
@@ -116,7 +118,7 @@ export async function describePhoto(env, { bytes, mediaType, context }) {
   for (let i = 0; i < u8.length; i += 0x8000) b64 += String.fromCharCode(...u8.subarray(i, i + 0x8000));
   b64 = btoa(b64);
   const res = await client.messages.parse({
-    model: MODEL, max_tokens: 4000,
+    model: DESCRIBE_MODEL, max_tokens: 4000,
     output_config: { effort: "low", format: jsonSchemaOutputFormat(obj({ description: { type: "string" }, search_terms: { type: "array", items: { type: "string" } } }, ["description", "search_terms"])) },
     system: DESCRIBE,
     messages: [{ role: "user", content: [
@@ -126,8 +128,9 @@ export async function describePhoto(env, { bytes, mediaType, context }) {
   });
   if (res.stop_reason === "refusal" || !res.parsed_output) throw new Error("No description could be suggested for this photo.");
   const u = res.usage || {};
-  const cost = ((u.input_tokens || 0) * PRICE.input + (u.output_tokens || 0) * PRICE.output + (u.cache_read_input_tokens || 0) * PRICE.cache_read + (u.cache_creation_input_tokens || 0) * PRICE.cache_write) / 1e6;
+  const P = DESCRIBE_PRICE;
+  const cost = ((u.input_tokens || 0) * P.input + (u.output_tokens || 0) * P.output + (u.cache_read_input_tokens || 0) * P.cache_read + (u.cache_creation_input_tokens || 0) * P.cache_write) / 1e6;
   return { alt: res.parsed_output.description.trim(), terms: res.parsed_output.search_terms.slice(0, 10), model: res.model,
            usage: { input: u.input_tokens || 0, output: u.output_tokens || 0, cache_read: u.cache_read_input_tokens || 0, cache_write: u.cache_creation_input_tokens || 0 },
-           cost: Math.round(cost * 10000) / 10000 };
+           cost: Math.round(cost * 100000) / 100000 };
 }

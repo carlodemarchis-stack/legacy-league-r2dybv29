@@ -9,8 +9,8 @@
    0.11 the photo library: every photo, searchable, uploaded on its own, chosen wherever a photo goes ·
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
-   0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date */
-export const STUDIO_VERSION = "0.14.0";
+   0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
+export const STUDIO_VERSION = "0.14.1";
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -881,7 +881,7 @@ async function editLibraryPhoto(e) {
 async function suggestFor(list) {
   if (!list.length) { await confirmModal("Nothing to suggest", "Every photo has a description or a suggestion waiting.", "OK"); return; }
   if (list.length > 1 && !(await confirmModal("Suggest descriptions for " + list.length + " photos?",
-    "Claude looks at each photo and writes a description for you to accept or change. It never names people. Each one costs about a cent and shows in AI usage.", "Suggest"))) return;
+    "Claude looks at each photo and writes a description for you to accept or change. It never names people. Each one costs a fraction of a cent (Claude Haiku) and shows in AI usage.", "Suggest"))) return;
   let cost = 0, done = 0, failed = 0;
   if ($("libsug")) $("libsug").disabled = true;
   for (const e of list) {
