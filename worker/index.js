@@ -1,6 +1,6 @@
 // The site on Cloudflare: the built page and its files are served as they are (ASSETS);
-// anything under /content/ comes from the content store, the R2 bucket bound as CONTENT.
-// The bucket itself stays private: this is the only way in, and it only reads.
+// the public part of the content store (site/, stories/, photos/ in the R2 bucket bound as CONTENT) is under /content/.
+// The bucket itself stays private: this is the only way in, it only reads, and never the desk's own files.
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /* The name a city or a player has in an address: plain lower-case words, the same rule as the page's. */
@@ -97,6 +97,8 @@ export default {
     if (!url.pathname.startsWith("/content/")) return env.ASSETS.fetch(request);
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
     const key = decodeURIComponent(url.pathname.slice("/content/".length));
+    // only what the page and the app read is public; the desk's own files (desk/, ai/, scores/) never leave the bucket
+    if (!/^(site|stories|photos)\/[^]+$/.test(key) || key.split("/").includes("..")) return new Response("Not found", { status: 404 });
     const obj = await env.CONTENT.get(key);
     if (!obj) return new Response("Not found", { status: 404 });
     const h = new Headers();
