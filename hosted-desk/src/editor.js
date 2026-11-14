@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.28.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live)
+export const STUDIO_VERSION = "0.28.1";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live) · 0.28.1: links to a player, city or event page from the Link dialog
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -515,19 +515,28 @@ async function linkDialog() {
   const was = ed.getAttributes("link").href || "";
   const { from, to } = ed.state.selection;
   const fix = (u) => /^www\\./i.test(u) ? "https://" + u : /^[^\\s@:\\/]+@[^\\s@]+\\.[^\\s@]+$/.test(u) ? "mailto:" + u : u;
+  // a league page: a player, city or event, by the readable name the site answers to (/players/wes-sandoval)
+  const slug = (t) => String(t || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/['’‘]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const pages = [["", "None: use the address above"],
+    ...ref.players.slice().sort((a, b) => (a.name < b.name ? -1 : 1)).map((x) => [\`/players/\${slug(x.name)}\`, \`Player · \${x.name}\${CITY[x.city] ? " (" + CITY[x.city].short + ")" : ""}\`]),
+    ...ref.cities.map((x) => [\`/cities/\${slug(x.name)}\`, \`City · \${x.name}\`]),
+    ...ref.events.map((x) => [\`/events/\${x.id}\`, \`Event · \${x.name}\`])];
+  const isPage = pages.some(([p]) => p && p === was);
   const v = await modal({
     title: was ? "Edit the link" : "Add a link",
-    text: from === to && !was ? "No words are selected, so the address itself becomes the link text." : "",
-    fields: [{ id: "url", label: "Address", value: was, required: true, placeholder: "https://…", requiredText: "Type the address.",
-      hint: "A web address, an email address, or /stories/<name> for another league story." }],
+    text: from === to && !was ? "No words are selected, so the link text will be the page's name or the address." : "",
+    fields: [{ id: "url", label: "Address", value: isPage ? "" : was, placeholder: "https://…",
+      hint: "A web address, an email address, or /stories/<name> for another league story." },
+      { id: "page", label: "Or a league page", type: "select", value: isPage ? was : "", options: pages }],
     ok: was ? "Update link" : "Add link", extra: was ? { label: "Remove link", value: "remove", danger: true } : null,
-    validate: (x) => TT.okUrl(fix(x.url)) ? null : { field: "url", message: "Links must start with https://, be an email address, or a /stories/ address on this site." },
+    validate: (x) => x.page || TT.okUrl(fix(x.url)) ? null : { field: "url", message: "Type a web or email address, or pick a league page." },
   });
   const ch = ed.chain().focus().setTextSelection({ from, to });
   if (!v) return;
   if (v.action === "remove") { ch.extendMarkRange("link").unsetLink().run(); return; }
-  const url = fix(v.url);
-  if (from === to && !was) ch.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
+  const url = v.page || fix(v.url);
+  const label = v.page ? (pages.find(([p]) => p === v.page) || ["", url])[1].replace(/^\\w+ · /, "").replace(/ \\(\\w+\\)$/, "") : url;
+  if (from === to && !was) ch.insertContent({ type: "text", text: label, marks: [{ type: "link", attrs: { href: url } }] }).run();
   else ch.extendMarkRange("link").setLink({ href: url }).run();
 }
 /* What a photo file says about itself, read before the browser shrinks it (shrinking drops it all).

@@ -145,7 +145,7 @@ export const insertEmbed = (editor, url, at) => {
   return at == null ? editor.chain().focus().insertContent(node).run() : editor.chain().focus().insertContentAt(at, node).run();
 };
 
-export const okUrl = (u) => /^(https:\/\/|mailto:|\/stories\/)/.test(u || "");
+export const okUrl = (u) => /^(https:\/\/|mailto:|\/(stories|players|cities|events)\/)/.test(u || "");   // league pages open in the site
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /* Markdown (our small part of it) → HTML, for loading a story into the editor. The site uses the same rules. */

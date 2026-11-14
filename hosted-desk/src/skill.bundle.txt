@@ -86,6 +86,8 @@ When the editor has their own photo:
 
 `at` is `r1`, a course time such as `14:20`, `final`, or `live` (always current; event and season only). A recap uses a frozen moment, so it stays true; a preview or a "follow along" story can be live. Cities by their ids from `league_reference`. Write the story's words around it; the board carries the numbers.
 
+**Links to league pages.** The site links the first mention of each tagged player, city and event by itself, so tag them and write their names as the site has them. To link any other league page, use its address: `[Wes Sandoval](/players/wes-sandoval)`, `[Denver](/cities/denver)` or `[Mayakoba](/events/mayakoba-2027)`. The name part is the page's name in lower case with dashes; event ids come from `league_reference`.
+
 A photo that is already online can be used by passing its web address as `photo_url`, but it then loads from someone else's server. Prefer the upload link.
 
 ## House style

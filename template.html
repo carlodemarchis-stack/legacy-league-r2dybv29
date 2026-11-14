@@ -1219,6 +1219,7 @@ function paintBody(s) {
   el.innerHTML = (paras && paras.length ? paras : [L(s, "dek")]).map(p => mdBlock(fill(p, s))).join("");
   paintEmbeds(el, s.embeds);
   paintBoards(el, s.boards);
+  linkEntities(el, s);
 }
 /* An article holds a little Markdown, written in the editor or by Claude: "## " subheadings, "- " and "1. " lists,
    **bold**, *italic* and [words](address). Nothing else becomes formatting, and the style is the site's own.
@@ -1226,7 +1227,7 @@ function paintBody(s) {
 function mdInline(text) {
   const links = [];
   let h = esc(text).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, label, url) => {
-    if (!/^(https:\/\/|mailto:|\/stories\/)/.test(url)) return m;
+    if (!/^(https:\/\/|mailto:|\/(stories|players|cities|events)\/)/.test(url)) return m;
     links.push([label, url]); return `\u0000${links.length - 1}\u0000`;
   });
   const marks = t => t.replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>");
@@ -1236,8 +1237,43 @@ function mdInline(text) {
       const st = findStory(decodeURIComponent(url.slice(9)).replace(/\/$/, ""));
       return st ? `<a href="#" onclick="openStory('${st.id}');return false">${marks(label)}</a>` : `<a href="${STORE_AT || "/"}${url.slice(1)}">${marks(label)}</a>`;
     }
+    if (/^\/(players|cities|events)\//.test(url)) return `<a class="ent" href="${url}" onclick="return leagueLink('${url}')">${marks(label)}</a>`;
     return `<a href="${url}" target="_blank" rel="noopener">${marks(label)}</a>`;
   });
+}
+/* A link to a league page (/players/…, /cities/…, /events/…) opens that card of the film, here, not a new page */
+function leagueLink(path) {
+  const n = cardFromPath(path);
+  if (n == null) return true;                                 // an unknown name: let the address answer
+  if (document.getElementById("smodal").classList.contains("on")) closeModal("smodal");
+  go(n); return false;
+}
+/* The first mention of each player, city and event the story is tagged with becomes a link to its page, as news
+   sites do. Only tagged ones (a passing "Boston" in an untagged story stays text), only whole words, never inside
+   a link, a subheading, a leaderboard or an embed, and not when the editor already linked that page by hand. */
+function linkEntities(el, s) {
+  const pathOf = (k, id) => { const n = CARDS.findIndex(c => c.k === k && c.id === id); return n < 0 ? null : cardPath(n); };
+  const ents = [
+    ...(s.players || []).filter(id => PLAYER[id]).map(id => [PLAYER[id].name, pathOf("player", id)]),
+    ...(s.cities || []).filter(id => CITY[id]).map(id => [CITY[id].name, pathOf("city", id)]),
+    ...(s.events || []).map(id => (LEAGUE.schedule || []).find(e => e.id === id)).filter(Boolean).map(e => [L(e, "name"), pathOf("event", e.id)]),
+  ].filter(([name, path]) => name && path && path !== "/").sort((a, b) => b[0].length - a[0].length);   // "New York" before "York"
+  const linked = new Set([...el.querySelectorAll("a[href]")].map(a => a.getAttribute("href")));
+  for (const [name, path] of ents) {
+    if (linked.has(path)) continue;
+    const re = new RegExp(`(^|[^\\p{L}\\p{N}])(${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(?=$|[^\\p{L}\\p{N}])`, "u");
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: n =>
+      n.parentElement.closest("a, h3, figure, .lbrd") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    for (let node; (node = walk.nextNode());) {
+      const m = node.nodeValue.match(re); if (!m) continue;
+      const rest = node.splitText(m.index + m[1].length);
+      rest.nodeValue = rest.nodeValue.slice(m[2].length);
+      const a = document.createElement("a"); a.className = "ent"; a.href = path; a.textContent = m[2];
+      a.setAttribute("onclick", `return leagueLink('${path}')`);
+      rest.parentNode.insertBefore(a, rest);
+      linked.add(path); break;
+    }
+  }
 }
 /* EMBEDS: a paragraph that is only a link to one of these becomes its player (a copy of hosted-desk/src/embeds.js,
    players only; keep the two in step). YouTube's privacy mode sets no cookies until it plays, so it loads at once.
