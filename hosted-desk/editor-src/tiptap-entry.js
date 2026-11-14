@@ -8,10 +8,12 @@
 //   **bold**  *italic*  [words](https://…)
 //   ![alt text](content/photos/…#1280x853 "Caption")   a photo from the league's store, a block of its own
 //   https://www.youtube.com/watch?v=…                   an embed: a block that is only a link to YouTube, X… (embeds.js)
+//   leaderboard: board=event top=5 at=r1                 a leaderboard (boards.js)
 // Nothing else exists: whatever else is pasted in is reduced to these.
 
 import { Editor, Node } from "@tiptap/core";
 import { embedOf } from "../src/embeds.js";
+import { parseBoard, boardLine } from "../src/boards.js";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -91,6 +93,53 @@ const Embed = Node.create({
     };
   },
 });
+/* A leaderboard: a card with its title, when it is as of, and its first rows. Rows come from the Desk:
+   setBoards(map) for the story's frozen ones, setBoardLookup(fn) to ask for any other. ⋯ opens the page's menu. */
+let BOARD_META = {}, BOARD_LOOKUP = null;
+export const setBoards = (m) => { BOARD_META = { ...(m || {}) }; };
+export const setBoardLookup = (fn) => { BOARD_LOOKUP = fn; };
+export { parseBoard, boardLine };
+const sgn = (n) => (n == null ? "" : n === 0 ? "E" : n > 0 ? `+${n}` : `${n}`);
+const Board = Node.create({
+  name: "board", group: "block", atom: true, draggable: true, selectable: true,
+  addAttributes() { return { line: { default: null } }; },
+  parseHTML() { return [{ tag: "div[data-board]", getAttrs: (el) => (parseBoard(el.getAttribute("data-board")) ? { line: el.getAttribute("data-board") } : false) }]; },
+  renderHTML({ node }) { return ["div", { "data-board": node.attrs.line }]; },
+  addNodeView() {
+    return ({ node, getPos }) => {
+      const box = document.createElement("div"); box.className = "brd"; box.contentEditable = "false";
+      const more = document.createElement("button");
+      more.type = "button"; more.className = "ph-more"; more.textContent = "⋯"; more.title = "Leaderboard options";
+      more.addEventListener("mousedown", (e) => e.preventDefault());
+      more.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const r = more.getBoundingClientRect();
+        window.dispatchEvent(new CustomEvent("board-menu", { detail: { pos: getPos(), line: node.attrs.line, x: r.right, y: r.bottom } }));
+      });
+      const inner = document.createElement("div"); box.append(inner, more);
+      const paint = (line) => {
+        const m = BOARD_META[line], spec = parseBoard(line) || {};
+        const rows = m && m.rows ? m.rows.slice(0, 6) : [];
+        inner.innerHTML = `<small>Leaderboard · ${esc(spec.at === "live" ? "live, always current" : "frozen")}</small>
+          <b>${esc((m && m.title) || "Leaderboard")}</b><span class="as">${esc((m && (m.note || m.as_of)) || "Loading…")}</span>
+          <div class="rows">${rows.map((r) => spec.board === "city"
+            ? `<div><span></span><span>${esc(r.name)}</span><span>${esc(String(r.thru))}</span><span>${sgn(r.to_par)}</span></div>`
+            : `<div><span>${esc(String(r.pos))}</span><span><i style="background:${esc(r.color || "#888")}"></i>${esc(r.city)}</span><span>${spec.board === "season" ? "" : sgn(r.total)}</span><span>${spec.board === "season" ? esc(String(r.points)) + " pts" : ""}</span></div>`).join("")}
+            ${m && m.rows && m.rows.length > rows.length ? `<div class="more">+ ${m.rows.length - rows.length} more</div>` : ""}</div>`;
+      };
+      paint(node.attrs.line);
+      if (!BOARD_META[node.attrs.line] && BOARD_LOOKUP)
+        BOARD_LOOKUP(node.attrs.line).then((m) => { if (m) { BOARD_META[node.attrs.line] = m; paint(node.attrs.line); } }).catch(() => {});
+      return { dom: box, update: (n) => { if (n.type !== node.type) return false; node = n; paint(n.attrs.line); return true; } };
+    };
+  },
+});
+export const insertBoard = (editor, line, at) => {
+  const node = { type: "board", attrs: { line } };
+  return at == null ? editor.chain().focus().insertContent(node).run() : editor.chain().focus().insertContentAt(at, node).run();
+};
+export const setBoardLine = (editor, pos, line) => editor.chain().setNodeSelection(pos).command(({ tr }) => { tr.setNodeMarkup(pos, undefined, { line }); return true; }).run();
+
 export const insertEmbed = (editor, url, at) => {
   const node = { type: "embed", attrs: { url } };
   return at == null ? editor.chain().focus().insertContent(node).run() : editor.chain().focus().insertContentAt(at, node).run();
@@ -114,6 +163,7 @@ export function inlineHtml(text) {
 const BULLET = /^[-*]\s+/, NUMBER = /^\d+[.)]\s+/;
 export function blockHtml(b) {
   if (embedOf(String(b).trim())) return `<div data-embed="${esc(String(b).trim())}"></div>`;
+  if (parseBoard(String(b).trim())) return `<div data-board="${esc(String(b).trim())}"></div>`;
   const im = String(b).trim().match(IMG);
   if (im) return `<img src="${esc(SITE + "/" + im[2] + (im[3] || ""))}" alt="${esc(im[1])}" title="${esc(im[4] || "")}">`;
   const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -162,6 +212,7 @@ function items(list) {
 export function toMd(doc) {
   return (doc.content || []).map((b) => {
     if (b.type === "embed") return embedOf(b.attrs.url) ? b.attrs.url : null;
+    if (b.type === "board") return parseBoard(b.attrs.line) ? b.attrs.line : null;
     if (b.type === "image") { const path = toPath(b.attrs.src); return path ? photoMd(path, b.attrs.alt, b.attrs.title) : null; }
     if (b.type === "bulletList") return items(b).map((t) => "- " + t).join("\n") || null;
     if (b.type === "orderedList") return items(b).map((t, i) => `${i + 1}. ${t}`).join("\n") || null;
@@ -206,7 +257,7 @@ export function makeEditor(element, blocks, onChange, site, onFiles, onNotice) {
     element,
     extensions: [
       Document, Text, Paragraph, Heading.configure({ levels: [2] }), Bold, Italic, UndoRedo,
-      BulletList, OrderedList, ListItem, ListKeymap, Photo, Embed,
+      BulletList, OrderedList, ListItem, ListKeymap, Photo, Embed, Board,
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: "https",
         protocols: ["mailto"], isAllowedUri: (url) => okUrl(url), HTMLAttributes: { rel: "noopener", target: null } }),
       Placeholder.configure({ placeholder: "Write the article. Subheadings, bold, italic, links, lists and photos are all it can hold." }),

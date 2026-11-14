@@ -359,6 +359,17 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .res span{font-size:12.5px;color:var(--dim);line-height:1.4}
 
 /* ------------------------------------------------------------- chrome */
+/* leaderboards in an article */
+.lbrd{margin:24px 0;padding:14px 14px 10px;border:1px solid var(--line);border-radius:16px;background:rgba(var(--veil),.03)}
+.lbrd-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 4px 8px}
+.lbrd-head b{font-size:15px}.lbrd-as{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.lbrd .live-dot{width:7px;height:7px;border-radius:50%;background:#e4645b;box-shadow:0 0 0 3px rgba(228,100,91,.25)}
+.lbrd .lbr.s3{grid-template-columns:38px minmax(0,1fr) 62px}
+.lbrd .lbr.c4{grid-template-columns:minmax(0,1fr) 52px 62px 70px;cursor:default}
+.lbrd .lbr.c4 .nm em{font-style:normal;font-size:10px;color:var(--acc);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px}
+.lbrd .lbr.tm{border-top:1px solid var(--line);font-weight:700}
+.lbrd-more{display:block;margin:8px 4px 2px auto;background:none;border:0;color:var(--acc);font:inherit;font-size:13px;cursor:pointer}
+.lbrd-note{color:var(--dim);font-size:13px;margin:0 4px}
 /* embeds in an article: the provider's player, or a card until the fan says yes (or while offline) */
 .emb{margin:22px 0}
 .emb .emb-frame{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000}
@@ -1207,6 +1218,7 @@ function paintBody(s) {
   const paras = L(s, "body");
   el.innerHTML = (paras && paras.length ? paras : [L(s, "dek")]).map(p => mdBlock(fill(p, s))).join("");
   paintEmbeds(el, s.embeds);
+  paintBoards(el, s.boards);
 }
 /* An article holds a little Markdown, written in the editor or by Claude: "## " subheadings, "- " and "1. " lists,
    **bold**, *italic* and [words](address). Nothing else becomes formatting, and the style is the site's own.
@@ -1271,7 +1283,56 @@ function showEmbed(btn, always) {
   const fig = btn.closest("figure.emb"); fig.dataset.show = "1";
   paintEmbeds(always ? document.getElementById("rtext") || fig.parentNode : fig.parentNode, (rList[rIdx] || {}).embeds);
 }
+/* BOARDS: a paragraph like "leaderboard: board=event top=5 at=r1" is a leaderboard (a copy of the parser in
+   hosted-desk/src/boards.js; keep the two in step). Frozen boards come with the article text, as the Desk fixed them
+   when the story was saved; live ones are drawn from the same live data as the Live card. */
+function parseBoard(line) {
+  const m = String(line || "").trim().match(/^leaderboard:\s*(.*)$/i); if (!m) return null;
+  const o = {};
+  for (const part of m[1].split(/\s+/).filter(Boolean)) { const [k, v] = part.split("="); if (["board", "event", "city", "round", "top", "at"].includes(k) && v && /^[\w:.-]{1,40}$/.test(v)) o[k] = v.toLowerCase(); }
+  if (!["event", "season", "city"].includes(o.board) || (o.board === "city" && !o.city)) return null;
+  o.top = o.top === "all" ? "all" : String(Math.min(30, Math.max(1, parseInt(o.top || (o.board === "city" ? "30" : "5"), 10) || 5)));
+  o.at = o.at === "live" && o.board !== "city" ? "live" : /^(r1|final|\d{1,2}:\d{2})$/.test(o.at || "") ? o.at : o.board === "city" ? "final" : "live";
+  return o;
+}
+/* a city in an article's leaderboard opens that city's hub */
+const boardCity = id => { closeModal("smodal"); goCity(id); };
+function paintBoards(el, meta) {
+  el.querySelectorAll("figure.lbrd[data-line]").forEach(fig => {
+    const line = fig.dataset.line, o = parseBoard(line); if (!o) return;
+    const cut = rows => (o.top === "all" ? rows : rows.slice(0, +o.top));
+    const full = `<button class="lbrd-more" onclick="closeModal('smodal'); go(SEC.live)">${t("Full leaderboard")} →</button>`;
+    let title, asOf, body;
+    if (o.at === "live") {                                      // the same rows as the Live card, now
+      const lb = leaderboard();
+      const ev = (LEAGUE.schedule || []).find(e => e.status === "live");
+      title = o.board === "season" ? t("League points") : `${esc(ev ? L(ev, "name") : FEED.event.name)} · ${t("team leaderboard")}`;
+      asOf = `<span class="live-dot"></span>${t("Live")}`;
+      body = o.board === "season"
+        ? `<div class="lbr s3 h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Pts")}</span></div>` +
+          cut(lb.slice().sort((a, b) => b.pts - a.pts)).map(x => `<div class="lbr s3" onclick="boardCity('${x.c.id}')"><span class="pos">${x.tied ? "T" : ""}${x.pos}</span><span class="nm"><i class="sw" style="--c:${x.c.color}"></i><span class="cn">${esc(x.c.name)}</span></span><span class="pts">${x.pts}</span></div>`).join("")
+        : lbRows(cut(lb), false, "boardCity");
+    } else {                                                    // as the Desk froze it
+      const m = (meta || {})[line];
+      if (!m || !m.rows) { fig.innerHTML = `<div class="lbrd-head"><b>${t("Leaderboard")}</b></div><p class="lbrd-note">${t("This leaderboard is not available.")}</p>`; return; }
+      title = esc(m.title); asOf = esc(m.note || m.as_of || "");
+      if (o.board === "city")
+        body = `<div class="lbr c4 h"><span class="nm">${t("Player")}</span><span>${t("Thru")}</span><span>${t("Score")}</span><span>${t("Counted")}</span></div>` +
+          m.rows.map(r => `<div class="lbr c4"><span class="nm">${esc(r.name)}${r.captain ? ` <em>C</em>` : ""}</span><span class="thru">${esc(String(r.thru))}</span><span class="${cls(r.to_par)}">${sgn(r.to_par)}</span><span>${r.counted}</span></div>`).join("") +
+          (m.team ? `<div class="lbr c4 tm"><span class="nm">${t("Team")}</span><span class="thru">${m.team.thru === 18 ? "F" : m.team.thru}</span><span class="${cls(m.team.to_par)}">${sgn(m.team.to_par)}</span><span></span></div>` : "");
+      else if (o.board === "season")
+        body = `<div class="lbr s3 h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Pts")}</span></div>` +
+          m.rows.map(r => `<div class="lbr s3" onclick="boardCity('${esc(r.id)}')"><span class="pos">${esc(String(r.pos))}</span><span class="nm"><i class="sw" style="--c:${esc(r.color || "#888")}"></i><span class="cn">${esc(r.city)}</span></span><span class="pts">${r.points}</span></div>`).join("");
+      else
+        body = `<div class="lbr h"><span class="pos">${t("Pos")}</span><span class="nm">${t("City")}</span><span>${t("Today")}</span><span>${t("Thru")}</span><span>${t("Total")}</span><span>${t("Pts")}</span></div>` +
+          m.rows.map(r => `<div class="lbr" onclick="boardCity('${esc(r.id)}')"><span class="pos">${esc(String(r.pos))}</span><span class="nm"><i class="sw" style="--c:${esc(r.color || "#888")}"></i><span class="cn">${esc(r.city)}</span> <em>${esc(r.short || "")}</em></span>` +
+            `<span class="${r.today == null ? "e" : cls(r.today)}">${r.today == null ? "–" : sgn(r.today)}</span><span class="thru">${esc(String(r.thru || "–"))}</span><span class="${cls(r.total)}">${sgn(r.total)}</span><span class="pts ${m.final ? "" : "prov"}">${r.points}</span></div>`).join("");
+    }
+    fig.innerHTML = `<div class="lbrd-head"><b>${title}</b><span class="lbrd-as">${asOf}</span></div><div class="lb">${body}</div>${full}`;
+  });
+}
 function mdBlock(b) {
+  if (parseBoard(String(b).trim())) return `<figure class="lbrd" data-line="${esc(String(b).trim())}"></figure>`;
   const em = embedOf(String(b).trim());
   if (em) return `<figure class="emb" data-url="${esc(em.url)}"></figure>`;
   // a photo from the league's store, full width of the text, its caption under it; #WxH reserves its room

@@ -23,6 +23,7 @@ import { scoring } from "./scores.js";
 import { draftWithAI, describePhoto, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
 import { FORMATS, SIZES, TOPIC_STYLES, clean as cleanStructure, kindOf, formatOf, topicOf, editorKinds } from "./structure.js";
 import { embedOf, oembedUrl, EMBED_NAMES } from "./embeds.js";
+import { parseBoard, boardLine } from "./boards.js";
 import { ROLES, ROLE_NAMES, can, grantable, mayManage, cleanEmail, validEmail, rolesOf, startingPeople } from "./people.js";
 const SITE_ROOT = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev";
 const SITE = SITE_ROOT + "/#3";
@@ -94,6 +95,44 @@ async function embedInfo(url) {
     }
   } catch (err) { /* the provider did not answer: the card shows the link */ }
   return info;
+}
+/* Leaderboards in articles (see boards.js): the rows of a board at the moment its line asks for, from the scoring
+   feed and the league's rules, the same numbers as live_board and city_round. Frozen ones are kept with the story. */
+async function boardSnapshot(env, spec) {
+  const sc = await scores(env), site = sc.ref.site;
+  const events = site.schedule || [];
+  const ev = events.find((e) => e.id === spec.event) || events.find((e) => e.status === "live") || events[0] || {};
+  const city = (id) => site.cities.find((c) => c.id === id) || {};
+  const head = { board: spec.board, event: ev.name || sc.feed.event.name };
+  if (spec.event && ev.id && !String(sc.feed.event.name || "").toLowerCase().includes(String(ev.name || "").toLowerCase().split(" ")[0]))
+    return { ...head, title: ev.name, as_of: "No scores yet", rows: [], note: "There are no scores for this event yet." };
+  const finalAt = sc.board(sc.clock).final_at;
+  const clock = spec.at === "live" ? sc.clock : spec.at === "final" ? finalAt : spec.at === "r1" ? "00:00" : spec.at;
+  const asOf = spec.at === "live" ? "Live" : spec.at === "r1" ? "After Round 1" : spec.at === "final" ? "Final" : `Round 2 · ${clock}`;
+  const top = (rows) => (spec.top === "all" ? rows : rows.slice(0, +spec.top));
+  if (spec.board === "city") {
+    const c = city(spec.city); if (!c.id) fail(`No city "${spec.city}".`);
+    const r = sc.cityRound(c.id, spec.round === "1" ? finalAt : clock, +spec.round);
+    const players = r.players.slice().sort((a, b) => a.to_par - b.to_par || (a.name < b.name ? -1 : 1));
+    return { ...head, title: `${c.name} · Round ${spec.round}`, as_of: spec.round === "1" ? "Round 1, final" : asOf, city: c.id, color: c.color,
+      team: { thru: r.team.thru, to_par: r.team.to_par },
+      rows: top(players).map((p) => ({ name: p.name, captain: !!p.captain, thru: p.finished ? "F" : p.thru, to_par: p.to_par, counted: p.counted_scores })) };
+  }
+  const b = sc.board(clock);
+  const rows = b.board.map((r) => ({ pos: r.pos, id: r.id, city: r.city, short: r.short, color: city(r.id).color,
+    today: spec.at === "r1" ? null : r.today, thru: spec.at === "r1" ? "" : r.thru, total: r.total, points: r.points }));
+  if (spec.board === "season")
+    return { ...head, title: `League points after ${head.event}`, as_of: b.final && spec.at !== "r1" ? "Final" : asOf, final: b.final && spec.at !== "r1",
+      rows: top(rows.slice().sort((a, b2) => b2.points - a.points)).map(({ pos, id, city: n, short, color, points }) => ({ pos, id, city: n, short, color, points })) };
+  return { ...head, title: `${head.event} · team leaderboard`, as_of: asOf, final: b.final && spec.at !== "r1", rows: top(rows) };
+}
+async function refreshBoards(env, s) {
+  const lines = [...new Set((s.body || []).map((b) => b.trim()).filter((b) => parseBoard(b)))].slice(0, 8);
+  const frozen = lines.filter((l) => parseBoard(l).at !== "live");
+  if (!frozen.length) { delete s.boards; return; }
+  const was = s.boards || {}, now = {};
+  for (const l of frozen) now[l] = was[l] && was[l].rows ? was[l] : await boardSnapshot(env, parseBoard(l)).catch((e) => ({ title: "Leaderboard", rows: [], note: e.message }));
+  s.boards = now;
 }
 async function refreshEmbeds(s) {
   const urls = [...new Set((s.body || []).map((b) => b.trim()).filter((b) => embedOf(b)))].slice(0, 12);
@@ -240,6 +279,7 @@ async function publishIndex(env, stories) {
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
     if (s.embeds) { body.embeds = s.embeds; delete s.embeds; }     // the embeds' titles and pictures travel with the text
+    if (s.boards) { body.boards = s.boards; delete s.boards; }     // so do the frozen leaderboards
     if (Object.keys(body).length) {
       const raw = JSON.stringify(body);
       const key = `stories/${s.id}.${(await sha1(raw)).slice(0, 8)}.json`;
@@ -306,7 +346,7 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
   };
   if (!a.photo_url) story.photo_auto = true;                 // a library photo, until the article gives one
   if (a.body) story.body = paras(a.body);
-  await refreshEmbeds(story);
+  await refreshEmbeds(story); await refreshBoards(env, story);
   adoptFirstPhoto(story);
   if (a.dur) story.dur = a.dur;
   if (a.count) story.count = a.count;
@@ -502,7 +542,7 @@ function createServer(env, door) {
       if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; delete s.photo_auto; }   // the new picture's shape is looked up on publish
       if (a.author) s.author = a.author;
       if (a.at) s.at = a.at;
-      if (a.body) { s.body = paras(a.body); await refreshEmbeds(s); }
+      if (a.body) { s.body = paras(a.body); await refreshEmbeds(s); await refreshBoards(env, s); }
       adoptFirstPhoto(s);
       s.updated_by = "desk"; s.updated_at = nowIso();
       return s;
@@ -764,6 +804,12 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
 
   // the structure (kinds and topics), for the Studio's menus. Read-only: it is changed in the repo, not here.
   if (request.method === "GET" && path === "structure") return json({ structure: (await readStructure(env)).structure });
+  // a leaderboard for the article editor's card: its rows now (a frozen one is fixed when the story is saved)
+  if (request.method === "GET" && path === "board") {
+    const spec = parseBoard(new URL(request.url).searchParams.get("line") || "");
+    if (!spec) return json({ error: "That is not a leaderboard line." }, 400);
+    try { return json({ line: boardLine(spec), spec, ...(await boardSnapshot(env, spec)) }); } catch (e) { return json({ error: e.message }, 400); }
+  }
   // an embed for the article editor: what the link is and its title and picture
   if (request.method === "GET" && path === "embed") {
     const url = new URL(request.url).searchParams.get("url") || "";
@@ -963,7 +1009,7 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
         if (f.at) s.at = f.at;
         const body = paras(f.body || "");
         if (body.length) s.body = body; else delete s.body;
-        await refreshEmbeds(s);
+        await refreshEmbeds(s); await refreshBoards(env, s);
         if (fmt === "video") s.dur = f.dur; else delete s.dur;
         if (fmt === "gallery") { if (gallery) setGallery(s); else s.count = +f.count; } else { delete s.count; delete s.photos; }
         if (f.photo && /^content\/photos\//.test(f.photo) && f.photo !== s.photo) {     // "Use as main photo"

@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.27.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing
+export const STUDIO_VERSION = "0.28.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live)
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -77,6 +77,14 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
 .tiptap figure.ph{margin:0 0 1em;cursor:pointer;position:relative}
+.tiptap .brd{position:relative;margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:12px;background:var(--panel);cursor:default}
+.tiptap .brd.ProseMirror-selectednode{outline:2px solid var(--acc)}
+.tiptap .brd small{display:block;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tiptap .brd b{display:block;font-size:14.5px;margin-top:2px}.tiptap .brd .as{display:block;color:var(--dim);font-size:12px;margin-bottom:6px}
+.tiptap .brd .rows div{display:grid;grid-template-columns:30px minmax(0,1fr) 50px 64px;gap:6px;font-size:13px;padding:3px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.tiptap .brd .rows div span:nth-child(n+3){text-align:right}.tiptap .brd .rows i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px}
+.tiptap .brd .rows .more{display:block;color:var(--dim);font-size:12px;border-top:1px solid var(--line);padding-top:5px}
+.tiptap .brd .ph-more{top:10px}
 .tiptap .emb{position:relative;display:flex;gap:12px;align-items:center;margin:14px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:default}
 .tiptap .emb.ProseMirror-selectednode{outline:2px solid var(--acc)}
 .tiptap .emb-pic{flex:none;width:120px;aspect-ratio:16/9;border-radius:8px;background:#000 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-size:20px}
@@ -284,7 +292,8 @@ function modal({ title, text = "", img = "", html = "", fields = [], custom = nu
       \${img ? \`<div class="msplit"><div class="mleft"><img class="mimg" src="\${esc(img)}" alt="">\${html}</div><div class="mright">\` : ""}
       \${text ? \`<p class="mtext">\${esc(text)}</p>\` : ""}\${img ? "" : html}
       \${fields.map((f) => \`<div class="mf" data-f="\${f.id}"><label for="mf-\${f.id}">\${esc(f.label)}\${f.required ? "" : "<em>optional</em>"}</label>
-        \${f.type === "textarea" ? \`<textarea id="mf-\${f.id}" rows="\${f.rows || 2}" placeholder="\${esc(f.placeholder || "")}">\${esc(f.value || "")}</textarea>\`
+        \${f.type === "select" ? \`<select id="mf-\${f.id}">\${(f.options || []).map(([v, l]) => \`<option value="\${esc(v)}" \${v === f.value ? "selected" : ""}>\${esc(l)}</option>\`).join("")}</select>\`
+          : f.type === "textarea" ? \`<textarea id="mf-\${f.id}" rows="\${f.rows || 2}" placeholder="\${esc(f.placeholder || "")}">\${esc(f.value || "")}</textarea>\`
           : \`<input id="mf-\${f.id}" type="\${f.type || "text"}" value="\${esc(f.value || "")}" placeholder="\${esc(f.placeholder || "")}" autocomplete="off">\`}
         \${f.hint ? \`<div class="hint">\${esc(f.hint)}</div>\` : ""}<div class="merr" hidden></div></div>\`).join("")}
       \${custom ? custom.html : ""}
@@ -296,7 +305,7 @@ function modal({ title, text = "", img = "", html = "", fields = [], custom = nu
     const before = document.activeElement;
     const done = (v) => { back.parentNode && back.parentNode.removeChild(back); removeEventListener("keydown", keys, true); if (before && before.focus) before.focus(); resolve(v); };
     const values = () => Object.fromEntries(fields.map((f) => [f.id, back.querySelector(\`#mf-\${f.id}\`).value.trim()]));
-    const showErr = (id, msg) => { const box = back.querySelector(\`[data-f="\${id}"]\`); box.classList.add("bad"); const e = box.querySelector(".merr"); e.textContent = msg; e.hidden = false; box.querySelector("input,textarea").focus(); };
+    const showErr = (id, msg) => { const box = back.querySelector(\`[data-f="\${id}"]\`); box.classList.add("bad"); const e = box.querySelector(".merr"); e.textContent = msg; e.hidden = false; box.querySelector("input,textarea,select").focus(); };
     const confirmIt = () => {
       back.querySelectorAll(".mf[data-f]").forEach((b) => { b.classList.remove("bad"); b.querySelector(".merr").hidden = true; });
       const v = values();
@@ -428,7 +437,7 @@ function renderForm(msg) {
           <button type="button" data-c="h" title="Subheading">H</button><button type="button" data-c="b" title="Bold (⌘B)"><b>B</b></button><button type="button" data-c="i" title="Italic (⌘I)"><i>I</i></button>
           <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
           <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button>
-          <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><button type="button" data-c="embed" title="Add a video or post from YouTube, Vimeo, X, TikTok, Instagram or Spotify">Embed</button><input type="file" id="pfile" accept="image/*" hidden></div>
+          <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><button type="button" data-c="embed" title="Add a video or post from YouTube, Vimeo, X, TikTok, Instagram or Spotify">Embed</button><button type="button" data-c="board" title="Add a leaderboard: the event, the season or a city's round, frozen at a moment or live">Leaderboard</button><input type="file" id="pfile" accept="image/*" hidden></div>
 
           <div id="body"></div></div>
         <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button for the library, or paste or drop a picture). The site and the app set the style.</div></div>
@@ -477,6 +486,7 @@ let ed = null;
 function mountBody(blocks) {
   if (ed) ed.destroy();
   TT.setEmbeds(cur && cur.embeds); TT.setEmbedLookup((url) => call("embed?url=" + encodeURIComponent(url)));
+  TT.setBoards(cur && cur.boards); TT.setBoardLookup((line) => call("board?line=" + encodeURIComponent(line)));
   ed = TT.makeEditor($("body"), blocks, touch, SITE, addPhotos, (m) => setTimeout(() => say("", m), 60));
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
     { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
@@ -495,6 +505,7 @@ function command(c) {
   else if (c === "ol") ch.toggleOrderedList().run();
   else if (c === "img") photoFromLibrary();
   else if (c === "embed") askEmbed();
+  else if (c === "board") askBoard();
   else if (c === "a") {
     linkDialog();
   }
@@ -717,6 +728,45 @@ async function askEmbed() {
   if (!v) return;
   TT.insertEmbed(ed, v.url.trim()); touch();
 }
+/* Leaderboards: which board, how many rows, and the moment it shows (frozen) or live. Frozen boards are fixed by the
+   Desk when the story is saved, so a recap stays true; live ones always show the current standings. */
+async function askBoard(line, pos) {
+  const o = (line && TT.parseBoard(line)) || { board: "event", top: "5", at: "r1", round: "2" };
+  const now = (LEAGUE_NOW || "").slice(11, 16) || "14:20";
+  const v = await modal({ title: line ? "Change the leaderboard" : "Add a leaderboard",
+    text: "Frozen: the board as it stood at that moment, fixed when you save, so a recap stays true. Live: always the current standings (event and season only).",
+    fields: [
+      { id: "board", label: "Board", type: "select", value: o.board, options: [["event", "Event: team leaderboard"], ["season", "Season: league points"], ["city", "A city's round: its players"]] },
+      { id: "city", label: "City (for a city's round)", type: "select", value: o.city || (ref.cities[0] || {}).id, options: ref.cities.map((c) => [c.id, c.name]) },
+      { id: "round", label: "Round (for a city's round)", type: "select", value: o.round || "2", options: [["1", "Round 1"], ["2", "Round 2"]] },
+      { id: "top", label: "Rows", type: "select", value: o.top || "5", options: [["3", "Top 3"], ["5", "Top 5"], ["10", "Top 10"], ["all", "All"]] },
+      { id: "at", label: "As of", type: "select", value: /^\\d/.test(o.at || "") ? "now" : o.at || "r1",
+        options: [["r1", "Frozen after Round 1"], ["now", \`Frozen now (Round 2, \${now})\`], ["final", "Frozen at the end of the event"], ["live", "Live: always current"]] },
+    ], ok: line ? "Change" : "Add" });
+  if (!v) return;
+  const spec = { board: v.board, top: v.board === "city" ? "all" : v.top, at: v.at === "now" ? now : v.at };
+  if (v.board === "city") { spec.city = v.city; spec.round = v.round; if (spec.at === "live") spec.at = "final"; }
+  const next = TT.boardLine(spec);
+  if (pos != null) TT.setBoardLine(ed, pos, next); else TT.insertBoard(ed, next);
+  touch();
+  if (v.board === "city" && v.at === "live") say("", "A city's round cannot be live: it is frozen at the end of the event.");
+}
+addEventListener("board-menu", (e) => {
+  closePhotoMenu();
+  const { pos, line, x, y } = e.detail;
+  ed.chain().setNodeSelection(pos).run();
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = '<button type="button" data-a="change">Change the leaderboard</button><button type="button" data-a="remove" class="bad">Remove from the article</button>';
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(y + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    closePhotoMenu();
+    if (b.dataset.a === "change") askBoard(line, pos);
+    else { ed.chain().setNodeSelection(pos).deleteSelection().run(); touch(); }
+  };
+});
 addEventListener("embed-menu", (e) => {
   closePhotoMenu();
   const { pos, url, x, y } = e.detail;

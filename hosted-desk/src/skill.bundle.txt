@@ -79,6 +79,13 @@ When the editor has their own photo:
 
 **Embeds (a video or post from elsewhere).** A paragraph that is only a link to a YouTube or Vimeo video, a post on X, TikTok or Instagram, or a Spotify track or episode becomes that player on the site: put the link alone on its own line, nothing else in the paragraph. Use only links the editor gave you or that you found and checked. Never guess a video address. The site shows the real player; until a fan agrees to the provider's cookies it shows a card with the title instead.
 
+**Leaderboards in the article.** Never type a leaderboard or a list of scores by hand. Put a leaderboard line on its own line instead, and the site draws the real board:
+- `leaderboard: board=event top=5 at=r1`: the event's team leaderboard, top 5, frozen after Round 1.
+- `leaderboard: board=season top=10 at=final`: league points.
+- `leaderboard: board=city city=den round=2 at=final`: one city's players in a round.
+
+`at` is `r1`, a course time such as `14:20`, `final`, or `live` (always current; event and season only). A recap uses a frozen moment, so it stays true; a preview or a "follow along" story can be live. Cities by their ids from `league_reference`. Write the story's words around it; the board carries the numbers.
+
 A photo that is already online can be used by passing its web address as `photo_url`, but it then loads from someone else's server. Prefer the upload link.
 
 ## House style
