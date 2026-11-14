@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.29";                       // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live) · 0.28.1: links to a player, city or event page from the Link dialog · 0.29: Alerts: push alerts to the app (compose, target followers, send or schedule, no duplicates, daily cap, history) and automatic alerts from the scoring feed
+export const STUDIO_VERSION = "0.29.1";                       // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live) · 0.28.1: links to a player, city or event page from the Link dialog · 0.29: Alerts: push alerts to the app (compose, target followers, send or schedule, no duplicates, daily cap, history) and automatic alerts from the scoring feed · 0.29.1: quotes in the article (“ Quote), shown by the site as pull quotes
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -77,6 +77,8 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
 .tiptap figure.ph{margin:0 0 1em;cursor:pointer;position:relative}
+.tiptap blockquote{margin:16px 0;padding:6px 0 6px 18px;border-left:3px solid var(--acc);font-size:1.12em;font-style:italic}
+.tiptap blockquote p{margin:4px 0}
 .tiptap .brd{position:relative;margin:14px 0;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:12px;background:var(--panel);cursor:default}
 .tiptap .brd.ProseMirror-selectednode{outline:2px solid var(--acc)}
 .tiptap .brd small{display:block;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
@@ -447,7 +449,7 @@ function renderForm(msg) {
       <div class="f"><label>Article</label><div class="rte"><div class="tb" id="tb">
           <button type="button" data-c="h" title="Subheading">H</button><button type="button" data-c="b" title="Bold (⌘B)"><b>B</b></button><button type="button" data-c="i" title="Italic (⌘I)"><i>I</i></button>
           <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
-          <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button>
+          <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button><button type="button" data-c="q" title="Quote: the site shows it as a pull quote. Put who said it on a last line starting with —">“ Quote</button>
           <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><button type="button" data-c="embed" title="Add a video or post from YouTube, Vimeo, X, TikTok, Instagram or Spotify">Embed</button><button type="button" data-c="board" title="Add a leaderboard: the event, the season or a city's round, frozen at a moment or live">Leaderboard</button><input type="file" id="pfile" accept="image/*" hidden></div>
 
           <div id="body"></div></div>
@@ -500,7 +502,7 @@ function mountBody(blocks) {
   TT.setBoards(cur && cur.boards); TT.setBoardLookup((line) => call("board?line=" + encodeURIComponent(line)));
   ed = TT.makeEditor($("body"), blocks, touch, SITE, addPhotos, (m) => setTimeout(() => say("", m), 60));
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
-    { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
+    { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList"), q: ed.isActive("blockquote") }[b.dataset.c] || false));
   ed.on("transaction", paint); paint();
   $("pfile").onchange = () => { const f = $("pfile").files[0]; $("pfile").value = ""; if (f) addPhoto(f); };
   $("tb").onmousedown = (e) => e.preventDefault();            // keep the text selected while a button is pressed
@@ -514,6 +516,7 @@ function command(c) {
   else if (c === "i") ch.toggleItalic().run();
   else if (c === "ul") ch.toggleBulletList().run();
   else if (c === "ol") ch.toggleOrderedList().run();
+  else if (c === "q") ch.toggleBlockquote().run();
   else if (c === "img") photoFromLibrary();
   else if (c === "embed") askEmbed();
   else if (c === "board") askBoard();

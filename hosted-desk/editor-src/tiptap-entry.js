@@ -9,6 +9,8 @@
 //   ![alt text](content/photos/…#1280x853 "Caption")   a photo from the league's store, a block of its own
 //   https://www.youtube.com/watch?v=…                   an embed: a block that is only a link to YouTube, X… (embeds.js)
 //   leaderboard: board=event top=5 at=r1                 a leaderboard (boards.js)
+//   > The words, as said                                 a quote: every line starts with "> "; a last line
+//   > — Wes Sandoval                                     starting with "—" is who said it
 // Nothing else exists: whatever else is pasted in is reduced to these.
 
 import { Editor, Node } from "@tiptap/core";
@@ -24,6 +26,7 @@ import Link from "@tiptap/extension-link";
 import { BulletList, OrderedList, ListItem, ListKeymap } from "@tiptap/extension-list";
 import { UndoRedo, Placeholder } from "@tiptap/extensions";
 import Image from "@tiptap/extension-image";
+import Blockquote from "@tiptap/extension-blockquote";
 
 /* Photos live in the league's store; the page shows them from the site's address. */
 let SITE = "";
@@ -167,6 +170,8 @@ export function blockHtml(b) {
   const im = String(b).trim().match(IMG);
   if (im) return `<img src="${esc(SITE + "/" + im[2] + (im[3] || ""))}" alt="${esc(im[1])}" title="${esc(im[4] || "")}">`;
   const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length && lines.every((l) => /^>/.test(l)))         // a quote: one paragraph per line
+    return `<blockquote>${lines.map((l) => `<p>${inlineHtml(l.replace(/^>\s?/, ""))}</p>`).join("")}</blockquote>`;
   if (lines.length && lines.every((l) => BULLET.test(l))) return `<ul>${lines.map((l) => `<li><p>${inlineHtml(l.replace(BULLET, ""))}</p></li>`).join("")}</ul>`;
   if (lines.length && lines.every((l) => NUMBER.test(l))) return `<ol>${lines.map((l) => `<li><p>${inlineHtml(l.replace(NUMBER, ""))}</p></li>`).join("")}</ol>`;
   if (/^##\s+/.test(b)) return `<h2>${inlineHtml(b.replace(/^##\s+/, ""))}</h2>`;
@@ -214,6 +219,7 @@ export function toMd(doc) {
     if (b.type === "embed") return embedOf(b.attrs.url) ? b.attrs.url : null;
     if (b.type === "board") return parseBoard(b.attrs.line) ? b.attrs.line : null;
     if (b.type === "image") { const path = toPath(b.attrs.src); return path ? photoMd(path, b.attrs.alt, b.attrs.title) : null; }
+    if (b.type === "blockquote") return (b.content || []).map((x) => inlineMd(x.content || []).trim()).filter(Boolean).map((t) => "> " + t).join("\n") || null;
     if (b.type === "bulletList") return items(b).map((t) => "- " + t).join("\n") || null;
     if (b.type === "orderedList") return items(b).map((t, i) => `${i + 1}. ${t}`).join("\n") || null;
     const t = inlineMd(b.content || []).trim();
@@ -257,7 +263,7 @@ export function makeEditor(element, blocks, onChange, site, onFiles, onNotice) {
     element,
     extensions: [
       Document, Text, Paragraph, Heading.configure({ levels: [2] }), Bold, Italic, UndoRedo,
-      BulletList, OrderedList, ListItem, ListKeymap, Photo, Embed, Board,
+      BulletList, OrderedList, ListItem, ListKeymap, Blockquote, Photo, Embed, Board,
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: "https",
         protocols: ["mailto"], isAllowedUri: (url) => okUrl(url), HTMLAttributes: { rel: "noopener", target: null } }),
       Placeholder.configure({ placeholder: "Write the article. Subheadings, bold, italic, links, lists and photos are all it can hold." }),

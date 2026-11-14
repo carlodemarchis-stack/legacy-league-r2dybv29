@@ -359,6 +359,9 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .res span{font-size:12.5px;color:var(--dim);line-height:1.4}
 
 /* ------------------------------------------------------------- chrome */
+/* a quote in an article: a pull quote, in the site's style */
+blockquote.pq{margin:28px 0;padding:4px 0 4px 22px;border-left:3px solid var(--acc);font-size:clamp(19px,1.6vw,23px);line-height:1.4;font-weight:600;letter-spacing:-.005em}
+blockquote.pq p{margin:0 0 8px}blockquote.pq cite{display:block;margin-top:10px;font-size:13px;font-style:normal;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
 /* leaderboards in an article */
 .lbrd{margin:24px 0;padding:14px 14px 10px;border:1px solid var(--line);border-radius:16px;background:rgba(var(--veil),.03)}
 .lbrd-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 4px 8px}
@@ -481,7 +484,7 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .rtext figure.rimg figcaption{font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.45}
 .rtext a{color:var(--acc-ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .rtext a:hover{text-decoration-thickness:2px}
-.rtext p:first-child::first-letter{font-size:2.6em;font-weight:700;float:left;line-height:.85;padding:4px 8px 0 0;color:var(--acc-ink)}
+.rtext > p:first-child::first-letter{font-size:2.6em;font-weight:700;float:left;line-height:.85;padding:4px 8px 0 0;color:var(--acc-ink)}
 .rfoot{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}
 .rfoot button{display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;color:var(--dim);transition:.18s}
 .rfoot button:hover{color:var(--ink);border-color:rgba(var(--veil),.3)}
@@ -1376,6 +1379,10 @@ function mdBlock(b) {
   const im = String(b).trim().match(/^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(?:#(\d+)x(\d+))?(?:\s+"([^"]*)")?\)$/);
   if (im) return `<figure class="rimg"><img ${srcs(fromStore(im[2]), 1024, 1600)} sizes="(max-width: 760px) 100vw, 66ch" alt="${esc(im[1])}" loading="lazy"${im[3] ? ` width="${im[3]}" height="${im[4]}"` : ""}>${im[5] ? `<figcaption>${esc(im[5])}</figcaption>` : ""}</figure>`;
   const lines = String(b).split("\n").map(l => l.trim()).filter(Boolean);
+  if (lines.length && lines.every(l => /^>/.test(l))) {          // a quote: the words, then who said it ("— Name")
+    const q = lines.map(l => l.replace(/^>\s?/, "")), who = q.length > 1 && /^(—|--|–)\s*/.test(q[q.length - 1]) ? q.pop().replace(/^(—|--|–)\s*/, "") : "";
+    return `<blockquote class="pq">${q.map(l => `<p>${mdInline(l)}</p>`).join("")}${who ? `<cite>${mdInline(who)}</cite>` : ""}</blockquote>`;
+  }
   if (lines.length && lines.every(l => /^[-*]\s+/.test(l))) return `<ul>${lines.map(l => `<li>${mdInline(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
   if (lines.length && lines.every(l => /^\d+[.)]\s+/.test(l))) return `<ol>${lines.map(l => `<li>${mdInline(l.replace(/^\d+[.)]\s+/, ""))}</li>`).join("")}</ol>`;
   if (/^##\s+/.test(b)) return `<h3>${mdInline(String(b).replace(/^##\s+/, ""))}</h3>`;
