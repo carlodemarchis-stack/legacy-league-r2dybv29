@@ -82,6 +82,33 @@ async function cardMeta(env, url, parts) {
   return null;
 }
 
+/* Photos in the size a page needs: /content/photos/<file>?w=<width> gives the photo at most that wide, as AVIF, WebP
+   or JPEG depending on what the browser accepts. Cloudflare Images (the IMAGES binding) makes each size once; the
+   result is kept in the bucket under derived/ and served from there afterwards (workers.dev has no edge cache).
+   Only a few widths exist, so nobody can make it produce thousands. Anything that goes wrong: the original. */
+const WIDTHS = [320, 640, 1024, 1600];
+async function sized(request, env, key, want) {
+  const width = WIDTHS.find((x) => x >= want) || WIDTHS[WIDTHS.length - 1];
+  const accept = request.headers.get("accept") || "";
+  const fmt = /image\/avif/.test(accept) ? "avif" : /image\/webp/.test(accept) ? "webp" : "jpeg";
+  const head = (type) => new Headers({ "content-type": type, "cache-control": "public, max-age=86400", vary: "Accept",
+    "access-control-allow-origin": "*", "x-robots-tag": "noindex" });
+  const kept = `derived/${width}/${fmt}/${key}`;
+  const hit = await env.CONTENT.get(kept);
+  if (hit) return new Response(request.method === "HEAD" ? null : hit.body, { headers: head(hit.httpMetadata?.contentType || "image/" + fmt) });
+  const orig = await env.CONTENT.get(key);
+  if (!orig) return new Response("Not found", { status: 404 });
+  try {
+    const out = await env.IMAGES.input(orig.body).transform({ width, fit: "scale-down" }).output({ format: "image/" + fmt, quality: 76 });
+    const type = out.contentType(), bytes = await out.response().arrayBuffer();
+    await env.CONTENT.put(kept, bytes, { httpMetadata: { contentType: type } });
+    return new Response(request.method === "HEAD" ? null : bytes, { headers: head(type) });
+  } catch (e) {
+    const again = await env.CONTENT.get(key);                 // the original, as it is
+    return new Response(request.method === "HEAD" ? null : again.body, { headers: head(again.httpMetadata?.contentType || "image/jpeg") });
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -99,6 +126,8 @@ export default {
     const key = decodeURIComponent(url.pathname.slice("/content/".length));
     // only what the page and the app read is public; the desk's own files (desk/, ai/, scores/) never leave the bucket
     if (!/^(site|stories|photos)\/[^]+$/.test(key) || key.split("/").includes("..")) return new Response("Not found", { status: 404 });
+    const want = parseInt(url.searchParams.get("w") || "", 10);
+    if (want > 0 && key.startsWith("photos/") && env.IMAGES) return sized(request, env, key, want);
     const obj = await env.CONTENT.get(key);
     if (!obj) return new Response("Not found", { status: 404 });
     const h = new Headers();

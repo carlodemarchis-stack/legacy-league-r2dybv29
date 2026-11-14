@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.25.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article
+export const STUDIO_VERSION = "0.26.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them)
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -251,6 +251,8 @@ let stories = [], ref = { cities: [], players: [] }, CITY = {}, PLAYER = {}, cur
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const pic = (p) => !p ? "" : /^https?:/.test(p) ? p : SITE + "/" + p;
+/* a store photo at the width it is shown at (320, 640, 1024 or 1600), made once by the site's worker */
+const picw = (p, w) => { const u = pic(p); return /\\/content\\/photos\\//.test(u) && !/[?#]/.test(u) ? u + "?w=" + w : u; };
 const statusOf = (s) => s.status || "published";
 // a headline can stand for names, as the site shows it: {p0} the first tagged player, {c0} the first city
 const shown = (s, t) => String(t || "").replace(/\{p0\}/g, PLAYER[(s.players || [])[0]] ? PLAYER[s.players[0]].name : "")
@@ -356,7 +358,7 @@ function renderList() {
   // the stories last worked on in the Desk come first (made or changed, newest first), then the rest by story time
   const touched = (s) => s.updated_at || s.published_at || s.created_at || "";
   rows.sort((a, b) => (touched(b) > touched(a) ? 1 : touched(b) < touched(a) ? -1 : (b.at || "") > (a.at || "") ? 1 : (b.at || "") < (a.at || "") ? -1 : 0));
-  $("list").innerHTML = rows.map((s) => \`<button class="row \${cur && cur.id === s.id ? "on" : ""}" onclick="pick('\${s.id}')"><img src="\${esc(pic(s.photo))}" alt="" loading="lazy">
+  $("list").innerHTML = rows.map((s) => \`<button class="row \${cur && cur.id === s.id ? "on" : ""}" onclick="pick('\${s.id}')"><img src="\${esc(picw(s.photo, 320))}" alt="" loading="lazy">
     <span><b>\${esc(shown(s, s.title))}</b><small><span class="st \${statusOf(s)}">\${statusOf(s)}</span>\${esc(kindName(s.kind))} · \${esc(when(s.at))}</small></span></button>\`).join("") ||
     '<div class="empty">No story matches.</div>';
   const on = $("list").querySelector(".row.on"); if (on) on.scrollIntoView({ block: "nearest" });
@@ -397,7 +399,7 @@ function renderForm(msg) {
     <button class="btn" id="discard" onclick="discard()" \${s.id ? "hidden" : ""}>\${s.id ? "Discard changes" : "Cancel"}</button>
     \${s.id ? \`<button class="btn" onclick="openHistory()">History</button><button class="btn bad" onclick="del()">Delete</button>\` : ""}
     \${s.id && st === "published" ? \`<button class="btn" onclick="act('unpublish')">Unpublish</button>\` : ""}
-    <button class="btn \${st === "published" ? "pri" : ""}" id="save" onclick="save()">\${st === "published" ? "Save and update the site" : "Save draft"}</button>
+    <button class="btn \${st === "published" ? "pri" : ""}" id="save" onclick="save()" \${dirty ? "" : "disabled"} title="\${dirty ? "" : "Nothing has changed yet"}">\${st === "published" ? "Save and update the site" : "Save draft"}</button>
     \${s.id && st !== "published" ? \`<button class="btn pri" onclick="act('publish')">Publish</button>\` : ""}
   </div>
   <div class="form">
@@ -417,7 +419,7 @@ function renderForm(msg) {
     </div>
     <div>
       <div class="f photo" id="mainblock"><label id="mainlabel">Main photo</label><div id="coverwrap" hidden></div>
-        <div class="mainwrap" id="mainwrap">\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="mainph" id="mainph">A golf photo from the library is given to a new story when it is saved.</div>'}
+        <div class="mainwrap" id="mainwrap">\${s.photo ? \`<img id="mainpic" src="\${esc(picw(s.photo, 1024))}" alt="">\` : '<div class="mainph" id="mainph">A golf photo from the library is given to a new story when it is saved.</div>'}
           <button type="button" class="ph-more" id="mainmore" title="Main photo options" onclick="mainMenu(this)">⋯</button></div>
         \${s.photo_auto || !s.id ? '<div class="hint" id="mainauto">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
         <input type="file" id="mainfile" accept="image/*" hidden>
@@ -657,7 +659,7 @@ async function photoFromLibrary() {
   ed.chain().focus().setTextSelection(from).run();
   if (r.file) return addPhoto(r.file);
   const e = r.entry;
-  const t = await askText(e.alt || "", photoText(e), "", pic(e.src)); if (!t) return;
+  const t = await askText(e.alt || "", photoText(e), "", picw(e.src, 1024)); if (!t) return;
   ed.chain().focus().setTextSelection(from).setImage({ src: SITE + "/" + e.src + (e.w ? "#" + e.w + "x" + e.h : ""), alt: t.alt, title: t.caption }).run();
   say("", "Photo added. Save to keep it.");
 }
@@ -760,7 +762,7 @@ function showMain(path, credit) {
   if (!$("mainpic")) { const img = document.createElement("img"); img.id = "mainpic"; img.alt = ""; $("mainwrap").insertBefore(img, $("mainmore")); }
   if ($("mainph")) $("mainph").parentNode.removeChild($("mainph"));
   if ($("mainauto")) $("mainauto").parentNode.removeChild($("mainauto"));
-  $("mainpic").src = pic(path);
+  $("mainpic").src = picw(path, 1024);
   $("maincredit").textContent = credit ? "Photo: " + credit : "";
 }
 /* the ⋯ menu on the main photo: the same menu as on a photo in the article */
@@ -809,7 +811,7 @@ async function newMainPhoto(file) {
   } catch (e) { say("err", e.message || "That picture could not be read. Save it as a JPEG and try again."); }
 }
 async function editMainCredit() {
-  const v = await modal({ title: "Photo credit", img: pic(cur.photo),
+  const v = await modal({ title: "Photo credit", img: picw(cur.photo, 1024),
     fields: [{ id: "credit", label: "Credit", value: cur.photo_credit || "", placeholder: "e.g. Jane Smith", hint: "Who took the photo. Leave empty for none." }], ok: "Save" });
   if (!v) return;
   cur.photo_credit = v.credit; cur.creditChanged = true;
@@ -853,11 +855,11 @@ function galAddMenu(btn) {
 function paintGallery() {
   const g = cur.gallery || [], el = $("galgrid"); if (!el) return;
   if (!g.includes(cur.cover)) cur.cover = g[0] || null;       // the cover is one of the gallery's photos
-  el.innerHTML = \`<div class="gal">\${g.map((src, i) => \`<figure class="\${src === cur.cover ? "cover" : ""}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
+  el.innerHTML = \`<div class="gal">\${g.map((src, i) => \`<figure class="\${src === cur.cover ? "cover" : ""}"><img src="\${esc(picw(src, 320))}" alt="" loading="lazy"><div class="gb">
       <button type="button" title="Move earlier" onclick="galMove(\${i},-1)" \${i ? "" : "disabled"}>←</button>\${src !== cur.cover ? \`<button type="button" title="Make it the cover" onclick="galCover(\${i})">★</button>\` : ""}<button type="button" title="Take out of the gallery" onclick="galDrop(\${i})">✕</button>
       <button type="button" title="Move later" onclick="galMove(\${i},1)" \${i < g.length - 1 ? "" : "disabled"}>→</button></div></figure>\`).join("")}
     <button type="button" class="gadd" title="Add photos" onclick="galAddMenu(this)">+</button></div>\`;
-  $("coverwrap").innerHTML = g.length ? \`<img src="\${esc(pic(cur.cover))}" alt=""><div class="hint">Shown on the story's tile and in link previews. Click ★ on another gallery photo to change it.</div>\`
+  $("coverwrap").innerHTML = g.length ? \`<img src="\${esc(picw(cur.cover, 1024))}" alt=""><div class="hint">Shown on the story's tile and in link previews. Click ★ on another gallery photo to change it.</div>\`
     : '<div class="coverph">The first photo you add to the gallery becomes the cover.</div>';
 }
 function galMove(i, d) { const g = cur.gallery, j = i + d; if (j < 0 || j >= g.length) return; [g[i], g[j]] = [g[j], g[i]]; paintGallery(); touch(); }
@@ -896,7 +898,7 @@ async function discard() {
   if (cur.id) { show(cur.id, true); say("", "Changes thrown away."); }
   else { cur = null; renderList(); renderForm(); }
 }
-function touch() { dirty = true; if ($("discard")) $("discard").hidden = false; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); keepLocal(); remember(); }
+function touch() { dirty = true; if ($("save")) { $("save").disabled = false; $("save").title = ""; } if ($("discard")) $("discard").hidden = false; say("", cur.id ? "Unsaved changes" : "New story, not saved yet"); keepLocal(); remember(); }
 /* Unsaved work is kept in this browser as it is typed (studio-draft:<id>, or :new for a story not saved yet), so a reload,
    a crash or a closed tab loses nothing: the story offers it back the next time it opens. Save and Discard clear it. */
 const draftKey = (id) => "studio-draft:" + (id || "new");
@@ -950,6 +952,7 @@ async function run(fn, busy) {
   catch (e) {
     say("err", e.message);
     document.querySelectorAll(".bar .btn").forEach((b) => (b.disabled = false));
+    if ($("save")) $("save").disabled = !dirty;               // Save stays off while there is nothing to save
     if (e.conflict) { const m = $("msg"); m.innerHTML = esc(e.message) + ' <button class="btn" onclick="dirty=false;load(cur.id)">Reload</button>'; }
   }
 }
@@ -1101,7 +1104,7 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
     const toReview = libPhotos.filter((e) => e.suggested_alt).length;
     if ($("liball")) { $("liball").hidden = !toReview; $("liball").textContent = "Accept all suggestions (" + toReview + ")"; }
     $("libcount").textContent = rows.length + " of " + libPhotos.length + " photos";
-    $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}">\${metaTags(e)}<img src="\${esc(pic(e.src))}" alt="" loading="lazy">
+    $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}">\${metaTags(e)}<img src="\${esc(picw(e.src, 640))}" alt="" loading="lazy">
       <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : e.suggested_alt ? \`<i class="sug">\${esc(e.suggested_alt)}</i>\` : '<b class="none">No description yet</b>'}<small>\${tagNames(e).length ? esc(tagNames(e).slice(0, 3).join(", ")) + " · " : ""}\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small>
       \${pick || e.alt ? "" : \`<span class="pact">\${e.suggested_alt ? \`<span class="btn pri" data-act="accept">Accept</span>\` : \`<span class="btn" data-act="suggest">✦ Suggest</span>\`}</span>\`}</span></button>\`).join("") ||
       '<div class="empty" style="grid-column:1/-1">No photo matches.</div>';
@@ -1271,7 +1274,7 @@ async function editLibraryPhoto(e) {
     : { events: fromStories("events"), cities: fromStories("cities"), players: fromStories("players") };
   const preTagged = !tagged && (sel.events.length || sel.cities.length || sel.players.length);
   const v = await modal({ custom: tagPicker(sel),
-    title: "Photo details", img: pic(e.src), html: photoData(e),
+    title: "Photo details", img: picw(e.src, 1024), html: photoData(e),
     text: (uses.length ? "Used in: " + uses.join("; ") : "Not used in any story yet.") + (preTagged ? " Tags taken from the stories that use it: check them and save." : "") + (sug ? " The description is a suggestion from Claude: check it, add names if you know them, then save." : ""),
     fields: [
       { id: "alt", label: sug ? "Description (suggested)" : "Description", value: e.alt || e.suggested_alt || "", type: "textarea", rows: 2, required: true, requiredText: "Describe the photo: it is read aloud to people who cannot see it.", hint: "What the photo shows, for people who cannot see it." },
@@ -1373,7 +1376,7 @@ async function openUsage() {
 function versionHtml(v) {
   const names = (ids, map) => (ids || []).map((x) => map[x] ? map[x].name : x).join(", ");
   const EV = Object.fromEntries(ref.events.map((e) => [e.id, e]));
-  return \`\${v.photo ? \`<img src="\${esc(pic(v.photo))}" alt="">\` : ""}<span class="st \${statusOf(v)}">\${statusOf(v)}</span> <small style="color:var(--dim)">\${esc(v.kind || "")} · \${esc(when(v.at))}</small>
+  return \`\${v.photo ? \`<img src="\${esc(picw(v.photo, 1024))}" alt="">\` : ""}<span class="st \${statusOf(v)}">\${statusOf(v)}</span> <small style="color:var(--dim)">\${esc(v.kind || "")} · \${esc(when(v.at))}</small>
     <h2>\${esc(shown(v, v.title))}</h2><p class="dek">\${esc(v.dek || "")}</p>
     <div class="art">\${TT.fromMd(v.body || [])}</div>
     <div class="tags">\${[names(v.events, EV), names(v.cities, CITY), names(v.players, PLAYER)].filter(Boolean).join(" · ") || "No tags"}\${v.author ? " · by " + esc(v.author) : ""}</div>\`;

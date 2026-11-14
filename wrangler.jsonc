@@ -7,5 +7,7 @@
   "main": "worker/index.js",
   // the home page goes through the worker too, so it carries the mark that clean addresses work here
   "assets": { "directory": "./.site", "binding": "ASSETS", "run_worker_first": ["/", "/index.html"] },
-  "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }]
+  "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }],
+  // photos in the size a page needs (?w=), made by Cloudflare Images and kept in the bucket under derived/
+  "images": { "binding": "IMAGES" }
 }

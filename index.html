@@ -809,7 +809,8 @@ const IN_APP = location.protocol === "capacitor:" || !!(window.Capacitor && Capa
 function useKeptPhoto(im) {
   if (im.dataset.off) return;
   im.dataset.off = "1";
-  PHOTOS.get(im.currentSrc || im.src).then(b => { if (b) im.src = URL.createObjectURL(b); });
+  const tries = [...new Set([im.currentSrc, im.src, String(im.src).replace(/([?&])w=\d+/, "$1w=640")].filter(Boolean))];
+  (async () => { for (const u of tries) { const b = await PHOTOS.get(u); if (b) { im.removeAttribute("srcset"); im.src = URL.createObjectURL(b); return; } } })();
 }
 if (IN_APP) document.addEventListener("error", e => { if (e.target instanceof HTMLImageElement) useKeptPhoto(e.target); }, true);
 const OFF = {
@@ -948,7 +949,7 @@ const placement = (label, name, when) => `<div class="placement"><span class="pl
    and a quote has no headline. */
 function newsTiles() {
   const news = LEAGUE.stories.filter(s => s.photo && !["result", "quote"].includes(s.kind)).slice(0, 5);
-  return news.map(s => `<button type="button" class="ntile" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
+  return news.map(s => `<button type="button" class="ntile" onclick="openStory('${s.id}')"><img src="${sz(s.photo, 640)}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
       <span class="ntile-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kindId)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("");
 }
 function storyCard() {
@@ -1049,7 +1050,7 @@ function eventCard(e) {
         <div class="box"><div class="legend">${t("Where to watch")}</div><p class="bio">${esc((e.watch || EVENT.watch).en)}</p></div>
       </div>
       ${clips.length ? `<div class="box"><div class="legend">${t("Highlights")}</div>
-        <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${s.photo}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>` : ""}
+        <div class="vids">${clips.map(s => `<div class="vid" onclick="openStory('${s.id}')" style="cursor:pointer"><img src="${sz(s.photo, 640)}" alt="" loading="lazy"><span>${esc(sTitle(s))} · ${s.dur}</span></div>`).join("")}</div></div>` : ""}
     </div>`;
   return `<div class="card" data-k="event" data-id="${e.id}" data-tab="${tab}" style="--c:${live ? "rgba(57,178,111,.45)" : "rgba(217,173,78,.5)"}"><div class="inner evp">
     ${head}
@@ -1164,8 +1165,8 @@ function tile(s) {
               pl && PLAYER[pl] ? `<span class="tag" style="--c:${CITY[PLAYER[pl].city].color}" onclick="event.stopPropagation();goPlayer('${pl}')"><i></i>${esc(PLAYER[pl].name)}</span>` : "";
   const badge = s.kind === "result" ? `<span class="badge live">${t("Live")}</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}${s.captions ? ` · <u class="cc">CC</u>` : ""}</span>` :
                 s.kind === "gallery" ? `<span class="badge">${s.count} ${t("photos")}</span>` : `<span class="badge">${topicBadge(s) || kindLabel(s.kindId)}</span>`;
-  let media = `<img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
-  if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${[s.photo, ...s.photos.filter(p => p !== s.photo)].filter(Boolean).slice(0, 3).map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;   // the cover leads the tile; the reader keeps the gallery's order
+  let media = `<img ${srcs(s.photo, 640, 1024)} sizes="(max-width: 700px) 100vw, 50vw" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
+  if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${[s.photo, ...s.photos.filter(p => p !== s.photo)].filter(Boolean).slice(0, 3).map(p => `<img src="${sz(p, 640)}" alt="" loading="lazy">`).join("")}</div>`;   // the cover leads the tile; the reader keeps the gallery's order
   let extra = "";
   if (s.kind === "video") extra = `<span class="play"></span>`;
   if (s.kind === "quote") extra = `<div class="q">${esc(sTitle(s))}</div>`;
@@ -1274,7 +1275,7 @@ function mdBlock(b) {
   if (em) return `<figure class="emb" data-url="${esc(em.url)}"></figure>`;
   // a photo from the league's store, full width of the text, its caption under it; #WxH reserves its room
   const im = String(b).trim().match(/^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(?:#(\d+)x(\d+))?(?:\s+"([^"]*)")?\)$/);
-  if (im) return `<figure class="rimg"><img src="${fromStore(im[2])}" alt="${esc(im[1])}" loading="lazy"${im[3] ? ` width="${im[3]}" height="${im[4]}"` : ""}>${im[5] ? `<figcaption>${esc(im[5])}</figcaption>` : ""}</figure>`;
+  if (im) return `<figure class="rimg"><img ${srcs(fromStore(im[2]), 1024, 1600)} sizes="(max-width: 760px) 100vw, 66ch" alt="${esc(im[1])}" loading="lazy"${im[3] ? ` width="${im[3]}" height="${im[4]}"` : ""}>${im[5] ? `<figcaption>${esc(im[5])}</figcaption>` : ""}</figure>`;
   const lines = String(b).split("\n").map(l => l.trim()).filter(Boolean);
   if (lines.length && lines.every(l => /^[-*]\s+/.test(l))) return `<ul>${lines.map(l => `<li>${mdInline(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
   if (lines.length && lines.every(l => /^\d+[.)]\s+/.test(l))) return `<ol>${lines.map(l => `<li>${mdInline(l.replace(/^\d+[.)]\s+/, ""))}</li>`).join("")}</ol>`;
@@ -1286,6 +1287,10 @@ function mdBlock(b) {
 const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()))
   ? "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/" : "";
 const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
+/* A store photo in the size it is shown at: the site's worker makes it (320, 640, 1024 or 1600 wide, AVIF or WebP).
+   Pictures that are not the store's (the page's own img/, a blob kept offline) are left as they are. */
+const sz = (p, w) => typeof p === "string" && /(^|\/)content\/photos\//.test(p) && !/[?&]w=/.test(p) ? `${p}${p.includes("?") ? "&" : "?"}w=${w}` : p;
+const srcs = (p, w1, w2) => sz(p, w1) === p ? `src="${p}"` : `src="${sz(p, w1)}" srcset="${sz(p, w1)} ${w1}w, ${sz(p, w2)} ${w2}w"`;
 let storeRev = null;
 { const kept = OFF.get("stories"); if (kept && kept.ix && Array.isArray(kept.ix.stories)) useStoreIndex(kept.ix); }
 /* Every story has an address of its own, built from its headline. Where the site can answer such an address
@@ -1427,14 +1432,14 @@ function renderStory() {
   let fig;
   galIdx = 0;
   const arrow = d => `<svg viewBox="0 0 24 24"><path d="${d}"/></svg>`;
-  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = `<div class="gmain"><div class="gstrip" id="gstrip" onscroll="galSeen()">${s.photos.map(p => `<img src="${p}" alt="">`).join("")}</div>
+  if (s.kind === "gallery" && (s.photos || []).length > 1) fig = `<div class="gmain"><div class="gstrip" id="gstrip" onscroll="galSeen()">${s.photos.map(p => `<img src="${sz(p, 1024)}" alt="">`).join("")}</div>
       <div class="gctl"><button onclick="galStep(-1)" title="${t("Previous picture")}">${arrow("M15 5l-7 7 7 7")}</button><span id="gcount">1 / ${s.photos.length}</span><button onclick="galStep(1)" title="${t("Next picture")}">${arrow("M9 5l7 7-7 7")}</button></div></div>
 `;
-  else if (s.kind === "quote") fig = `<img src="${s.photo}" alt=""${focus}><blockquote>${esc(sTitle(s))}<cite>${speaker}${esc(s.author)}</cite></blockquote>`;
+  else if (s.kind === "quote") fig = `<img ${srcs(s.photo, 1024, 1600)} alt=""${focus}><blockquote>${esc(sTitle(s))}<cite>${speaker}${esc(s.author)}</cite></blockquote>`;
   else if (s.kind === "video" && s.video) fig = `<video controls playsinline preload="metadata" poster="${s.photo}" crossorigin="anonymous">
       <source src="${s.video}" type="video/webm">
       <track kind="captions" srclang="en" label="English" src="img/video/swing.en.vtt" default></video>`;
-  else fig = `<img src="${s.photo}" alt=""${focus}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span>` : ""}<span class="cap">${s.kind === "video" ? t("Video · hosted, adaptive, captioned") : t("Picture · supplied by Legacy")}</span>`;
+  else fig = `<img ${srcs(s.photo, 1024, 1600)} alt=""${focus}>${s.kind === "video" ? `<span class="play"></span><span class="dur">${s.dur}</span>` : ""}<span class="cap">${s.kind === "video" ? t("Video · hosted, adaptive, captioned") : t("Picture · supplied by Legacy")}</span>`;
   const hasCard = id => CARDS.some(c => c.k === "event" && c.id === id);
   const tags = (s.events || []).map(id => LEAGUE.schedule.find(e => e.id === id)).filter(Boolean).map(e =>
                  `<span class="chip ev" style="--c:var(--acc)" ${hasCard(e.id) ? `onclick="closeModal('smodal');goEvent('${e.id}')"` : ""}><i></i>${esc(L(e, "name"))}</span>`).join("") +
@@ -1457,7 +1462,7 @@ function renderStory() {
         <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0}</button>
         <button onclick="shareStory('${s.id}')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
         ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
-      ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kindId)}</small></span></button>`).join("")}</div>` : ""}
+      ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${sz(x.photo, 320)}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kindId)}</small></span></button>`).join("")}</div>` : ""}
     </aside>
   </article>`;
   applyLayout(s);
@@ -1494,7 +1499,7 @@ function cityStories(c) {
   const all = LEAGUE.stories.filter(s => s.kind !== "result");
   return [...all.filter(mine), ...all.filter(s => !mine(s))].slice(0, 8).map(s => {
     const sc = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
-    return `<button type="button" class="ctile" style="--c:${sc ? sc.color : "var(--acc)"}" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
+    return `<button type="button" class="ctile" style="--c:${sc ? sc.color : "var(--acc)"}" onclick="openStory('${s.id}')"><img src="${sz(s.photo, 640)}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
       <em>${s.kind === "video" ? `▶ ${s.dur || ""}` : s.kind === "gallery" ? `${s.count} ${t("photos")}` : kindLabel(s.kindId)}</em><b>${esc(sTitle(s))}</b></button>`; }).join("");
 }
 function cityCard(c, i) {
@@ -2091,7 +2096,7 @@ async function keepForOffline() {
     if (!s.body_ref || (OFF.get("bodies") || {})[bodyName(s.body_ref)]) continue;
     try { const r = await fetch(s.body_ref); if (r.ok) keepBody(s.body_ref, await r.json()); } catch (e) { return; }
   }
-  const want = new Set(newest.flatMap(s => [s.photo, ...(s.photos || [])]).filter(u => /^https?:/.test(u || "")));
+  const want = new Set(newest.flatMap(s => [s.photo, ...(s.photos || [])]).filter(u => /^https?:/.test(u || "")).map(u => sz(u, 640)));
   const have = new Set(await PHOTOS.keys());
   for (const u of want) if (!have.has(u)) {
     try { const r = await fetch(u, { mode: "cors" }); if (r.ok) await PHOTOS.put(u, await r.blob()); } catch (e) { return; }
