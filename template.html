@@ -803,6 +803,8 @@ const PREF = {
    it shows that instead of what it was installed with: the store's story list, the structure and the newest
    stories' article texts (localStorage, ll.off.*), and those stories' photos (IndexedDB). A pill under the top bar
    says the app is offline and how old what it shows is. The website does not keep any of this. */
+const PREVIEW = new URLSearchParams(location.search).has("preview");   // the Content Studio's preview frame (see the listener next to loadStore)
+let PREVIEW_STORY = null;
 const IN_APP = location.protocol === "capacitor:" || !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 /* a picture that cannot load (offline) is taken from the phone's copy, kept in IndexedDB by keepForOffline */
 function useKeptPhoto(im) {
@@ -2071,7 +2073,23 @@ function useStoreIndex(ix) {
   ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
     const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; } });
   storeRev = ix.rev; LEAGUE.stories = shapeStories(ix.stories); LEAGUE.story_count = ix.stories.length;
+  if (PREVIEW_STORY) LEAGUE.stories = [PREVIEW_STORY, ...LEAGUE.stories.filter(x => x.id !== PREVIEW_STORY.id && x.id !== PREVIEW_STORY.source)];
 }
+/* Preview from the Content Studio: the Studio opens this page with ?preview=1 in a frame (desktop, tablet or phone
+   size) and sends the draft by postMessage. It is shown as if published, first in the list, as a tile ("feed") or
+   opened ("story"). Nothing is saved, and only the Desk's own address (or a local test) may send one. */
+if (PREVIEW) addEventListener("message", e => {
+  if (!/^https:\/\/legacy-league-desk\.[\w-]+\.workers\.dev$|^http:\/\/localhost:\d+$/.test(e.origin)) return;
+  const d = e.data; if (!d || d.type !== "ll-preview" || !d.story) return;
+  const s = { ...d.story, id: "preview", status: "published", likes: 0, comments: 0 };
+  delete s.body_ref; delete s.kindId;
+  s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
+  PREVIEW_STORY = shapeStories([s])[0];
+  LEAGUE.stories = [PREVIEW_STORY, ...LEAGUE.stories.filter(x => x.id !== "preview" && x.id !== s.source)];   // in place of its published version
+  renderFeed(); document.getElementById("hnrow").innerHTML = newsTiles();
+  if (d.view === "story") openStory("preview");
+  else { if (document.getElementById("smodal").classList.contains("on")) closeModal("smodal"); go(SEC.stories); document.getElementById("feed").scrollTop = 0; }
+});
 function loadStore() {
   fetch(STORE_AT + "content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
     setOffline(false);
@@ -2148,6 +2166,7 @@ function loadSite(justOpened) {
   }).catch(() => {});
 }
 (window.requestIdleCallback || setTimeout)(() => { loadStructure(); loadStore(); loadSite(true); });
+if (PREVIEW && window.parent !== window) window.parent.postMessage({ type: "ll-preview-ready" }, "*");   // the Studio sends the draft
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadStructure(); loadStore(); loadSite(false); } });
 </script>
 </body>

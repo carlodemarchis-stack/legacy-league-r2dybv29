@@ -203,6 +203,22 @@ async function restoreVersion(env, id, version, by, check) {
   return out;
 }
 
+/* Scheduled stories go out on time: the Worker's cron (every 5 minutes, wrangler.jsonc) publishes those whose
+   scheduled_at (UTC) has come, as their scheduler, and refreshes what the site reads. */
+async function publishDue(env) {
+  const now = nowIso().slice(0, 16);
+  const due = ((await readJson(env, RECORDS)).data || []).filter((s) => s.status === "scheduled" && s.scheduled_at && s.scheduled_at <= now);
+  if (!due.length) return 0;
+  const { stories } = await change(env, async (list) => {
+    for (const s of list) if (s.status === "scheduled" && s.scheduled_at && s.scheduled_at <= now) {
+      s.status = "published"; s.published_at = s.scheduled_at + ":00"; s.published_by = s.scheduled_by || "schedule";
+      delete s.scheduled_at; delete s.scheduled_by;
+    }
+  }, "schedule");
+  await publishIndex(env, stories);
+  return due.length;
+}
+
 /* What the site reads: the published stories, newest first, article texts in files of their own. */
 async function publishIndex(env, stories) {
   const now = nowIso().slice(0, 16);
@@ -963,13 +979,17 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
       if (isLive(out)) await publishIndex(env, stories);
       return json({ ok: true, story: await withStamp(out) });
     }
-    if (path === "publish" || path === "unpublish") {
+    if (path === "publish" || path === "unpublish" || path === "schedule") {
+      // schedule: b.at is the UTC time it goes out (YYYY-MM-DDTHH:MM); the Desk's timer publishes it then (publishDue)
+      const at = path === "schedule" ? String(b.at || "").slice(0, 16) : null;
+      if (path === "schedule" && (!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(at) || at <= nowIso().slice(0, 16))) fail("Pick a time in the future.");
       const { out, stories } = await change(env, async (list) => {
         const s = find(list, b.id);
         await check(s);
         wasLive = isLive(s);
         if (path === "publish") { s.status = "published"; delete s.scheduled_at; s.published_by = who; s.published_at = nowIso(); }
-        else s.status = "draft";
+        else if (path === "schedule") { s.status = "scheduled"; s.scheduled_at = at; s.scheduled_by = who; }
+        else { s.status = "draft"; delete s.scheduled_at; delete s.scheduled_by; }
         return s;
       }, who);
       if (isLive(out) || wasLive) await publishIndex(env, stories);
@@ -1292,4 +1312,6 @@ export default {
     url.pathname = rest;
     return createMcpHandler(() => createServer(env, door))(new Request(url, request), env, ctx);
   },
+  // every 5 minutes: scheduled stories whose time has come go out
+  async scheduled(event, env, ctx) { ctx.waitUntil(publishDue(env)); },
 };

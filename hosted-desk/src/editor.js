@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.26.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them)
+export const STUDIO_VERSION = "0.27.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -174,6 +174,19 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .pcard .mtags{position:absolute;top:8px;left:8px;display:flex;gap:4px;pointer-events:none;z-index:1}
 .pcard .mtags i{font-style:normal;font-weight:700;font-size:9.5px;line-height:1;letter-spacing:.07em;padding:4px 6px;border-radius:5px;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .mtags .exif{background:#b8741a}.mtags .xmp{background:#2f68c8}.mtags .gps{background:#2b8f55}
+.pv{position:fixed;inset:0;z-index:60;background:#05080a;display:flex;flex-direction:column}
+.pv header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
+.pv header h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+.pv .seg2{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.pv .seg2 button{border:0;background:none;color:var(--dim);font:inherit;font-size:12.5px;padding:6px 12px;border-radius:999px;cursor:pointer}
+.pv .seg2 button.on{background:var(--acc);color:var(--on-acc);font-weight:600}
+.pv .note{color:var(--dim);font-size:12px;margin-left:auto}
+.pv .stage{flex:1;display:grid;place-items:center;overflow:hidden;padding:18px}
+.pv .dev{position:relative;background:#000;border-radius:14px;box-shadow:0 0 0 1px #2a3438,0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+.pv .dev.phone{border-radius:44px;box-shadow:0 0 0 10px #1b2124,0 0 0 11px #333,0 30px 80px rgba(0,0,0,.6)}
+.pv .dev.tablet{border-radius:28px;box-shadow:0 0 0 12px #1b2124,0 0 0 13px #333,0 30px 80px rgba(0,0,0,.6)}
+.pv .dev iframe{border:0;display:block;transform-origin:0 0;background:#0b0f11}
+.sched{font-size:12.5px;color:var(--acc);align-self:center}
 .adm{flex:1;overflow-y:auto;padding:18px 20px 60px}.adm h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:22px 0 6px}
 .adm p.hint{max-width:860px}.adm table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px}
 .adm th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:6px;border-bottom:1px solid var(--line)}
@@ -395,12 +408,15 @@ function renderForm(msg) {
   $("main").innerHTML = \`
   <div class="bar"><span class="msg" id="msg">\${s.id ? \`<span class="st \${st}">\${st}</span>\` : "New story, not saved yet"}</span>
     \${s.url ? \`<a class="btn" href="\${esc(s.url)}" target="_blank" rel="noopener">View on site ↗</a>\` : ""}
+    <button class="btn" onclick="openPreview()" title="See it on the site, as a computer, tablet or phone shows it, before anyone else does">Preview</button>
     <button class="btn \${s.id ? "" : "pri"}" onclick="openAI()" title="Ask Claude Opus 5.5 for a headline, summary and article">✦ Draft with AI</button>
     <button class="btn" id="discard" onclick="discard()" \${s.id ? "hidden" : ""}>\${s.id ? "Discard changes" : "Cancel"}</button>
     \${s.id ? \`<button class="btn" onclick="openHistory()">History</button><button class="btn bad" onclick="del()">Delete</button>\` : ""}
     \${s.id && st === "published" ? \`<button class="btn" onclick="act('unpublish')">Unpublish</button>\` : ""}
     <button class="btn \${st === "published" ? "pri" : ""}" id="save" onclick="save()" \${dirty ? "" : "disabled"} title="\${dirty ? "" : "Nothing has changed yet"}">\${st === "published" ? "Save and update the site" : "Save draft"}</button>
-    \${s.id && st !== "published" ? \`<button class="btn pri" onclick="act('publish')">Publish</button>\` : ""}
+    \${s.id && st === "scheduled" ? \`<span class="sched">Goes out \${esc(when(s.scheduled_at + ":00"))}</span><button class="btn" onclick="act('unpublish')">Unschedule</button>\` : ""}
+    \${s.id && st === "draft" ? \`<button class="btn" onclick="scheduleStory()">Schedule…</button>\` : ""}
+    \${s.id && st !== "published" ? \`<button class="btn pri" onclick="act('publish')">\${st === "scheduled" ? "Publish now" : "Publish"}</button>\` : ""}
   </div>
   <div class="form">
     <div>
@@ -967,13 +983,83 @@ async function act(what) {
   if (dirty) { say("err", "Save your changes first."); return; }
   const ok = what === "publish"
     ? await confirmModal("Publish this story?", "It is public on the site and in the app at once.", "Publish")
+    : statusOf(cur) === "scheduled" ? await confirmModal("Unschedule this story?", "It goes back to drafts and will not go out.", "Unschedule")
     : await confirmModal("Take this story off the site?", "It leaves the site and the app at once and goes back to drafts.", "Unpublish", true);
   if (!ok) return;
   run(async () => {
     await call(what, { id: cur.id, stamp: cur.stamp });
-    await load(cur.id); renderForm(["ok", what === "publish" ? "Published. It is on the site now." : "Back in drafts, off the site."]);
+    const was = statusOf(cur);
+    await load(cur.id); renderForm(["ok", what === "publish" ? "Published. It is on the site now." : was === "scheduled" ? "Unscheduled: back in drafts." : "Back in drafts, off the site."]);
   }, what === "publish" ? "Publishing…" : "Taking it off the site…");
 }
+/* Schedule: the time is picked in this computer's time; the Desk keeps it in UTC and publishes it then (it checks
+   every 5 minutes) */
+async function scheduleStory() {
+  if (dirty) { say("err", "Save your changes first."); return; }
+  const d = new Date(Date.now() + 3600e3); d.setMinutes(0, 0, 0);
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  const v = await modal({ title: "Schedule this story", text: "It goes out on the site and in the app at this time, within 5 minutes. Until then it stays a draft for readers.",
+    fields: [{ id: "at", label: "Goes out at (your time)", type: "datetime-local", value: local, required: true, requiredText: "Pick a date and time." }],
+    ok: "Schedule", validate: (f) => (new Date(f.at).getTime() > Date.now() + 60000 ? null : { field: "at", message: "Pick a time in the future." }) });
+  if (!v) return;
+  const at = new Date(v.at).toISOString().slice(0, 16);
+  run(async () => {
+    await call("schedule", { id: cur.id, stamp: cur.stamp, at });
+    await load(cur.id); renderForm(["ok", "Scheduled. It goes out " + when(at + ":00") + "."]);
+  }, "Scheduling…");
+}
+
+/* Preview: the real site in a frame the size of a computer, tablet or phone, with this story in it as if it were
+   published (as a tile in the feed, or opened). It sends the story as it is in the form, saved or not; nothing is
+   published and only you see it. */
+const PV_SIZES = { desktop: [1280, 800], tablet: [820, 1180], phone: [390, 844] };
+let pvDevice = "phone", pvView = "story";
+try { pvDevice = localStorage.getItem("studio-pv-device") || "phone"; } catch (e) {}
+function previewStory() {
+  const f = fields(), k = kindDef(f.kind) || {}, gal = fmtOf(f.kind) === "gallery" ? (cur.gallery || []) : null;
+  return { kind: f.kind, topic: f.topic, title: f.title || "(No headline yet)", dek: f.dek, author: f.author || "Legacy League",
+    at: f.at || localNow(), cities: f.cities, players: f.players, events: f.events,
+    body: String(f.body || "").split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean),
+    photo: gal && gal.length ? (cur.cover && gal.includes(cur.cover) ? cur.cover : gal[0]) : cur.photo || null,
+    photos: gal || undefined, count: gal ? gal.length : undefined, dur: f.dur || undefined,
+    size: cur.size || k.size || "m", embeds: cur.embeds || undefined, slug: cur.slug || undefined, source: cur.id || null };
+}
+function openPreview() {
+  closePreview();
+  const box = document.createElement("div"); box.className = "pv"; box.id = "pv";
+  box.innerHTML = \`<header><h1>Preview</h1>
+    <span class="seg2" id="pvdev"><button data-d="desktop">Desktop</button><button data-d="tablet">Tablet</button><button data-d="phone">Phone</button></span>
+    <span class="seg2" id="pvview"><button data-v="story">Story</button><button data-v="feed">In the feed</button></span>
+    <span class="note">\${cur && cur.id && statusOf(cur) === "published" ? "Your unsaved changes, not yet on the site" : "Not published: only you see this"}</span>
+    <button class="btn" onclick="closePreview()">Close</button></header>
+    <div class="stage" id="pvstage"><div class="dev" id="pvdevbox"><iframe id="pvframe" title="Preview" src="\${esc(SITE)}/stories?preview=1"></iframe></div></div>\`;
+  document.body.appendChild(box);
+  $("pvdev").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; pvDevice = b.dataset.d; try { localStorage.setItem("studio-pv-device", pvDevice); } catch (err) {} sizePreview(); };
+  $("pvview").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; pvView = b.dataset.v; paintPvButtons(); sendPreview(); };
+  sizePreview();
+}
+function paintPvButtons() {
+  document.querySelectorAll("#pvdev button").forEach((b) => b.classList.toggle("on", b.dataset.d === pvDevice));
+  document.querySelectorAll("#pvview button").forEach((b) => b.classList.toggle("on", b.dataset.v === pvView));
+}
+function sizePreview() {
+  const st = $("pvstage"), dev = $("pvdevbox"), fr = $("pvframe"); if (!st) return;
+  const [w, h] = PV_SIZES[pvDevice], pad = pvDevice === "desktop" ? 20 : 50;
+  const k = Math.min(1, (st.clientWidth - pad) / w, (st.clientHeight - pad) / h);
+  fr.style.width = w + "px"; fr.style.height = h + "px"; fr.style.transform = \`scale(\${k})\`;
+  dev.style.width = Math.round(w * k) + "px"; dev.style.height = Math.round(h * k) + "px";
+  dev.className = "dev " + pvDevice;
+  paintPvButtons();
+}
+function sendPreview() {
+  const fr = $("pvframe"); if (!fr || !fr.contentWindow) return;
+  fr.contentWindow.postMessage({ type: "ll-preview", view: pvView, story: previewStory() }, new URL(SITE).origin);
+}
+function closePreview() { const x = $("pv"); if (x) x.remove(); }
+addEventListener("message", (e) => { if (e.origin === new URL(SITE).origin && e.data && e.data.type === "ll-preview-ready") sendPreview(); });
+addEventListener("resize", () => sizePreview());
+addEventListener("keydown", (e) => { if (e.key === "Escape" && $("pv")) closePreview(); });
+
 async function del() {
   if (!(await confirmModal("Delete this story?", (statusOf(cur) === "published" ? "It leaves the site and the app at once. " : "") + "It can be brought back from Deleted.", "Delete", true))) return;
   run(async () => { await call("delete", { id: cur.id, stamp: cur.stamp }); dropLocal(cur.id); cur = null; dirty = false; await load(); renderForm(); }, "Deleting…");
