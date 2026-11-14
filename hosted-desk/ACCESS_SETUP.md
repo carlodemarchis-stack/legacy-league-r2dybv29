@@ -6,9 +6,13 @@
 - Sign-in: a code sent by email ("Email code" method).
 - Policy: "Content Studio editors", allowing the listed emails.
 - The team address and AUD tag are in `wrangler.jsonc` → `vars`.
-- Claude manages it through the Cloudflare API, with an account token limited to Access, kept in
-  `~/.config/legacy-league/cf-access-token` (never in the repo). To add or remove an editor, ask Claude, or edit the
-  policy in Zero Trust → Access → Policies.
+- People and roles (Studio 0.22): the Desk keeps the list in `desk/people.json`. Super admin and producers manage
+  it in the Studio under ⚙︎ Admin → People and roles.
+- Every change to that list rewrites the policy's emails through the Cloudflare API, using the Worker secret
+  `CF_API_TOKEN` (an account token limited to Access, 90-day expiry; the same token is kept locally in
+  `~/.config/legacy-league/cf-access-token`, never in the repo) and the vars `CF_ACCOUNT_ID` / `ACCESS_POLICY_ID`.
+- When the token expires, the People page says so, and the policy has to be edited by hand until a new token is set
+  with `npx wrangler secret put CF_API_TOKEN`.
 
 The Desk is ready for it, from Content Studio 0.19.0. Until the two settings in step 6 are on the Worker, nothing changes:
 editors type a name as before.

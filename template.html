@@ -910,7 +910,7 @@ const placement = (label, name, when) => `<div class="placement"><span class="pl
 function newsTiles() {
   const news = LEAGUE.stories.filter(s => s.photo && !["result", "quote"].includes(s.kind)).slice(0, 5);
   return news.map(s => `<button type="button" class="ntile" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
-      <span class="ntile-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kind)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("");
+      <span class="ntile-t"><small>${s.kind === "video" ? "▶ " + s.dur : kindLabel(s.kindId)} · ${ago(s.at)}</small><b>${esc(sTitle(s))}</b></span></button>`).join("");
 }
 function storyCard() {
   return `<div class="card" data-k="story" style="--c:rgba(217,173,78,.5)"><img class="bg" src="${LEAGUE.hero[0]}" alt=""><div class="inner home">
@@ -1036,7 +1036,36 @@ function goEvent(id, tab) {
 /* --- stories: the editorial layer as a social flow. One CMS entry = one post,
    published once for web and app. Posts are tagged by city and player, so
    "Following" is the same follow set the push alerts use. --- */
-const FILTERS = [["all", "All stories"], ["following", "Following"], ["video", "Video"], ["gallery", "Galleries"], ["article", "News"], ["mission", "Mission"]];
+/* The structure of the content, the kinds of story and the topics, is data the league's producers change: the
+   store's site/structure.json, the same file the Desk and the Content Studio use. Each kind is built on a format
+   (text, gallery, video, quote, result) and everything that draws a story works on its format: when stories arrive,
+   each keeps its kind as kindId and its kind becomes the format ("article" for text). Labels, filters and topic
+   badges come from the structure. Without the file (the GitHub copy, an old app), the league's first structure. */
+let STRUCT = { kinds: [
+    { id: "video", format: "video", label: "Video", filter_label: "Video", filter: true },
+    { id: "gallery", format: "gallery", label: "Gallery", filter_label: "Galleries", filter: true },
+    { id: "article", format: "text", label: "News", filter_label: "News", filter: true },
+    { id: "quote", format: "quote", label: "Mission" },
+    { id: "result", format: "result", label: "Live result" }],
+  topics: [{ id: "league", label: "League" }, { id: "city", label: "City" }, { id: "mission", label: "Mission", filter: true, badge: true, style: "mission" }] };
+const KIND = id => STRUCT.kinds.find(k => k.id === id), TOPIC = id => STRUCT.topics.find(x => x.id === id);
+function shapeStories(list) {
+  (list || []).forEach(s => { if (!s.kindId) s.kindId = s.kind; const k = KIND(s.kindId); s.kind = !k ? s.kindId : k.format === "text" ? "article" : k.format; });
+  return list;
+}
+shapeStories(LEAGUE.stories);
+const filters = () => [["all", "All stories"], ["following", "Following"],
+  ...STRUCT.kinds.filter(k => k.filter).map(k => [k.id, k.filter_label || k.label]), ...STRUCT.topics.filter(x => x.filter && !KIND(x.id)).map(x => [x.id, x.label])];
+const topicBadge = s => { const x = TOPIC(s.topic); return x && x.badge ? t(x.label) : ""; };
+const topicStyle = s => (TOPIC(s.topic) || {}).style || "";
+function loadStructure() {
+  fetch(STORE_AT + "content/site/structure.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => {
+    if (!j || !Array.isArray(j.kinds) || !Array.isArray(j.topics) || JSON.stringify(j) === JSON.stringify(STRUCT)) return;
+    STRUCT = j; shapeStories(LEAGUE.stories);
+    if (!filters().some(([k]) => k === state.filter)) state.filter = "all";
+    renderFeed(); document.getElementById("hnrow").innerHTML = newsTiles();
+  }).catch(() => {});
+}
 state.filter = PREF.get("filter", "all");
 state.city = PREF.get("scity", "all");                 // a city, or "all"
 state.sevent = "all";                                  // stories: an event of the schedule, or "all"
@@ -1053,7 +1082,7 @@ function storiesCard() {
 }
 const ago = iso => { const h = Math.round((Date.parse(FEED.generated_at.slice(0, 16)) - Date.parse(iso)) / 36e5);
   return h < 1 ? t("just now") : h < 24 ? `${h}h` : h < 48 ? t("yesterday") : h < 24 * 14 ? `${Math.round(h / 24)}d` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
-const kindLabel = k => ({ video: t("Video"), gallery: t("Gallery"), article: t("News"), quote: t("Mission"), result: t("Live result") }[k]);
+const kindLabel = id => { const k = KIND(id); return k ? t(k.label) : ""; };    // by the story's kindId
 const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "k" : n;
 /* A story belongs to a city when it is tagged with the city or one of its players; to an event by its date: from the
    event's first day until the next event starts. The event picker shows only once stories span two events. */
@@ -1069,7 +1098,7 @@ function renderFilters() {
   const shown = n(state.filter);
   const cityN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, id)).length;
   const evN = id => LEAGUE.stories.filter(s => matchFilter(s, state.filter, state.city, id)).length;
-  document.getElementById("st-filters").innerHTML = FILTERS.map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter(state.filter === '${k}' ? 'all' : '${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
+  document.getElementById("st-filters").innerHTML = filters().map(([k, l]) => `<button class="${state.filter === k ? "on" : ""}" onclick="setFilter(state.filter === '${k}' ? 'all' : '${k}')">${t(l)}<small>${n(k)}</small></button>`).join("") +
     `<span class="fsep"></span>` + LEAGUE.cities.map(c => { const k = cityN(c.id);
       return `<button class="cf ${state.city === c.id ? "on" : ""} ${k ? "" : "none"}" style="--c:${c.color}" title="${esc(c.name)} · ${k}" onclick="setCity(state.city === '${c.id}' ? 'all' : '${c.id}')">${c.short}</button>`; }).join("") +
     (evs.length > 1 ? `<span class="fsep"></span>` + evs.map(e => `<button class="${state.sevent === e.id ? "on" : ""}" onclick="setStoryEvent(state.sevent === '${e.id}' ? 'all' : '${e.id}')">${esc(L(e, "name"))}<small>${evN(e.id)}</small></button>`).join("") : "") +
@@ -1082,8 +1111,9 @@ function matchFilter(s, f, city = state.city, ev = state.sevent) {
   if (ev !== "all" && !eventsOf(s).includes(ev)) return false;
   if (f === "all") return true;
   if (f === "following") return (s.cities || []).some(c => state.follow.has(c)) || (s.players || []).some(p => state.follow.has(p));
-  if (f === "mission") return s.topic === "mission";
-  return s.kind === f;
+  if (KIND(f)) return s.kindId === f;
+  if (TOPIC(f)) return s.topic === f;
+  return false;
 }
 function tile(s) {
   const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
@@ -1093,7 +1123,7 @@ function tile(s) {
   const tag = tagId ? `<span class="tag" style="--c:${CITY[tagId].color}" onclick="event.stopPropagation();goCity('${tagId}')"><i></i>${esc(CITY[tagId].name)}</span>` :
               pl && PLAYER[pl] ? `<span class="tag" style="--c:${CITY[PLAYER[pl].city].color}" onclick="event.stopPropagation();goPlayer('${pl}')"><i></i>${esc(PLAYER[pl].name)}</span>` : "";
   const badge = s.kind === "result" ? `<span class="badge live">${t("Live")}</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}${s.captions ? ` · <u class="cc">CC</u>` : ""}</span>` :
-                s.kind === "gallery" ? `<span class="badge">${s.count} ${t("photos")}</span>` : `<span class="badge">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}</span>`;
+                s.kind === "gallery" ? `<span class="badge">${s.count} ${t("photos")}</span>` : `<span class="badge">${topicBadge(s) || kindLabel(s.kindId)}</span>`;
   let media = `<img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
   if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${s.photos.map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;
   let extra = "";
@@ -1317,7 +1347,7 @@ function renderStory() {
     <figure class="rfig">${fig}</figure>
     <div class="rmain">
       <div class="rmeta"><span class="ava" style="--c:${col}">${c ? c.short : "LL"}</span><b>${esc(s.author)}</b><span>${ago(s.at)}</span>
-        <span class="badge ${s.topic === "mission" ? "mission" : ""}">${s.topic === "mission" ? t("Mission") : kindLabel(s.kind)}${s.kind === "gallery" ? ` · ${s.count} ${t("pictures")}` : ""}</span></div>
+        <span class="badge ${topicStyle(s)}">${topicBadge(s) || kindLabel(s.kindId)}${s.kind === "gallery" ? ` · ${s.count} ${t("pictures")}` : ""}</span></div>
       ${s.kind === "quote" ? "" : `<h2 class="rtitle">${esc(sTitle(s))}</h2>`}
       <p class="rlead">${esc(sDek(s))}</p>
       <div class="rtext" id="rtext"></div>
@@ -1329,7 +1359,7 @@ function renderStory() {
         <button><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/></svg>${s.comments || 0}</button>
         <button onclick="shareStory('${s.id}')"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 15V3m0 0L8 7m4-4l4 4"/></svg>${t("Share")}</button>
         ${s.id === "s03" ? `<span class="sp">${t("Presented by · sponsor slot")}</span>` : ""}</div>
-      ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kind)}</small></span></button>`).join("")}</div>` : ""}
+      ${more.length ? `<div class="rmore"><div class="legend">${t("More like this")}</div>${more.map(x => `<button class="row" onclick="openStory('${x.id}')"><img src="${x.photo}" alt=""><span><b>${esc(sTitle(x))}</b><small>${esc(x.author)} · ${ago(x.at)} · ${kindLabel(x.kindId)}</small></span></button>`).join("")}</div>` : ""}
     </aside>
   </article>`;
   applyLayout(s);
@@ -1367,7 +1397,7 @@ function cityStories(c) {
   return [...all.filter(mine), ...all.filter(s => !mine(s))].slice(0, 8).map(s => {
     const sc = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
     return `<button type="button" class="ctile" style="--c:${sc ? sc.color : "var(--acc)"}" onclick="openStory('${s.id}')"><img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>
-      <em>${s.kind === "video" ? `▶ ${s.dur || ""}` : s.kind === "gallery" ? `${s.count} ${t("photos")}` : kindLabel(s.kind)}</em><b>${esc(sTitle(s))}</b></button>`; }).join("");
+      <em>${s.kind === "video" ? `▶ ${s.dur || ""}` : s.kind === "gallery" ? `${s.count} ${t("photos")}` : kindLabel(s.kindId)}</em><b>${esc(sTitle(s))}</b></button>`; }).join("");
 }
 function cityCard(c, i) {
   return `<div class="card" data-k="city" data-id="${c.id}" style="--c:${c.color}"><img class="bg" src="${c.photos[0]}" alt="" loading="lazy"><div class="inner">
@@ -1756,7 +1786,7 @@ function searchItems() {
   LEAGUE.stories.filter(s => s.kind !== "result").forEach(s => {
     const c = (s.cities || []).length === 1 ? CITY[s.cities[0]] : null;
     const names = [...(s.cities || []).map(id => CITY[id] && CITY[id].name), ...(s.players || []).map(id => PLAYER[id] && PLAYER[id].name)].filter(Boolean).join(" ");
-    items.push({ kind: "story", label: sTitle(s), sub: `${s.author} · ${ago(s.at)}`, more: `${sDek(s)} ${names} ${kindLabel(s.kind)} ${s.topic}`,
+    items.push({ kind: "story", label: sTitle(s), sub: `${s.author} · ${ago(s.at)}`, more: `${sDek(s)} ${names} ${kindLabel(s.kindId)} ${s.topic}`,
                  color: c ? c.color : "var(--acc)", act: `closeModal('jmodal');openStory('${s.id}')` });
   });
   PAGES.forEach(p => items.push({ kind: "page", label: t(p[1]), sub: "", more: t(p[2]), color: "var(--dim2)", act: `pageInfo('${p[0]}')` }));
@@ -1924,7 +1954,7 @@ if (startStory) openStoryByKey(startStory);
 (window.requestIdleCallback || setTimeout)(warmMenu);
 /* The page carries the newest stories. Older ones arrive once the first screen is up. */
 if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
-  fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { if (!storeRev) { LEAGUE.stories.push(...older); renderFeed(); } }).catch(() => {}));
+  fetch(LEAGUE.more_stories).then(r => r.json()).then(older => { if (!storeRev) { LEAGUE.stories.push(...shapeStories(older)); renderFeed(); } }).catch(() => {}));
 /* Where the site is served with a content store behind it, the stories come from there: the page asks for the
    store's list when it opens and each time the reader comes back to it, so a story published in the store shows
    without a new page. Anywhere else the request finds nothing and the stories in the page stand. */
@@ -1935,7 +1965,7 @@ function loadStore() {
     const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
     ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
       const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; } });
-    storeRev = ix.rev; LEAGUE.stories = ix.stories; LEAGUE.story_count = ix.stories.length;
+    storeRev = ix.rev; LEAGUE.stories = shapeStories(ix.stories); LEAGUE.story_count = ix.stories.length;
     renderFeed();
     document.getElementById("hnrow").innerHTML = newsTiles();
     if (wantStory) openStoryByKey(wantStory);                  // the story asked for by address has arrived
@@ -1954,8 +1984,8 @@ function loadSite(justOpened) {
     });
   }).catch(() => {});
 }
-(window.requestIdleCallback || setTimeout)(() => { loadStore(); loadSite(true); });
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadStore(); loadSite(false); } });
+(window.requestIdleCallback || setTimeout)(() => { loadStructure(); loadStore(); loadSite(true); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadStructure(); loadStore(); loadSite(false); } });
 </script>
 </body>
 </html>

@@ -14,6 +14,10 @@
   // Application Audience tag of its "Content Studio" application. Not secrets. Remove both to turn the check off.
   "vars": {
     "ACCESS_TEAM_DOMAIN": "https://broad-mouse-18a9.cloudflareaccess.com",
-    "ACCESS_AUD": "e82a48d218a777a910a1e4bccedaac915a0e7407e72ddc22615e8f6b29a39939"
+    "ACCESS_AUD": "e82a48d218a777a910a1e4bccedaac915a0e7407e72ddc22615e8f6b29a39939",
+    // the People page keeps the Access rule "Content Studio editors" equal to the people list; it also needs the
+    // Worker secret CF_API_TOKEN (an account token limited to Access): npx wrangler secret put CF_API_TOKEN
+    "CF_ACCOUNT_ID": "7b3a32089e99a0353b7cf77605ef3133",
+    "ACCESS_POLICY_ID": "9b6cd17c-51a5-436c-85fa-b18cb1313159"
   }
 }

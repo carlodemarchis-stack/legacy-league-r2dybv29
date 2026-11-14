@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.21.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right
+export const STUDIO_VERSION = "0.23.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -162,6 +162,19 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .libpick .mbox.libmodal{width:min(1040px,100%);height:min(86dvh,820px);max-height:none;padding:0;display:flex;flex-direction:column;overflow:hidden}
 .libpick .libbar{padding:14px 18px}.libpick .grid{padding:14px 18px 24px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
 .soon{flex:1;display:grid;place-items:center;text-align:center;color:var(--dim);padding:40px}
+.pcard{position:relative}
+.pcard .mtags{position:absolute;top:8px;left:8px;display:flex;gap:4px;pointer-events:none;z-index:1}
+.pcard .mtags i{font-style:normal;font-weight:700;font-size:9.5px;line-height:1;letter-spacing:.07em;padding:4px 6px;border-radius:5px;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.mtags .exif{background:#b8741a}.mtags .xmp{background:#2f68c8}.mtags .gps{background:#2b8f55}
+.adm{flex:1;overflow-y:auto;padding:18px 20px 60px}.adm h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:22px 0 6px}
+.adm p.hint{max-width:860px}.adm table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px}
+.adm th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:6px;border-bottom:1px solid var(--line)}
+.adm td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.adm input[type=text],.adm input[type=email],.adm select{width:100%;box-sizing:border-box;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px}
+.adm input[readonly]{opacity:.65}.adm td.n{text-align:right;white-space:nowrap;color:var(--dim)}.adm td.act{white-space:nowrap;text-align:right}
+.adm td.act button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:4px 8px;cursor:pointer;font:inherit;font-size:12px;margin-left:3px}
+.adm td.act button:disabled{opacity:.3;cursor:default}.adm .roles label{display:inline-flex;gap:4px;align-items:center;margin-right:10px;white-space:nowrap;font-size:12px}
+.adm .msg{margin-left:6px}
 .soon h2{color:var(--ink);font-size:20px;margin:0 0 8px}.soon p{max-width:520px;line-height:1.55;margin:0 auto}
 :is(.lib,.libmodal) .libbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}
 :is(.lib,.libmodal) .libbar h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
@@ -207,8 +220,8 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
 <header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span>
-  <nav class="snav" id="snav"><button data-v="stories" class="on">Stories</button><button data-v="photos">Photos</button><button data-v="videos">Videos</button><button data-v="shorts">Shorts</button></nav>
-  <span class="hright"><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
+  <nav class="snav" id="snav"><button data-v="stories" class="on">Stories</button><button data-v="photos">Photos</button><button data-v="videos">Videos</button><button data-v="shorts">Shorts</button><button data-v="people" hidden>People</button></nav>
+  <span class="hright"><button class="btn" id="adminbtn" onclick="adminMenu(this)" hidden title="Administration">⚙︎ Admin</button><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
   <a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></span></header>
 <div class="wrap">
   <aside>
@@ -286,6 +299,12 @@ const leaveUnsaved = () => !dirty ? Promise.resolve(true) : confirmModal("Leave 
 
 /* who is working: the sign-in email when the Studio is behind Cloudflare Access; otherwise a name asked once and kept in this browser */
 let EDITOR = "", SIGNED = null;
+/* what this person may do (from the Desk) and the content structure (kinds, each on a format, and topics) */
+let ME = { roles: ["editor"], can: {}, grantable: [] }, STRUCT = { kinds: [], topics: [] };
+const kindDef = (id) => STRUCT.kinds.find((k) => k.id === id) || null;
+const fmtOf = (id) => (kindDef(id) || {}).format || id;
+const editorKinds = () => STRUCT.kinds.filter((k) => k.format !== "result");
+const kindName = (id) => (kindDef(id) || {}).label || id;
 try { EDITOR = localStorage.getItem("studio-editor") || ""; } catch (e) {}
 function paintWho() { $("whobtn").textContent = EDITOR ? "👤 " + EDITOR : "👤 Your name"; }
 async function askName() {
@@ -330,7 +349,7 @@ function renderList() {
   const touched = (s) => s.updated_at || s.published_at || s.created_at || "";
   rows.sort((a, b) => (touched(b) > touched(a) ? 1 : touched(b) < touched(a) ? -1 : (b.at || "") > (a.at || "") ? 1 : (b.at || "") < (a.at || "") ? -1 : 0));
   $("list").innerHTML = rows.map((s) => \`<button class="row \${cur && cur.id === s.id ? "on" : ""}" onclick="pick('\${s.id}')"><img src="\${esc(pic(s.photo))}" alt="" loading="lazy">
-    <span><b>\${esc(shown(s, s.title))}</b><small><span class="st \${statusOf(s)}">\${statusOf(s)}</span>\${esc(s.kind)} · \${esc(when(s.at))}</small></span></button>\`).join("") ||
+    <span><b>\${esc(shown(s, s.title))}</b><small><span class="st \${statusOf(s)}">\${statusOf(s)}</span>\${esc(kindName(s.kind))} · \${esc(when(s.at))}</small></span></button>\`).join("") ||
     '<div class="empty">No story matches.</div>';
   const on = $("list").querySelector(".row.on"); if (on) on.scrollIntoView({ block: "nearest" });
 }
@@ -354,13 +373,15 @@ function show(id, quiet) {
 }
 function blank() {
   const live = ref.events.find((e) => e.status === "live");          // a new story is about the event on now, until untagged
-  return { id: null, status: "draft", kind: "article", topic: "league", title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "", at: localNow() };
+  const k = editorKinds().find((x) => x.format === "text") || editorKinds()[0] || { id: "article" };
+  return { id: null, status: "draft", kind: k.id, topic: (STRUCT.topics[0] || { id: "league" }).id, title: "", dek: "", body: [], cities: [], players: [], events: live ? [live.id] : [], author: "", at: localNow() };
 }
 function renderForm(msg) {
   remember();
   const s = cur; if (!s) { $("main").innerHTML = '<div class="empty">Pick a story on the left, or make a new one.</div>'; return; }
   const st = s.id ? statusOf(s) : "new";
-  const kinds = s.kind === "result" ? ["result"] : ["article", "video", "gallery", "quote"];
+  const kinds = fmtOf(s.kind) === "result" ? [s.kind] : editorKinds().map((k) => k.id).concat(s.kind && !kindDef(s.kind) ? [s.kind] : []);
+  const topics = STRUCT.topics.map((t) => t.id).concat(s.topic && !STRUCT.topics.some((t) => t.id === s.topic) ? [s.topic] : []);
   $("main").innerHTML = \`
   <div class="bar"><span class="msg" id="msg">\${s.id ? \`<span class="st \${st}">\${st}</span>\` : "New story, not saved yet"}</span>
     \${s.url ? \`<a class="btn" href="\${esc(s.url)}" target="_blank" rel="noopener">View on site ↗</a>\` : ""}
@@ -393,8 +414,8 @@ function renderForm(msg) {
         \${s.photo_auto || !s.id ? '<div class="hint" id="mainauto">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
         <input type="file" id="mainfile" accept="image/*" hidden>
         <div class="hint" id="maincredit">\${s.photo_credit ? "Photo: " + esc(s.photo_credit) : ""}</div></div>
-      <div class="f two"><div><label for="kind">Kind</label><select id="kind" \${kinds.length === 1 ? "disabled" : ""}>\${kinds.map((k) => \`<option \${k === s.kind ? "selected" : ""}>\${k}</option>\`).join("")}</select></div>
-        <div><label for="topic">Topic</label><select id="topic">\${["league", "city", "mission"].map((k) => \`<option \${k === s.topic ? "selected" : ""}>\${k}</option>\`).join("")}</select></div></div>
+      <div class="f two"><div><label for="kind">Kind</label><select id="kind" \${kinds.length === 1 ? "disabled" : ""}>\${kinds.map((k) => \`<option value="\${esc(k)}" \${k === s.kind ? "selected" : ""}>\${esc(kindName(k))}</option>\`).join("")}</select></div>
+        <div><label for="topic">Topic</label><select id="topic">\${topics.map((k) => \`<option value="\${esc(k)}" \${k === s.topic ? "selected" : ""}>\${esc((STRUCT.topics.find((t) => t.id === k) || { label: k }).label)}</option>\`).join("")}</select></div></div>
       <div class="f" id="kindx"></div>
       <div class="f"><label>Cities</label><div class="cities" id="cities">\${ref.cities.map((c) => \`<button type="button" style="--c:\${c.color}" class="\${(s.cities || []).includes(c.id) ? "on" : ""}" data-id="\${c.id}" title="\${esc(c.name)}">\${c.short}</button>\`).join("")}</div></div>
       <div class="f"><label>Events</label><div class="events" id="events">\${ref.events.map((e) => \`<button type="button" class="\${(s.events || []).includes(e.id) ? "on" : ""}" data-id="\${e.id}" title="\${esc(e.start)} – \${esc(e.end)}">\${esc(e.name)}\${e.status === "live" ? "<small>live</small>" : ""}</button>\`).join("")}</div>
@@ -769,7 +790,7 @@ function mainFromPhoto() {
   touch(); say("", "Main photo changed. Save to keep it.");
 }
 function paintKind() {
-  const k = $("kind").value, s = cur;
+  const k = fmtOf($("kind").value), s = cur;
   const gal = k === "gallery";
   // a gallery: its photos across the top of the middle column, the right column shows its cover (the first photo)
   $("galrow").hidden = !gal; $("coverwrap").hidden = !gal; $("mainlabel").textContent = gal ? "Cover" : "Main photo";
@@ -777,7 +798,7 @@ function paintKind() {
   $("kindx").innerHTML = k === "video" ? \`<label for="dur">Video length</label><input id="dur" value="\${esc(s.dur || "")}" placeholder="2:14">\` : "";
   ["dur"].forEach((id) => $(id) && $(id).addEventListener("input", touch));
   if (gal) {
-    if (!cur.gallery) cur.gallery = (s.kind === "gallery" && s.photos && s.photos.length ? s.photos : []).slice();
+    if (!cur.gallery) cur.gallery = (fmtOf(s.kind) === "gallery" && s.photos && s.photos.length ? s.photos : []).slice();
     $("galfile").onchange = (e) => { const files = [...e.target.files]; e.target.value = ""; galUpload(files); };
     paintGallery();
   }
@@ -864,7 +885,7 @@ async function offerLocal(id) {
 }
 function applyLocal(d) {
   const f = d.fields;
-  $("title").value = f.title || ""; $("dek").value = f.dek || ""; $("topic").value = f.topic || "league";
+  $("title").value = f.title || ""; $("dek").value = f.dek || ""; $("topic").value = f.topic || (STRUCT.topics[0] || {}).id || "";
   if (f.kind && [...$("kind").options].some((o) => o.value === f.kind)) { $("kind").value = f.kind; paintKind(); }
   if ($("dur") && f.dur != null) $("dur").value = f.dur;
   if (Array.isArray(f.photos)) { cur.gallery = f.photos.slice(); paintGallery(); }
@@ -880,7 +901,7 @@ function applyLocal(d) {
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
-    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, photos: $("kind").value === "gallery" ? (cur.gallery || []).slice() : undefined,
+    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, photos: fmtOf($("kind").value) === "gallery" ? (cur.gallery || []).slice() : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
     events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id),
     ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}),
@@ -1030,6 +1051,12 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
     box.addEventListener("dragleave", (e) => { if (e.target === box || !box.contains(e.relatedTarget)) box.classList.remove("drop"); });
     box.addEventListener("drop", (e) => { box.classList.remove("drop"); const f = [...e.dataTransfer.files].filter((x) => /^image\\//.test(x.type)); if (f.length) { e.preventDefault(); uploadToLibrary(f); } });
   }
+  /* which extra data the file carried (kept in e.meta): EXIF (camera), XMP (editing and rights), GPS (where it was taken) */
+  const metaTags = (e) => {
+    const k = Object.keys(e.meta || {}); if (!k.length) return "";
+    const gps = k.filter((x) => x.startsWith("exif:GPS")).length, exif = k.filter((x) => x.startsWith("exif:")).length - gps, xmp = k.length - exif - gps;
+    return \`<span class="mtags">\${exif ? \`<i class="exif" title="\${exif} EXIF fields: camera and settings">EXIF</i>\` : ""}\${xmp ? \`<i class="xmp" title="\${xmp} XMP fields: description, author, rights">XMP</i>\` : ""}\${gps ? \`<i class="gps" title="Where it was taken">GPS</i>\` : ""}</span>\`;
+  };
   window.paintLibrary = () => {
     const words = $("libq").value.toLowerCase().split(/\\s+/).filter(Boolean);
     const rows = libPhotos.filter((e) => (filter === "all" || (filter === "nodesc" && !e.alt) || (filter === "unused" && !e.used_in.length) || (filter === "review" && e.suggested_alt)) &&
@@ -1037,7 +1064,7 @@ function libraryPage({ pick = false, title = "Photo library", resolve = null } =
     const toReview = libPhotos.filter((e) => e.suggested_alt).length;
     if ($("liball")) { $("liball").hidden = !toReview; $("liball").textContent = "Accept all suggestions (" + toReview + ")"; }
     $("libcount").textContent = rows.length + " of " + libPhotos.length + " photos";
-    $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}"><img src="\${esc(pic(e.src))}" alt="" loading="lazy">
+    $("libgrid").innerHTML = rows.map((e, i) => \`<button type="button" class="pcard" data-i="\${libPhotos.indexOf(e)}">\${metaTags(e)}<img src="\${esc(pic(e.src))}" alt="" loading="lazy">
       <span>\${e.alt ? \`<b>\${esc(e.alt)}</b>\` : e.suggested_alt ? \`<i class="sug">\${esc(e.suggested_alt)}</i>\` : '<b class="none">No description yet</b>'}<small>\${tagNames(e).length ? esc(tagNames(e).slice(0, 3).join(", ")) + " · " : ""}\${esc(photoText(e) || "No caption")} · \${e.used_in.length ? "in " + e.used_in.length + " " + (e.used_in.length === 1 ? "story" : "stories") : "not used"}</small>
       \${pick || e.alt ? "" : \`<span class="pact">\${e.suggested_alt ? \`<span class="btn pri" data-act="accept">Accept</span>\` : \`<span class="btn" data-act="suggest">✦ Suggest</span>\`}</span>\`}</span></button>\`).join("") ||
       '<div class="empty" style="grid-column:1/-1">No photo matches.</div>';
@@ -1057,6 +1084,71 @@ async function loadLibrary() { libPhotos = (await call("library")).photos; }
 function openLibrary() { closeAI(); closeHistory(); closeUsage(); libraryPage(); }
 
 /* ------------------------------------------------ the top menu: Stories, Photos, Videos, Shorts */
+function closeAdmin() { const x = $("admin"); if (x) x.remove(); }
+function adminBox(title) {
+  const box = document.createElement("div"); box.className = "lib"; box.id = "admin";
+  box.innerHTML = \`<div class="libbar"><h1>\${esc(title)}</h1><span class="msg" id="admmsg"></span></div><div class="adm" id="adm"><div class="empty">Loading…</div></div>\`;
+  document.body.appendChild(box); return box;
+}
+const admSay = (kind, text) => { const m = $("admmsg"); if (m) { m.className = "msg " + kind; m.textContent = text; } };
+
+/* ------------------------------------------------ the Admin menu: what the role allows, more to come */
+function adminMenu(btn) {
+  closePhotoMenu();
+  const r = btn.getBoundingClientRect();
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = ME.can && ME.can.people ? '<button type="button" data-v="people">People and roles</button>' : "";
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; closePhotoMenu(); goView(b.dataset.v); };
+}
+
+/* ------------------------------------------------ people and roles: the super admin manages everyone, a producer producers and editors */
+let peopleInfo = null;
+async function peoplePage() {
+  adminBox("People");
+  try { peopleInfo = await call("people"); paintPeople(); }
+  catch (e) { $("adm").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
+}
+function paintPeople() {
+  const P = peopleInfo, N = P.role_names, give = P.grantable;
+  const roleBoxes = (pre, roles, editable) => P.roles.map((r) => \`<label><input type="checkbox" data-r="\${r}" \${roles.includes(r) ? "checked" : ""} \${editable && give.includes(r) ? "" : "disabled"}> \${esc(N[r])}</label>\`).join("");
+  $("adm").innerHTML = \`
+    <p class="hint"><b>Editors</b> write and publish in the Content Studio. <b>Producers</b> add producers and editors here, and change the structure (kinds, topics) in Claude Code. <b>Coders</b> change the code, in Claude Code. The <b>super admin</b> manages everyone. A person signs in with their email; adding them here lets them in.</p>
+    <h2>Add a person</h2>
+    <table><tr><th>Email</th><th>Name</th><th>Roles</th><th></th></tr>
+      <tr id="padd-row"><td><input type="email" id="pnew-email" placeholder="name@example.com"></td><td><input type="text" id="pnew-name" placeholder="Optional"></td>
+      <td class="roles">\${roleBoxes("new", ["editor"], true)}</td><td class="act"><button type="button" onclick="personSave(null)">Add</button></td></tr></table>
+    <h2>Everyone (\${P.people.length})</h2>
+    <table><tr><th>Email</th><th>Name</th><th>Roles</th><th>Added</th><th></th></tr>
+    \${P.people.map((x, i) => \`<tr data-i="\${i}"><td>\${esc(x.email)}\${x.email === P.me ? " <small>(you)</small>" : ""}</td>
+      <td><input type="text" value="\${esc(x.name || "")}" \${x.can_change ? "" : "readonly"}></td>
+      <td class="roles">\${roleBoxes(i, x.roles, x.can_change)}</td>
+      <td><small>\${esc(x.added_at ? when(x.added_at) : "")}\${x.added_by ? " · " + esc(x.added_by) : ""}</small></td>
+      <td class="act">\${x.can_change ? \`<button type="button" onclick="personSave(\${i})">Save</button><button type="button" onclick="personRemove(\${i})">Remove</button>\` : ""}</td></tr>\`).join("")}</table>\`;
+}
+const rolesIn = (row) => [...row.querySelectorAll("input[data-r]:checked")].map((b) => b.dataset.r);
+async function personSave(i) {
+  const row = i == null ? $("padd-row") : $("adm").querySelector(\`tr[data-i="\${i}"]\`);
+  const email = i == null ? $("pnew-email").value.trim() : peopleInfo.people[i].email;
+  const name = i == null ? $("pnew-name").value.trim() : row.querySelector("input[type=text]").value.trim();
+  admSay("", "Saving…");
+  try {
+    const j = await call("people", { action: "save", email, name, roles: rolesIn(row) });
+    peopleInfo.people = j.people; paintPeople();
+    admSay(j.access && !j.access.ok ? "err" : "ok", j.access && !j.access.ok ? j.access.note : i == null ? \`Added \${email}. They can sign in now.\` : "Saved.");
+  } catch (e) { admSay("err", e.message); }
+}
+async function personRemove(i) {
+  const x = peopleInfo.people[i];
+  if (!(await confirmModal("Remove " + x.email + "?", "They can no longer use the Content Studio. Their stories and changes stay.", "Remove", true))) return;
+  try {
+    const j = await call("people", { action: "remove", email: x.email });
+    peopleInfo.people = j.people; paintPeople();
+    admSay(j.access && !j.access.ok ? "err" : "ok", j.access && !j.access.ok ? j.access.note : "Removed " + x.email + ".");
+  } catch (e) { admSay("err", e.message); }
+}
 function closeSoon() { const x = $("soon"); if (x) x.parentNode.removeChild(x); }
 const SOON = {
   videos: ["Videos", "Highlights, documentaries and series, hosted with captions. To be decided: where the files live (Cloudflare Stream is in the plan), what a video entry holds (title, description, poster, captions, length, cities, players, events), and who uploads them."],
@@ -1065,8 +1157,9 @@ const SOON = {
 function setView(v) {
   document.querySelectorAll("#snav button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
   remember();
-  closeLibrary(); closeSoon(); closeAI(); closeHistory(); closeUsage();
+  closeLibrary(); closeSoon(); closeAI(); closeHistory(); closeUsage(); closeAdmin();
   if (v === "photos") libraryPage();
+  else if (v === "people") peoplePage();
   else if (SOON[v]) {
     const box = document.createElement("div"); box.className = "lib"; box.id = "soon";
     box.innerHTML = \`<div class="soon"><div><h2>\${esc(SOON[v][0])}: coming</h2><p>\${esc(SOON[v][1])}</p></div></div>\`;
@@ -1306,11 +1399,16 @@ $("seg").onclick = (e) => { const b = e.target.closest("button"); if (!b) return
 $("new").onclick = async () => { if (!(await leaveUnsaved())) return; closeAI(); aiChat = []; aiChatId = null; cur = blank(); dirty = false; renderList(); renderForm(); $("title").focus(); };
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 (async () => {
-  try { const me = await call("me"); if (me.email) { SIGNED = me; EDITOR = me.email; $("whobtn").title = "Signed in: your changes and AI requests carry this address"; } } catch (e) {}
+  try {
+    const me = await call("me"); ME = me;
+    if (me.email) { SIGNED = me; EDITOR = me.email; $("whobtn").title = "Signed in as " + (me.roles || []).map((r) => (me.role_names || {})[r] || r).join(", ") + ": your changes and AI requests carry this address"; }
+    $("adminbtn").hidden = !(me.can && me.can.people);              // the People view has no tab of its own: it opens from ⚙︎ Admin
+  } catch (e) {}
   paintWho();
   if (!EDITOR) setTimeout(askName, 400);
   try {
     ref = await call("ref");
+    STRUCT = (await call("structure")).structure;
     CITY = Object.fromEntries(ref.cities.map((c) => [c.id, c])); PLAYER = Object.fromEntries(ref.players.map((p) => [p.id, p]));
     await load();
     let saved = "all";
@@ -1319,7 +1417,7 @@ addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.ret
     const h = location.hash, m = h.match(/^#story\\/([a-z]\\d+)$/);
     if (m && stories.find((s) => s.id === m[1])) show(m[1]);
     else if (h === "#new" && readLocal(null)) { cur = blank(); dirty = false; renderList(); renderForm(); offerLocal(null); }
-    else if (/^#(photos|videos|shorts)$/.test(h)) setView(h.slice(1));
+    else if (/^#(photos|videos|shorts)$/.test(h) || (h === "#people" && ME.can && ME.can.people)) setView(h.slice(1));
   } catch (e) { $("main").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
 })();
 </script></body></html>`;

@@ -7,6 +7,9 @@
 //   stories/index.json           what the site lists: the published stories, without article text
 //   stories/<id>.<hash>.json     one article text each
 //   site/…                       profiles and wording (read here only to resolve city and player names)
+//   site/structure.json          the kinds of story and the topics (see structure.js): read here, never written.
+//                                 Producers change ../structure/structure.json in Claude Code; tools/structure.mjs pushes it
+//   desk/people.json             who may use the Content Studio, with their roles (see people.js)
 //   photos/…                     pictures (a new story is given one from photos/course/)
 //
 // The address carries a secret (the DESK_KEY secret of this Worker): /<key>/mcp. Anything else is refused.
@@ -18,10 +21,8 @@ import { editorPage, STUDIO_ICON } from "./editor.js";
 import TIPTAP from "./tiptap.bundle.txt";
 import { scoring } from "./scores.js";
 import { draftWithAI, describePhoto, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
-
-const KINDS = { video: "l", gallery: "m", article: "m", quote: "m", result: "r" };
-const TOPICS = ["league", "city", "mission"];
-const SIZES = ["s", "m", "l", "xl", "p", "r"];
+import { FORMATS, SIZES, TOPIC_STYLES, clean as cleanStructure, kindOf, formatOf, topicOf, editorKinds } from "./structure.js";
+import { ROLES, ROLE_NAMES, can, grantable, mayManage, cleanEmail, validEmail, rolesOf, startingPeople } from "./people.js";
 const SITE_ROOT = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev";
 const SITE = SITE_ROOT + "/#3";
 const RECORDS = "desk/stories.json";
@@ -74,6 +75,9 @@ const paras = (text) => text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolea
 const nowIso = () => new Date().toISOString().slice(0, 19);
 const isLive = (s) => (s.status || "published") === "published";
 const fail = (message) => { throw new Error(message); };
+const STRUCTURE = "site/structure.json", PEOPLE = "desk/people.json";
+async function readStructure(env) { const { data, etag } = await readJson(env, STRUCTURE); return { structure: cleanStructure(data), etag: etag || null, stored: !!data }; }
+async function readPeople(env) { const { data, etag } = await readJson(env, PEOPLE); return { people: data || startingPeople(env), etag: etag || null }; }
 
 /* ------------------------------------------------------------------ the store */
 
@@ -249,11 +253,12 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
   const n = Math.max(0, ...stories.filter((s) => /^d\d+$/.test(s.id)).map((s) => parseInt(s.id.slice(1), 10))) + 1;
   const id = "d" + String(n).padStart(3, "0");
   const kind = a.kind;
+  const { structure } = await readStructure(env), topicAuthor = (topicOf(structure, a.topic) || {}).author;
   const story = {
     id, status: "draft", kind, topic: a.topic, at: a.at || now,
-    author: a.author || (cids.length === 1 ? `${ref.city[cids[0]].name} desk` : a.topic === "mission" ? "Legacy League · Mission" : "Legacy League"),
+    author: a.author || (cids.length === 1 ? `${ref.city[cids[0]].name} desk` : topicAuthor || "Legacy League"),
     title: a.title.trim(), dek: (a.dek || "").trim(), cities: cids, players: pids, events: a.eventIds || [], likes: 0, comments: 0,
-    size: a.size || KINDS[kind], photo: a.photo_url || (await pickPhoto(env, id + a.title)),
+    size: a.size || (kindOf(structure, kind) || {}).size || "m", photo: a.photo_url || (await pickPhoto(env, id + a.title)),
     created_by: by, created_at: nowIso(),
   };
   if (!a.photo_url) story.photo_auto = true;                 // a library photo, until the article gives one
@@ -261,7 +266,7 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
   adoptFirstPhoto(story);
   if (a.dur) story.dur = a.dur;
   if (a.count) story.count = a.count;
-  if (kind === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
+  if (formatOf(structure, kind) === "gallery") story.photos = [story.photo, await pickPhoto(env, id + "b"), await pickPhoto(env, id + "c")];
   stories.push(story);
   return story;
 }
@@ -305,6 +310,7 @@ const lookups = (env) => ({
         captain: ref.player[c.captain] ? ref.player[c.captain].name : null, charity: c.charity })),
       events: (site.schedule || []).map((e) => ({ id: e.id, name: e.name, venue: e.venue, start: e.start, end: e.end, status: e.status })),
       rules: site.rules, scores_at: { event: feed.event.name, course_time: clock },
+      ...(await structureForClaude(env)),
     };
   },
   async findPlayers(query, city) {
@@ -326,6 +332,14 @@ const lookups = (env) => ({
   },
   async getStory(id) { return find((await readJson(env, RECORDS)).data || [], id); },
 });
+
+const structureForClaude = async (env) => {
+  const { structure } = await readStructure(env);
+  return {
+    kinds: editorKinds(structure).map((k) => ({ id: k.id, name: k.label, format: k.format, needs: k.format === "video" ? "dur" : k.format === "gallery" ? "count" : undefined })),
+    topics: structure.topics.map((t) => ({ id: t.id, name: t.label })),
+  };
+};
 
 /* ------------------------------------------------------------------ the tools */
 
@@ -368,6 +382,18 @@ function createServer(env, door) {
     inputSchema: z.object({ status: z.string().default("all"), limit: z.number().int().default(30) }),
   }, tool(({ status, limit }) => look.listStories(status, limit)));
 
+  server.registerTool("get_structure", {
+    description: "The content structure: the kinds of story (each built on a format: " + Object.keys(FORMATS).join(", ") +
+      ") and the topics, with how many stories use each. Read-only: producers change it in the repo " +
+      "(structure/structure.json, pushed with hosted-desk/tools/structure.mjs), never through the Desk.",
+    inputSchema: z.object({}),
+  }, tool(async () => {
+    const { structure } = await readStructure(env);
+    const stories = (await readJson(env, RECORDS)).data || [];
+    const use = (field) => stories.reduce((m, x) => ((m[x[field]] = (m[x[field]] || 0) + 1), m), {});
+    return { structure, formats: FORMATS, sizes: SIZES, topic_styles: TOPIC_STYLES, used: { kinds: use("kind"), topics: use("topic") } };
+  }));
+
   server.registerTool("get_story", {
     description: "One story in full: every field, the article text, and its photo (with photo_credit when the editor gave one).",
     inputSchema: z.object({ id: z.string() }),
@@ -378,9 +404,9 @@ function createServer(env, door) {
       "Create a DRAFT story. body = the article text, paragraphs separated by blank lines (2–4 short paragraphs; the " +
       "body may use only: '## ' subheadings, **bold**, *italic*, [words](https://…) links, '- ' or '1. ' lists, and " +
       "photos as their own paragraph in the form photo_inbox gives (photo_upload_link with place=article); the " +
-      "collage shows title + dek, the reader shows the body). kind: video | gallery | article | quote. Cities and " +
+      "collage shows title + dek, the reader shows the body). kind and topic: ids from league_reference (kinds, topics). Cities and " +
       "players may be names or ids. events = the league events the story is about, names or ids (e.g. Mayakoba); " +
-      "leave out for a story not about an event. video needs dur (\"2:14\"); gallery needs count. Without photo_url a golf photo " +
+      "leave out for a story not about an event. A kind with the video format needs dur (\"2:14\"); gallery format needs count. Without photo_url a golf photo " +
       "from the library is picked. at = ISO time in the demo's event timeline (default: the demo's current time, " +
       "shows as \"just now\"). A draft is not public until publish_story.",
     inputSchema: z.object({
@@ -392,11 +418,13 @@ function createServer(env, door) {
     }),
   }, tool(async (a) => {
     const kind = a.kind.trim().toLowerCase();
-    if (!KINDS[kind] || kind === "result") fail("kind must be video, gallery, article or quote");
-    if (!TOPICS.includes(a.topic)) fail(`topic must be one of ${TOPICS.join(", ")}`);
+    const { structure } = await readStructure(env), kinds = editorKinds(structure);
+    if (!kinds.some((k) => k.id === kind)) fail(`kind must be one of ${kinds.map((k) => k.id).join(", ")}`);
+    if (!topicOf(structure, a.topic)) fail(`topic must be one of ${structure.topics.map((t) => t.id).join(", ")}`);
     if (a.size && !SIZES.includes(a.size)) fail(`size must be one of ${SIZES.join(", ")}`);
-    if (kind === "video" && !a.dur) fail("a video needs dur, e.g. '2:14'");
-    if (kind === "gallery" && !a.count) fail("a gallery needs count");
+    const format = formatOf(structure, kind);
+    if (format === "video" && !a.dur) fail("a video needs dur, e.g. '2:14'");
+    if (format === "gallery" && !a.count) fail("a gallery needs count");
     const ref = await reference(env);
     const cids = (a.cities || []).map(ref.cityId), pids = (a.players || []).map(ref.playerId);
     for (const pid of pids) if (!cids.includes(ref.player[pid].city)) cids.push(ref.player[pid].city);
@@ -681,11 +709,52 @@ async function storePhoto(env, request, prefix) {
    the story in between, the save is refused and the editor reloads, so nobody's work is silently lost. */
 const stampOf = async (s) => (await sha1(JSON.stringify(s))).slice(0, 12);
 class Conflict extends Error {}
-async function editorApi(request, env, path, signedIn) {
+async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
   const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   // who is working: the checked Cloudflare Access email when the Studio has sign-in, until then the name the editor gave
   const who = (signedIn || header(request, "x-editor", 60) || "editor").trim();
-  if (request.method === "GET" && path === "me") return json({ email: signedIn || null, signout: signedIn ? "/cdn-cgi/access/logout" : null });
+  if (request.method === "GET" && path === "me") return json({ email: signedIn || null, signout: signedIn ? "/cdn-cgi/access/logout" : null,
+    roles, role_names: ROLE_NAMES, can: { people: can.people(roles) }, grantable: grantable(roles) });
+  const refuse = (what) => json({ error: `Your role does not allow ${what}.` }, 403);
+  if (!can.content(roles)) return refuse("using the Studio");
+
+  // the structure (kinds and topics), for the Studio's menus. Read-only: it is changed in the repo, not here.
+  if (request.method === "GET" && path === "structure") return json({ structure: (await readStructure(env)).structure });
+
+  // the people: the super admin sees and changes everyone; a producer adds and changes producers and editors
+  if (path === "people") {
+    if (!can.people(roles)) return refuse("managing people");
+    const view = (list) => list.map((x) => ({ ...x, can_change: mayManage(roles, x.roles) && x.email !== signedIn }));
+    if (request.method === "GET") { const { people } = await readPeople(env); return json({ people: view(people), roles: ROLES, role_names: ROLE_NAMES, grantable: grantable(roles), me: signedIn }); }
+    try {
+      const b = await request.json();
+      const email = cleanEmail(b.email), mine = grantable(roles);
+      if (!validEmail(email)) fail("That is not an email address.");
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const { people, etag } = await readPeople(env);
+        const list = people.slice(), i = list.findIndex((x) => x.email === email), had = i >= 0 ? list[i] : null;
+        if (had && !mayManage(roles, had.roles)) fail(`You cannot change ${email}: their role is above yours.`);
+        if (email === signedIn) fail("You cannot change or remove yourself. Ask the super admin.");
+        if (b.action === "remove") {
+          if (!had) fail("That person is not on the list.");
+          list.splice(i, 1);
+        } else {
+          const give = [...new Set((b.roles || []).filter((r) => ROLES.includes(r)))];
+          if (!give.length) fail("Give the person at least one role.");
+          const not = give.filter((r) => !mine.includes(r));
+          if (not.length) fail(`You cannot give the role ${not.map((r) => ROLE_NAMES[r]).join(", ")}.`);
+          const row = { ...(had || { added_by: who, added_at: nowIso() }), email, name: String(b.name || "").trim().slice(0, 60), roles: ROLES.filter((r) => give.includes(r)), changed_by: who, changed_at: nowIso() };
+          if (had) list[i] = row; else list.push(row);
+        }
+        if (!list.some((x) => x.roles.includes("superadmin"))) fail("Keep at least one super admin.");
+        const saved = await env.CONTENT.put(PEOPLE, JSON.stringify(list), { httpMetadata: { contentType: "application/json" }, ...(etag ? { onlyIf: { etagMatches: etag } } : {}) });
+        if (!saved) continue;
+        const access = await syncAccess(env, list);
+        return json({ ok: true, people: view(list), access });
+      }
+      fail("The list was being changed by someone else at the same moment. Try again.");
+    } catch (e) { return json({ error: e.message }, 400); }
+  }
   const withStamp = async (s) => ({ ...s, stamp: await stampOf(s), url: s.slug && isLive(s) ? `${SITE_ROOT}/stories/${s.slug}` : null });
   try {
     if (request.method === "GET" && path === "stories") {
@@ -797,14 +866,16 @@ async function editorApi(request, env, path, signedIn) {
       const ref = await reference(env);
       const kind = String(f.kind || "").trim();
       if (!f.title || !f.title.trim()) fail("A story needs a headline.");
-      if (!b.id && (!KINDS[kind] || kind === "result")) fail("Kind must be article, video, gallery or quote.");
-      if (f.topic && !TOPICS.includes(f.topic)) fail(`Topic must be one of ${TOPICS.join(", ")}.`);
-      if (kind === "video" && !f.dur) fail("A video needs its length, e.g. 2:14.");
+      const { structure } = await readStructure(env), kinds = editorKinds(structure);
+      if (!b.id && !kinds.some((k) => k.id === kind)) fail(`Kind must be one of: ${kinds.map((k) => k.label).join(", ")}.`);
+      if (f.topic && !topicOf(structure, f.topic)) fail(`Topic must be one of: ${structure.topics.map((t) => t.label).join(", ")}.`);
+      const format = formatOf(structure, kind);
+      if (format === "video" && !f.dur) fail("A video needs its length, e.g. 2:14.");
       // a gallery's photos, in order, from the store (the Studio sends them); the count follows, the first is the cover
       const gallery = Array.isArray(f.photos) ? f.photos.filter((x) => typeof x === "string" && /^content\/photos\/[\w./-]+$/.test(x)).slice(0, 60) : null;
-      if (kind === "gallery" && gallery && gallery.length < 2) fail("A gallery needs at least two photos.");
-      if (kind === "gallery" && !gallery && !f.count) fail("A gallery needs its number of pictures.");
-      const lib = kind === "gallery" && gallery ? (await readJson(env, LIBRARY)).data || [] : [];
+      if (format === "gallery" && gallery && gallery.length < 2) fail("A gallery needs at least two photos.");
+      if (format === "gallery" && !gallery && !f.count) fail("A gallery needs its number of pictures.");
+      const lib = format === "gallery" && gallery ? (await readJson(env, LIBRARY)).data || [] : [];
       const setGallery = (s) => {
         s.photos = [...new Set(gallery)]; s.count = s.photos.length;
         if (s.photo !== s.photos[0]) {
@@ -823,13 +894,14 @@ async function editorApi(request, env, path, signedIn) {
           const st = await makeDraft(env, list, { ...f, kind, topic: f.topic || "league", eventIds, photo_url: main }, cids, pids, ref, now, who);
           if (main && f.photo_w && f.photo_h) { st.photo_w = +f.photo_w; st.photo_h = +f.photo_h; }
           if (main && typeof f.photo_credit === "string" && f.photo_credit.trim()) st.photo_credit = f.photo_credit.trim().slice(0, 120);
-          if (kind === "gallery" && gallery) setGallery(st);
+          if (format === "gallery" && gallery) setGallery(st);
           linkChat(st, b.ai_chat);
           return st;
         }
         const s = find(list, b.id);
         await check(s);
-        if (KINDS[kind] && kind !== "result" && s.kind !== "result") s.kind = kind;
+        if (kinds.some((k) => k.id === kind) && formatOf(structure, s.kind) !== "result") s.kind = kind;
+        const fmt = formatOf(structure, s.kind);
         if (f.topic) s.topic = f.topic;
         s.title = f.title.trim();
         s.dek = (f.dek || "").trim();
@@ -838,8 +910,8 @@ async function editorApi(request, env, path, signedIn) {
         if (f.at) s.at = f.at;
         const body = paras(f.body || "");
         if (body.length) s.body = body; else delete s.body;
-        if (s.kind === "video") s.dur = f.dur; else delete s.dur;
-        if (s.kind === "gallery") { if (gallery) setGallery(s); else s.count = +f.count; } else { delete s.count; delete s.photos; }
+        if (fmt === "video") s.dur = f.dur; else delete s.dur;
+        if (fmt === "gallery") { if (gallery) setGallery(s); else s.count = +f.count; } else { delete s.count; delete s.photos; }
         if (f.photo && /^content\/photos\//.test(f.photo) && f.photo !== s.photo) {     // "Use as main photo"
           s.photo = f.photo; delete s.photo_auto; delete s.photo_credit;
           if (f.photo_w && f.photo_h) { s.photo_w = +f.photo_w; s.photo_h = +f.photo_h; } else { delete s.photo_w; delete s.photo_h; }
@@ -1126,6 +1198,31 @@ async function accessUser(request, env) {
   } catch (e) { return refused; }
 }
 
+/* signed in, but not on the people list */
+function notListed(rest, email) {
+  const text = `${email} is not on the Content Studio's list. Ask the super admin or a producer to add you, then reload.`;
+  if (rest.startsWith("/editor/api/")) return new Response(JSON.stringify({ error: text }), { status: 403, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Content Studio</title>${STUDIO_ICON}
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0f11;color:#e9eef0;font:16px/1.5 -apple-system,system-ui,sans-serif">
+<main style="max-width:440px;padding:24px"><h1 style="font-size:20px">Not on the list yet</h1><p style="color:#9aa7ab">${esc(text)}</p>
+<p><a style="color:#d9ad4e" href="/cdn-cgi/access/logout">Sign out</a></p></main></body>`, { status: 403, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
+/* Keep the Cloudflare Access sign-in rule ("Content Studio editors") the same as the people list, so a person added
+   here can sign in and one removed cannot. Needs the Worker secret CF_API_TOKEN (an account token limited to Access)
+   and the vars CF_ACCOUNT_ID and ACCESS_POLICY_ID. Without them the list still works; the rule is then kept by hand. */
+async function syncAccess(env, people) {
+  if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID || !env.ACCESS_POLICY_ID)
+    return { ok: false, note: "Cloudflare sign-in is not updated from here: add or remove the address in Zero Trust → Access → Policies as well." };
+  const emails = [...new Set(people.map((p) => p.email))];
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/access/policies/${env.ACCESS_POLICY_ID}`, {
+    method: "PUT", headers: { authorization: `Bearer ${env.CF_API_TOKEN}`, "content-type": "application/json" },
+    body: JSON.stringify({ name: "Content Studio editors", decision: "allow", session_duration: "24h", include: emails.map((email) => ({ email: { email } })) }),
+  }).catch((e) => null);
+  const j = r ? await r.json().catch(() => ({})) : {};
+  return r && r.ok && j.success ? { ok: true } : { ok: false, note: "The list is saved, but Cloudflare's sign-in rule could not be updated" + (j.errors && j.errors[0] ? ` (${j.errors[0].message})` : "") + ". Update it in Zero Trust → Access → Policies." };
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -1137,14 +1234,20 @@ export default {
     for (let i = 0; i < key.length; i++) diff |= key.charCodeAt(i) ^ env.DESK_KEY.charCodeAt(i);
     if (diff) return new Response("Not found", { status: 404 });
     // the pages people open (the Studio and the photo pages) need a Cloudflare Access sign-in once it is configured
-    let signedIn = null;
+    let signedIn = null, roles = [];
     if (rest.startsWith("/photo/") || rest.startsWith("/editor")) {
       const a = await accessUser(request, env);
       if (a.error) return new Response(a.error, { status: 403, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
       signedIn = a.email || null;
+      // the roles come from the people list; without sign-in (a local copy) everyone is an editor, unless DEV_ROLES
+      // is set, when the name sent as x-editor is looked up instead, for testing
+      const { people } = await readPeople(env);
+      roles = signedIn ? rolesOf(people, signedIn) : env.DEV_ROLES ? rolesOf(people, header(request, "x-editor", 120)) : [];
+      if (!signedIn && !roles.length) roles = ["editor"];
+      if (!roles.length) return notListed(rest, signedIn);
     }
     if (rest.startsWith("/photo/")) return photoRoute(request, env, rest.slice("/photo/".length), signedIn);
-    if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length), signedIn);
+    if (rest.startsWith("/editor/api/")) return editorApi(request, env, rest.slice("/editor/api/".length), signedIn, roles);
     if (rest === "/editor/app.js") return new Response(TIPTAP, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-cache" } });
     if (rest === "/editor") return new Response(editorPage(SITE_ROOT), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex", "referrer-policy": "no-referrer" } });
     const door = `${url.origin}/${key}`;

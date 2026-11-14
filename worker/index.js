@@ -107,7 +107,7 @@ export default {
     h.set("X-Robots-Tag", "noindex");
     h.set("Access-Control-Allow-Origin", "*");   // the app's page lives at its own address and reads the store from there
     // the index is checked on every visit; an article text never changes under its name; photos keep for a day
-    h.set("Cache-Control", key.endsWith("index.json") ? "no-cache"
+    h.set("Cache-Control", key.endsWith("index.json") || key === "site/structure.json" ? "no-cache"
       : /\.[0-9a-f]{8}\.json$/.test(key) ? "public, max-age=31536000, immutable" : "public, max-age=86400");
     return new Response(request.method === "HEAD" ? null : obj.body, { headers: h });
   },

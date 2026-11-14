@@ -1,0 +1,60 @@
+{
+  "kinds": [
+    {
+      "id": "video",
+      "format": "video",
+      "label": "Video",
+      "filter_label": "Video",
+      "size": "l",
+      "filter": true
+    },
+    {
+      "id": "gallery",
+      "format": "gallery",
+      "label": "Gallery",
+      "filter_label": "Galleries",
+      "size": "m",
+      "filter": true
+    },
+    {
+      "id": "article",
+      "format": "text",
+      "label": "News",
+      "filter_label": "News",
+      "size": "m",
+      "filter": true
+    },
+    {
+      "id": "quote",
+      "format": "quote",
+      "label": "Mission",
+      "size": "m",
+      "filter": false
+    },
+    {
+      "id": "result",
+      "format": "result",
+      "label": "Live result",
+      "size": "r",
+      "filter": false
+    }
+  ],
+  "topics": [
+    {
+      "id": "league",
+      "label": "League"
+    },
+    {
+      "id": "city",
+      "label": "City"
+    },
+    {
+      "id": "mission",
+      "label": "Mission",
+      "filter": true,
+      "badge": true,
+      "style": "mission",
+      "author": "Legacy League · Mission"
+    }
+  ]
+}
