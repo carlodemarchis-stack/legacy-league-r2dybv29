@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.20.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first
+export const STUDIO_VERSION = "0.21.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -189,14 +189,17 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .photo img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;display:block;background:#000}
 .photo .btn{margin-top:8px}
 .mainwrap{position:relative}
-.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:2px 0 8px}
-.gal figure{margin:0;position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--line)}
+.gal{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}
+.gal figure{margin:0;position:relative;width:128px;height:128px;flex:none;border-radius:10px;overflow:hidden;background:var(--line)}
+.gal .gadd{width:128px;height:128px;flex:none;border:1.5px dashed var(--line);border-radius:10px;background:none;color:var(--dim);font:300 44px/1 inherit;cursor:pointer}
+.gal .gadd:hover{border-color:var(--acc);color:var(--acc)}
+.coverph{display:grid;place-items:center;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:16px}
+#coverwrap img{display:block;width:100%;border-radius:10px}
 .gal img{width:100%;height:100%;object-fit:cover;display:block}
 .gal .gb{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:10px 2px 2px}
 .gal .gb button{background:none;border:0;color:#fff;cursor:pointer;font:inherit;font-size:13px;padding:2px 7px}.gal .gb button:disabled{opacity:.3;cursor:default}
 .gal figure.cover::after{content:"Cover";position:absolute;top:5px;left:5px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--acc);color:var(--on-acc);padding:1px 7px;border-radius:999px}
-.galempty{border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:18px 12px;margin:2px 0 8px}
-.galbtns{display:flex;gap:6px;flex-wrap:wrap}
+
 .mainwrap .mainph{display:grid;place-items:center;aspect-ratio:16/10;border:1px dashed var(--line);border-radius:10px;color:var(--dim);font-size:12px;text-align:center;padding:16px}
 .mainwrap .ph-more.lone{position:static;margin-top:8px;width:auto;padding:0 12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:12px}
 .photo.drop img{outline:3px dashed var(--acc);outline-offset:3px}
@@ -370,6 +373,8 @@ function renderForm(msg) {
   </div>
   <div class="form">
     <div>
+      <div class="f" id="galrow" hidden><label>Gallery photos</label><div id="galgrid"></div><input type="file" id="galfile" accept="image/*" multiple hidden>
+        <div class="hint">In the order fans see them: use the arrows to move a photo. The first is the cover. At least two.</div></div>
       <div class="f"><label for="title">Headline</label><input id="title" value="\${esc(s.title)}">\${/\{(p0|c0|author)\}/.test(s.title) ? \`<div class="hint">Shows on the site as: \${esc(shown(s, s.title))}</div>\` : ""}</div>
       <div class="f"><label for="dek">Summary</label><textarea id="dek" rows="2">\${esc(s.dek)}</textarea><div class="hint">One or two sentences, shown under the headline on the tile and in the reader.</div></div>
       <div class="f"><label>Article</label><div class="rte"><div class="tb" id="tb">
@@ -382,7 +387,7 @@ function renderForm(msg) {
         <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button for the library, or paste or drop a picture). The site and the app set the style.</div></div>
     </div>
     <div>
-      <div class="f photo" id="mainblock"><label>Main photo</label>
+      <div class="f photo" id="mainblock"><label id="mainlabel">Main photo</label><div id="coverwrap" hidden></div>
         <div class="mainwrap" id="mainwrap">\${s.photo ? \`<img id="mainpic" src="\${esc(pic(s.photo))}" alt="">\` : '<div class="mainph" id="mainph">A golf photo from the library is given to a new story when it is saved.</div>'}
           <button type="button" class="ph-more" id="mainmore" title="Main photo options" onclick="mainMenu(this)">⋯</button></div>
         \${s.photo_auto || !s.id ? '<div class="hint" id="mainauto">Picked from the library. The first photo you add to the article takes its place.</div>' : ""}
@@ -765,26 +770,38 @@ function mainFromPhoto() {
 }
 function paintKind() {
   const k = $("kind").value, s = cur;
-  if ($("mainblock")) $("mainblock").hidden = k === "gallery";
-  $("kindx").innerHTML = k === "video" ? \`<label for="dur">Video length</label><input id="dur" value="\${esc(s.dur || "")}" placeholder="2:14">\` :
-    k === "gallery" ? \`<label>Gallery photos</label><div id="galgrid"></div>
-      <div class="galbtns"><button type="button" class="btn" onclick="galFromLibrary()">+ From the library</button><button type="button" class="btn" onclick="$('galfile').click()">+ Upload photos</button>
-      <input type="file" id="galfile" accept="image/*" multiple hidden></div>
-      <div class="hint">In the order fans see them. The first is the cover, on the tile and in link previews. At least two.</div>\` : "";
+  const gal = k === "gallery";
+  // a gallery: its photos across the top of the middle column, the right column shows its cover (the first photo)
+  $("galrow").hidden = !gal; $("coverwrap").hidden = !gal; $("mainlabel").textContent = gal ? "Cover" : "Main photo";
+  ["mainwrap", "mainauto", "maincredit"].forEach((id) => { if ($(id)) $(id).hidden = gal; });
+  $("kindx").innerHTML = k === "video" ? \`<label for="dur">Video length</label><input id="dur" value="\${esc(s.dur || "")}" placeholder="2:14">\` : "";
   ["dur"].forEach((id) => $(id) && $(id).addEventListener("input", touch));
-  if (k === "gallery") {
-    if (!cur.gallery) cur.gallery = (s.photos && s.photos.length ? s.photos : s.photo ? [s.photo] : []).slice();
+  if (gal) {
+    if (!cur.gallery) cur.gallery = (s.kind === "gallery" && s.photos && s.photos.length ? s.photos : []).slice();
     $("galfile").onchange = (e) => { const files = [...e.target.files]; e.target.value = ""; galUpload(files); };
     paintGallery();
   }
 }
+/* the + tile: from the library, or upload several at once */
+function galAddMenu(btn) {
+  closePhotoMenu();
+  const r = btn.getBoundingClientRect();
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = '<button type="button" data-a="lib">Choose from the library</button><button type="button" data-a="up">Upload photos</button>';
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; closePhotoMenu(); if (b.dataset.a === "lib") galFromLibrary(); else $("galfile").click(); };
+}
 /* the gallery's photos, in order: move them left or right, take one out, add from the library or upload several at once */
 function paintGallery() {
   const g = cur.gallery || [], el = $("galgrid"); if (!el) return;
-  el.innerHTML = g.length ? \`<div class="gal">\${g.map((src, i) => \`<figure class="\${i ? "" : "cover"}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
+  el.innerHTML = \`<div class="gal">\${g.map((src, i) => \`<figure class="\${i ? "" : "cover"}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
       <button type="button" title="Move earlier" onclick="galMove(\${i},-1)" \${i ? "" : "disabled"}>←</button><button type="button" title="Take out of the gallery" onclick="galDrop(\${i})">✕</button>
-      <button type="button" title="Move later" onclick="galMove(\${i},1)" \${i < g.length - 1 ? "" : "disabled"}>→</button></div></figure>\`).join("")}</div>\`
-    : '<div class="galempty">No photos yet. Add them from the library or upload them.</div>';
+      <button type="button" title="Move later" onclick="galMove(\${i},1)" \${i < g.length - 1 ? "" : "disabled"}>→</button></div></figure>\`).join("")}
+    <button type="button" class="gadd" title="Add photos" onclick="galAddMenu(this)">+</button></div>\`;
+  $("coverwrap").innerHTML = g.length ? \`<img src="\${esc(pic(g[0]))}" alt=""><div class="hint">The first gallery photo. Move another photo first to change it.</div>\`
+    : '<div class="coverph">The first photo you add to the gallery becomes the cover.</div>';
 }
 function galMove(i, d) { const g = cur.gallery, j = i + d; if (j < 0 || j >= g.length) return; [g[i], g[j]] = [g[j], g[i]]; paintGallery(); touch(); }
 function galDrop(i) { cur.gallery.splice(i, 1); paintGallery(); touch(); }
