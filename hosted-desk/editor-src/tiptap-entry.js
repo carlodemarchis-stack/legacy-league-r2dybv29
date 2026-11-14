@@ -7,9 +7,11 @@
 //   1. one / 2. two          a numbered list, one item per line
 //   **bold**  *italic*  [words](https://…)
 //   ![alt text](content/photos/…#1280x853 "Caption")   a photo from the league's store, a block of its own
+//   https://www.youtube.com/watch?v=…                   an embed: a block that is only a link to YouTube, X… (embeds.js)
 // Nothing else exists: whatever else is pasted in is reduced to these.
 
-import { Editor } from "@tiptap/core";
+import { Editor, Node } from "@tiptap/core";
+import { embedOf } from "../src/embeds.js";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -51,6 +53,49 @@ const Photo = Image.extend({
   },
 }).configure({ inline: false, allowBase64: false });
 
+/* An embed: a card in the editor (picture, provider, title) standing for the player the site shows.
+   Its title and picture come from the Desk: setEmbeds(map) gives those already known for the story,
+   setEmbedLookup(fn) how to ask for a new one. ⋯ opens the page's embed menu. */
+let EMBED_META = {}, EMBED_LOOKUP = null;
+export const setEmbeds = (m) => { EMBED_META = { ...(m || {}) }; };
+export const setEmbedLookup = (fn) => { EMBED_LOOKUP = fn; };
+export const embedLink = (u) => embedOf(u);
+const Embed = Node.create({
+  name: "embed", group: "block", atom: true, draggable: true, selectable: true,
+  addAttributes() { return { url: { default: null } }; },
+  parseHTML() { return [{ tag: "div[data-embed]", getAttrs: (el) => (embedOf(el.getAttribute("data-embed")) ? { url: el.getAttribute("data-embed") } : false) }]; },
+  renderHTML({ node }) { return ["div", { "data-embed": node.attrs.url }]; },
+  addNodeView() {
+    return ({ node, getPos }) => {
+      const box = document.createElement("div"); box.className = "emb"; box.contentEditable = "false";
+      const pic = document.createElement("div"), txt = document.createElement("div"), more = document.createElement("button");
+      pic.className = "emb-pic"; txt.className = "emb-txt";
+      more.type = "button"; more.className = "ph-more"; more.textContent = "⋯"; more.title = "Embed options";
+      more.addEventListener("mousedown", (e) => e.preventDefault());
+      more.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const r = more.getBoundingClientRect();
+        window.dispatchEvent(new CustomEvent("embed-menu", { detail: { pos: getPos(), url: node.attrs.url, x: r.right, y: r.bottom } }));
+      });
+      box.append(pic, txt, more);
+      const paint = (url) => {
+        const e = embedOf(url) || { name: "Link" }, m = EMBED_META[url] || {};
+        pic.style.backgroundImage = m.thumb ? `url("${m.thumb.replace(/"/g, "%22")}")` : "";
+        pic.textContent = m.thumb ? "" : "▶";
+        txt.innerHTML = `<small>${esc(e.name)}${m.author ? " · " + esc(m.author) : ""}</small><b>${esc(m.title || url)}</b><span>${esc(url)}</span>`;
+      };
+      paint(node.attrs.url);
+      if (!EMBED_META[node.attrs.url] && EMBED_LOOKUP)
+        EMBED_LOOKUP(node.attrs.url).then((m) => { if (m) { EMBED_META[node.attrs.url] = m; paint(node.attrs.url); } }).catch(() => {});
+      return { dom: box, update: (n) => { if (n.type !== node.type) return false; node = n; paint(n.attrs.url); return true; } };
+    };
+  },
+});
+export const insertEmbed = (editor, url, at) => {
+  const node = { type: "embed", attrs: { url } };
+  return at == null ? editor.chain().focus().insertContent(node).run() : editor.chain().focus().insertContentAt(at, node).run();
+};
+
 export const okUrl = (u) => /^(https:\/\/|mailto:|\/stories\/)/.test(u || "");
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -68,6 +113,7 @@ export function inlineHtml(text) {
 }
 const BULLET = /^[-*]\s+/, NUMBER = /^\d+[.)]\s+/;
 export function blockHtml(b) {
+  if (embedOf(String(b).trim())) return `<div data-embed="${esc(String(b).trim())}"></div>`;
   const im = String(b).trim().match(IMG);
   if (im) return `<img src="${esc(SITE + "/" + im[2] + (im[3] || ""))}" alt="${esc(im[1])}" title="${esc(im[4] || "")}">`;
   const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -115,6 +161,7 @@ function items(list) {
 }
 export function toMd(doc) {
   return (doc.content || []).map((b) => {
+    if (b.type === "embed") return embedOf(b.attrs.url) ? b.attrs.url : null;
     if (b.type === "image") { const path = toPath(b.attrs.src); return path ? photoMd(path, b.attrs.alt, b.attrs.title) : null; }
     if (b.type === "bulletList") return items(b).map((t) => "- " + t).join("\n") || null;
     if (b.type === "orderedList") return items(b).map((t, i) => `${i + 1}. ${t}`).join("\n") || null;
@@ -135,6 +182,13 @@ export function makeEditor(element, blocks, onChange, site, onFiles, onNotice) {
   return new Editor({
     editorProps: {
       handlePaste(view, event) {
+        // a link to YouTube, X… pasted on an empty line becomes an embed; anywhere else it stays a link in the text
+        const text = ((event.clipboardData && event.clipboardData.getData("text/plain")) || "").trim(), { $from } = view.state.selection;
+        if (embedOf(text) && $from.parent.type.name === "paragraph" && !$from.parent.content.size) {
+          event.preventDefault();
+          view.dispatch(view.state.tr.replaceWith($from.before(), $from.after(), view.state.schema.nodes.embed.create({ url: text })));
+          return true;
+        }
         const files = imageFiles(event.clipboardData);
         if (files.length && onFiles) { event.preventDefault(); onFiles(files, null); return true; }
         if (foreignImages(event.clipboardData) && onNotice) onNotice("Pictures from other websites are left out. Copy the image itself, or use the Photo button.");
@@ -152,7 +206,7 @@ export function makeEditor(element, blocks, onChange, site, onFiles, onNotice) {
     element,
     extensions: [
       Document, Text, Paragraph, Heading.configure({ levels: [2] }), Bold, Italic, UndoRedo,
-      BulletList, OrderedList, ListItem, ListKeymap, Photo,
+      BulletList, OrderedList, ListItem, ListKeymap, Photo, Embed,
       Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true, defaultProtocol: "https",
         protocols: ["mailto"], isAllowedUri: (url) => okUrl(url), HTMLAttributes: { rel: "noopener", target: null } }),
       Placeholder.configure({ placeholder: "Write the article. Subheadings, bold, italic, links, lists and photos are all it can hold." }),

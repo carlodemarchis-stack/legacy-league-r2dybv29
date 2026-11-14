@@ -35,6 +35,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:300;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select{font:inherit;color:inherit}
+/* iOS zooms into a text field under 16px when it gets the keyboard, and leaves the page zoomed and shifted after.
+   On touch screens every field is 16px, so it never zooms. */
+@media (pointer:coarse){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important}}
 [hidden]{display:none!important}
 a{color:var(--acc-ink);text-decoration:none}
 
@@ -356,6 +359,22 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .res span{font-size:12.5px;color:var(--dim);line-height:1.4}
 
 /* ------------------------------------------------------------- chrome */
+/* embeds in an article: the provider's player, or a card until the fan says yes (or while offline) */
+.emb{margin:22px 0}
+.emb .emb-frame{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000}
+.emb .emb-frame iframe{display:block;width:100%;height:100%;border:0}
+.emb.wide .emb-frame{aspect-ratio:16/9}
+.emb.tall .emb-frame{aspect-ratio:9/16;max-width:340px;margin:0 auto}
+.emb.post .emb-frame{height:640px;max-width:550px;margin:0 auto;background:transparent}
+.emb.audio .emb-frame{height:152px}.emb.audiolist .emb-frame{height:352px}
+.emb .emb-src{display:block;margin-top:6px;font-size:12px;color:var(--dim);text-decoration:none;text-align:right}
+.emb.card{display:flex;gap:14px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(var(--veil),.04)}
+.emb.card .emb-pic{flex:none;width:132px;aspect-ratio:16/9;border-radius:9px;background:#000 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-size:22px}
+.emb.card .emb-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+.emb.card small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.emb.card b{font-size:15px;line-height:1.35}
+.emb.card .emb-note{font-size:12px;color:var(--dim)}
+.emb.card .emb-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 #offpill{position:fixed;z-index:45;left:50%;transform:translateX(-50%);padding:6px 13px;border-radius:999px;font-size:12px;font-weight:600;
   letter-spacing:.04em;background:rgba(20,24,28,.92);color:#f2c94c;border:1px solid rgba(242,201,76,.45);box-shadow:0 6px 20px rgba(0,0,0,.35);white-space:nowrap;pointer-events:none}
 #offpill[hidden]{display:none}
@@ -1184,6 +1203,7 @@ function paintBody(s) {
   if (s.body_ref && !s.body) { el.innerHTML = ""; return loadBody(s); }
   const paras = L(s, "body");
   el.innerHTML = (paras && paras.length ? paras : [L(s, "dek")]).map(p => mdBlock(fill(p, s))).join("");
+  paintEmbeds(el, s.embeds);
 }
 /* An article holds a little Markdown, written in the editor or by Claude: "## " subheadings, "- " and "1. " lists,
    **bold**, *italic* and [words](address). Nothing else becomes formatting, and the style is the site's own.
@@ -1204,7 +1224,53 @@ function mdInline(text) {
     return `<a href="${url}" target="_blank" rel="noopener">${marks(label)}</a>`;
   });
 }
+/* EMBEDS: a paragraph that is only a link to one of these becomes its player (a copy of hosted-desk/src/embeds.js,
+   players only; keep the two in step). YouTube's privacy mode sets no cookies until it plays, so it loads at once.
+   The others set their own cookies, so they wait for the fan's yes: "Show" for one, "Always show" for all, kept on
+   this device (ll.embeds). Offline the app shows a card instead. Titles and pictures come with the article text. */
+const EMBEDS = [
+  { id: "youtube", name: "YouTube", cookieFree: true, re: /^https:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:[^#\s]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/,
+    player: m => `https://www.youtube-nocookie.com/embed/${m[1]}`, shape: (m, u) => (/\/shorts\//.test(u) ? "tall" : "wide") },
+  { id: "vimeo", name: "Vimeo", re: /^https:\/\/(?:www\.)?vimeo\.com\/(\d+)/, player: m => `https://player.vimeo.com/video/${m[1]}?dnt=1`, shape: () => "wide" },
+  { id: "x", name: "X", re: /^https:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/\w+\/status\/(\d+)/, player: m => `https://platform.twitter.com/embed/Tweet.html?id=${m[1]}&dnt=true&theme=dark`, shape: () => "post" },
+  { id: "tiktok", name: "TikTok", re: /^https:\/\/(?:www\.)?tiktok\.com\/@[\w.-]+\/video\/(\d+)/, player: m => `https://www.tiktok.com/embed/v2/${m[1]}`, shape: () => "tall" },
+  { id: "instagram", name: "Instagram", re: /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/([\w-]+)/, player: m => `https://www.instagram.com/p/${m[1]}/embed`, shape: () => "post" },
+  { id: "spotify", name: "Spotify", re: /^https:\/\/open\.spotify\.com\/(?:intl-[\w-]+\/)?(track|episode|show|playlist|album)\/(\w+)/, player: m => `https://open.spotify.com/embed/${m[1]}/${m[2]}`, shape: m => (["track", "episode"].includes(m[1]) ? "audio" : "audiolist") },
+];
+function embedOf(url) {
+  url = String(url || "").trim(); if (!url || /\s/.test(url)) return null;
+  for (const p of EMBEDS) { const m = url.match(p.re); if (m) return { provider: p.id, name: p.name, url, player: p.player(m, url), shape: p.shape(m, url), cookieFree: !!p.cookieFree }; }
+  return null;
+}
+/* the article's embeds: the player where it may load, otherwise a card */
+function paintEmbeds(el, meta) {
+  el.querySelectorAll("figure.emb[data-url]").forEach(fig => {
+    const e = embedOf(fig.dataset.url); if (!e || fig.classList.contains("live")) return;   // a player already there keeps playing
+    const m = (meta || {})[e.url] || {}, title = m.title || `${e.name}`;
+    const offline = IN_APP && (!navigator.onLine || (document.getElementById("offpill") && !document.getElementById("offpill").hidden));
+    const allowed = e.cookieFree || PREF.get("embeds", "") === "on" || fig.dataset.show === "1";
+    const link = `<a class="emb-src" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.name)}${m.author ? " · " + esc(m.author) : ""} ↗</a>`;
+    if (!offline && allowed) {
+      fig.className = `emb ${e.shape} live`;
+      fig.innerHTML = `<div class="emb-frame"><iframe src="${esc(e.player)}" title="${esc(title)}" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>${link}`;
+      return;
+    }
+    fig.className = `emb card`;
+    fig.innerHTML = `<div class="emb-pic"${m.thumb && !offline ? ` style="background-image:url('${esc(m.thumb)}')"` : ""}>▶</div>
+      <div class="emb-body"><small>${esc(e.name)}${m.author ? " · " + esc(m.author) : ""}</small><b>${esc(title)}</b>
+      ${offline ? `<span class="emb-note">${t("Available online")}</span>`
+        : `<span class="emb-note">${esc(e.name)} ${t("sets its own cookies when it loads.")}</span>
+           <span class="emb-act"><button class="pill" onclick="showEmbed(this, false)">${t("Show")}</button><button class="pill" onclick="showEmbed(this, true)">${t("Always show external content")}</button></span>`}</div>`;
+  });
+}
+function showEmbed(btn, always) {
+  if (always) PREF.set("embeds", "on");                     // every embed from now on, on this device
+  const fig = btn.closest("figure.emb"); fig.dataset.show = "1";
+  paintEmbeds(always ? document.getElementById("rtext") || fig.parentNode : fig.parentNode, (rList[rIdx] || {}).embeds);
+}
 function mdBlock(b) {
+  const em = embedOf(String(b).trim());
+  if (em) return `<figure class="emb" data-url="${esc(em.url)}"></figure>`;
   // a photo from the league's store, full width of the text, its caption under it; #WxH reserves its room
   const im = String(b).trim().match(/^!\[([^\]]*)\]\((content\/photos\/[^\s)#]+)(?:#(\d+)x(\d+))?(?:\s+"([^"]*)")?\)$/);
   if (im) return `<figure class="rimg"><img src="${fromStore(im[2])}" alt="${esc(im[1])}" loading="lazy"${im[3] ? ` width="${im[3]}" height="${im[4]}"` : ""}>${im[5] ? `<figcaption>${esc(im[5])}</figcaption>` : ""}</figure>`;
@@ -1867,6 +1933,11 @@ function moveKb(d) {
   const next = rows[(i + d + rows.length) % rows.length];
   next.classList.add("kb"); next.scrollIntoView({ block: "nearest" });
 }
+/* when the keyboard goes away, the page goes back to where it was: iOS can leave it pushed up or to the side */
+addEventListener("focusout", () => setTimeout(() => {
+  const a = document.activeElement;
+  if (!a || !/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) window.scrollTo(0, 0);
+}, 60));
 function openJump() {
   const q = document.getElementById("jq"); q.value = ""; renderJump("");
   document.getElementById("jmodal").classList.add("on");

@@ -22,6 +22,7 @@ import TIPTAP from "./tiptap.bundle.txt";
 import { scoring } from "./scores.js";
 import { draftWithAI, describePhoto, aiError } from "./ai.js";                   // the article field (Tiptap), see editor-src/
 import { FORMATS, SIZES, TOPIC_STYLES, clean as cleanStructure, kindOf, formatOf, topicOf, editorKinds } from "./structure.js";
+import { embedOf, oembedUrl, EMBED_NAMES } from "./embeds.js";
 import { ROLES, ROLE_NAMES, can, grantable, mayManage, cleanEmail, validEmail, rolesOf, startingPeople } from "./people.js";
 const SITE_ROOT = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev";
 const SITE = SITE_ROOT + "/#3";
@@ -76,6 +77,31 @@ const nowIso = () => new Date().toISOString().slice(0, 19);
 const isLive = (s) => (s.status || "published") === "published";
 const fail = (message) => { throw new Error(message); };
 const STRUCTURE = "site/structure.json", PEOPLE = "desk/people.json";
+/* Embeds (see embeds.js): a paragraph that is only a link to YouTube, X… The title and picture come from the
+   provider's oEmbed answer, asked once per link and kept with the story (s.embeds), then published with its text. */
+async function embedInfo(url) {
+  const e = embedOf(url); if (!e) return null;
+  const info = { provider: e.provider, name: e.name };
+  const at = oembedUrl(url);
+  if (at) try {
+    const r = await fetch(at, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const j = await r.json();
+      const text = (h) => String(h || "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
+      info.title = String(j.title || (e.provider === "x" ? text(j.html).replace(/\s*—\s*.*$/, "") : "") || "").slice(0, 200);
+      if (j.author_name) info.author = String(j.author_name).slice(0, 80);
+      if (/^https:\/\//.test(j.thumbnail_url || "")) info.thumb = j.thumbnail_url;
+    }
+  } catch (err) { /* the provider did not answer: the card shows the link */ }
+  return info;
+}
+async function refreshEmbeds(s) {
+  const urls = [...new Set((s.body || []).map((b) => b.trim()).filter((b) => embedOf(b)))].slice(0, 12);
+  if (!urls.length) { delete s.embeds; return; }
+  const was = s.embeds || {}, now = {};
+  for (const u of urls) now[u] = was[u] && was[u].provider ? was[u] : await embedInfo(u);
+  s.embeds = now;
+}
 async function readStructure(env) { const { data, etag } = await readJson(env, STRUCTURE); return { structure: cleanStructure(data), etag: etag || null, stored: !!data }; }
 async function readPeople(env) { const { data, etag } = await readJson(env, PEOPLE); return { people: data || startingPeople(env), etag: etag || null }; }
 
@@ -197,6 +223,7 @@ async function publishIndex(env, stories) {
     s.words = plain([s.dek || "", ...(s.body || [])].join(" ")).split(/\s+/).filter(Boolean).length;
     const body = {};
     if (s.body) { body.body = s.body; delete s.body; }
+    if (s.embeds) { body.embeds = s.embeds; delete s.embeds; }     // the embeds' titles and pictures travel with the text
     if (Object.keys(body).length) {
       const raw = JSON.stringify(body);
       const key = `stories/${s.id}.${(await sha1(raw)).slice(0, 8)}.json`;
@@ -263,6 +290,7 @@ async function makeDraft(env, stories, a, cids, pids, ref, now, by) {
   };
   if (!a.photo_url) story.photo_auto = true;                 // a library photo, until the article gives one
   if (a.body) story.body = paras(a.body);
+  await refreshEmbeds(story);
   adoptFirstPhoto(story);
   if (a.dur) story.dur = a.dur;
   if (a.count) story.count = a.count;
@@ -458,7 +486,7 @@ function createServer(env, door) {
       if (a.photo_url) { s.photo = a.photo_url; delete s.photo_w; delete s.photo_h; delete s.photo_auto; }   // the new picture's shape is looked up on publish
       if (a.author) s.author = a.author;
       if (a.at) s.at = a.at;
-      if (a.body) s.body = paras(a.body);
+      if (a.body) { s.body = paras(a.body); await refreshEmbeds(s); }
       adoptFirstPhoto(s);
       s.updated_by = "desk"; s.updated_at = nowIso();
       return s;
@@ -720,6 +748,12 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
 
   // the structure (kinds and topics), for the Studio's menus. Read-only: it is changed in the repo, not here.
   if (request.method === "GET" && path === "structure") return json({ structure: (await readStructure(env)).structure });
+  // an embed for the article editor: what the link is and its title and picture
+  if (request.method === "GET" && path === "embed") {
+    const url = new URL(request.url).searchParams.get("url") || "";
+    if (!embedOf(url)) return json({ error: `That link cannot be embedded. Links from ${EMBED_NAMES} can.` }, 400);
+    return json({ ...embedOf(url), ...(await embedInfo(url)) });
+  }
 
   // the people: the super admin sees and changes everyone; a producer adds and changes producers and editors
   if (path === "people") {
@@ -913,6 +947,7 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
         if (f.at) s.at = f.at;
         const body = paras(f.body || "");
         if (body.length) s.body = body; else delete s.body;
+        await refreshEmbeds(s);
         if (fmt === "video") s.dur = f.dur; else delete s.dur;
         if (fmt === "gallery") { if (gallery) setGallery(s); else s.count = +f.count; } else { delete s.count; delete s.photos; }
         if (f.photo && /^content\/photos\//.test(f.photo) && f.photo !== s.photo) {     // "Use as main photo"

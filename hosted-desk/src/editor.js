@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.24.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays
+export const STUDIO_VERSION = "0.25.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -77,6 +77,14 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .tiptap ul,.tiptap ol{margin:0 0 .8em;padding-left:1.4em}.tiptap li p{margin:0 0 .25em}
 .tiptap a{color:var(--acc);text-decoration:underline}
 .tiptap figure.ph{margin:0 0 1em;cursor:pointer;position:relative}
+.tiptap .emb{position:relative;display:flex;gap:12px;align-items:center;margin:14px 0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:default}
+.tiptap .emb.ProseMirror-selectednode{outline:2px solid var(--acc)}
+.tiptap .emb-pic{flex:none;width:120px;aspect-ratio:16/9;border-radius:8px;background:#000 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-size:20px}
+.tiptap .emb-txt{min-width:0;display:flex;flex-direction:column;gap:2px;padding-right:40px}
+.tiptap .emb-txt small{color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tiptap .emb-txt b{font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tiptap .emb-txt span{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiptap .emb .ph-more{top:50%;transform:translateY(-50%)}
 .ph-more{position:absolute;top:8px;right:8px;width:34px;height:28px;border-radius:8px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;line-height:1;cursor:pointer;backdrop-filter:blur(6px)}
 .ph-more:hover{background:rgba(0,0,0,.8)}
 .tiptap figure.ph.nodesc .ph-more{box-shadow:0 0 0 2px var(--bad)}
@@ -402,7 +410,7 @@ function renderForm(msg) {
           <button type="button" data-c="h" title="Subheading">H</button><button type="button" data-c="b" title="Bold (⌘B)"><b>B</b></button><button type="button" data-c="i" title="Italic (⌘I)"><i>I</i></button>
           <button type="button" data-c="a" title="Link (⌘K)">Link</button><i class="sep"></i>
           <button type="button" data-c="ul" title="Bulleted list">• List</button><button type="button" data-c="ol" title="Numbered list">1. List</button>
-          <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><input type="file" id="pfile" accept="image/*" hidden></div>
+          <i class="sep"></i><button type="button" data-c="img" title="Add a photo where the cursor is">Photo</button><button type="button" data-c="embed" title="Add a video or post from YouTube, Vimeo, X, TikTok, Instagram or Spotify">Embed</button><input type="file" id="pfile" accept="image/*" hidden></div>
 
           <div id="body"></div></div>
         <div class="hint">Subheadings, bold, italic, links, lists and photos (Photo button for the library, or paste or drop a picture). The site and the app set the style.</div></div>
@@ -450,6 +458,7 @@ function renderForm(msg) {
 let ed = null;
 function mountBody(blocks) {
   if (ed) ed.destroy();
+  TT.setEmbeds(cur && cur.embeds); TT.setEmbedLookup((url) => call("embed?url=" + encodeURIComponent(url)));
   ed = TT.makeEditor($("body"), blocks, touch, SITE, addPhotos, (m) => setTimeout(() => say("", m), 60));
   const paint = () => document.querySelectorAll("#tb button").forEach((b) => b.classList.toggle("on",
     { h: ed.isActive("heading"), b: ed.isActive("bold"), i: ed.isActive("italic"), a: ed.isActive("link"), ul: ed.isActive("bulletList"), ol: ed.isActive("orderedList") }[b.dataset.c] || false));
@@ -467,6 +476,7 @@ function command(c) {
   else if (c === "ul") ch.toggleBulletList().run();
   else if (c === "ol") ch.toggleOrderedList().run();
   else if (c === "img") photoFromLibrary();
+  else if (c === "embed") askEmbed();
   else if (c === "a") {
     linkDialog();
   }
@@ -681,6 +691,30 @@ async function addPhoto(file, which = "", at = null) {
 }
 /* the ⋯ menu on a photo in the article */
 function closePhotoMenu() { const m = $("pmenu"); if (m) m.remove(); }
+/* embeds: a link to YouTube, X… The site shows the real player; here a card stands for it. */
+async function askEmbed() {
+  const v = await modal({ title: "Embed a video or post", text: "Paste the link to a YouTube or Vimeo video, a post on X, TikTok or Instagram, or a Spotify track or episode. The site shows its player. Tip: pasting the link on an empty line of the article does the same.",
+    fields: [{ id: "url", label: "Link", placeholder: "https://www.youtube.com/watch?v=…", required: true, requiredText: "Paste a link." }],
+    ok: "Embed", validate: (f) => (TT.embedLink(f.url.trim()) ? null : { field: "url", message: "That link cannot be embedded. Use a link from YouTube, Vimeo, X, TikTok, Instagram or Spotify." }) });
+  if (!v) return;
+  TT.insertEmbed(ed, v.url.trim()); touch();
+}
+addEventListener("embed-menu", (e) => {
+  closePhotoMenu();
+  const { pos, url, x, y } = e.detail;
+  ed.chain().setNodeSelection(pos).run();
+  const m = document.createElement("div"); m.className = "pmenu"; m.id = "pmenu";
+  m.innerHTML = '<button type="button" data-a="open">Open the link</button><button type="button" data-a="remove" class="bad">Remove from the article</button>';
+  document.body.appendChild(m);
+  m.style.left = Math.max(8, Math.min(x - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  m.style.top = Math.min(y + 6, innerHeight - m.offsetHeight - 8) + "px";
+  m.onclick = (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    closePhotoMenu();
+    if (b.dataset.a === "open") window.open(url, "_blank", "noopener");
+    else { ed.chain().setNodeSelection(pos).deleteSelection().run(); touch(); }
+  };
+});
 addEventListener("photo-menu", (e) => {
   closePhotoMenu();
   const { pos, x, y } = e.detail;

@@ -77,6 +77,8 @@ When the editor has their own photo:
 
 **Photos inside the article.** A longer story can carry one or two photos in its text. Call `photo_upload_link` with `place: "article"`: the page also asks the editor to describe the photo (alt text, required) and for a caption. When they say it is uploaded, `get_story` shows it under `photo_inbox` with a ready `markdown` line: ask where it goes and put that line in the body as a paragraph of its own with `update_story`, unchanged. Every in-text photo is the full width of the text, and the site sets its style. A story whose main photo was only picked from the library takes the first photo of its article as its main photo automatically. For many pictures and few words, a gallery story is the better choice.
 
+**Embeds (a video or post from elsewhere).** A paragraph that is only a link to a YouTube or Vimeo video, a post on X, TikTok or Instagram, or a Spotify track or episode becomes that player on the site: put the link alone on its own line, nothing else in the paragraph. Use only links the editor gave you or that you found and checked. Never guess a video address. The site shows the real player; until a fan agrees to the provider's cookies it shows a card with the title instead.
+
 A photo that is already online can be used by passing its web address as `photo_url`, but it then loads from someone else's server. Prefer the upload link.
 
 ## House style
