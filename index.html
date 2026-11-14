@@ -1126,7 +1126,7 @@ function tile(s) {
   const badge = s.kind === "result" ? `<span class="badge live">${t("Live")}</span>` : s.kind === "video" ? `<span class="badge">▶ ${s.dur}${s.captions ? ` · <u class="cc">CC</u>` : ""}</span>` :
                 s.kind === "gallery" ? `<span class="badge">${s.count} ${t("photos")}</span>` : `<span class="badge">${topicBadge(s) || kindLabel(s.kindId)}</span>`;
   let media = `<img src="${s.photo}" alt="" loading="lazy"${s.focus ? ` style="object-position:${s.focus}"` : ""}>`;
-  if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${s.photos.map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;
+  if (s.kind === "gallery" && s.photos) media = `<div class="mosaic">${[s.photo, ...s.photos.filter(p => p !== s.photo)].filter(Boolean).slice(0, 3).map(p => `<img src="${p}" alt="" loading="lazy">`).join("")}</div>`;   // the cover leads the tile; the reader keeps the gallery's order
   let extra = "";
   if (s.kind === "video") extra = `<span class="play"></span>`;
   if (s.kind === "quote") extra = `<div class="q">${esc(sTitle(s))}</div>`;

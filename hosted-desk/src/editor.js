@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.23.1";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover
+export const STUDIO_VERSION = "0.24.0";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -395,7 +395,7 @@ function renderForm(msg) {
   <div class="form">
     <div>
       <div class="f" id="galrow" hidden><label>Gallery photos</label><div id="galgrid"></div><input type="file" id="galfile" accept="image/*" multiple hidden>
-        <div class="hint">In the order fans see them: use the arrows to move a photo, ★ to make one the cover (it moves first). At least two.</div></div>
+        <div class="hint">In the order fans see them: use the arrows to move a photo. ★ makes one the cover, wherever it is. At least two.</div></div>
       <div class="f"><label for="title">Headline</label><input id="title" value="\${esc(s.title)}">\${/\{(p0|c0|author)\}/.test(s.title) ? \`<div class="hint">Shows on the site as: \${esc(shown(s, s.title))}</div>\` : ""}</div>
       <div class="f"><label for="dek">Summary</label><textarea id="dek" rows="2">\${esc(s.dek)}</textarea><div class="hint">One or two sentences, shown under the headline on the tile and in the reader.</div></div>
       <div class="f"><label>Article</label><div class="rte"><div class="tb" id="tb">
@@ -799,6 +799,7 @@ function paintKind() {
   ["dur"].forEach((id) => $(id) && $(id).addEventListener("input", touch));
   if (gal) {
     if (!cur.gallery) cur.gallery = (fmtOf(s.kind) === "gallery" && s.photos && s.photos.length ? s.photos : []).slice();
+    if (!cur.cover) cur.cover = cur.gallery.includes(s.photo) ? s.photo : cur.gallery[0] || null;
     $("galfile").onchange = (e) => { const files = [...e.target.files]; e.target.value = ""; galUpload(files); };
     paintGallery();
   }
@@ -817,15 +818,16 @@ function galAddMenu(btn) {
 /* the gallery's photos, in order: move them left or right, take one out, add from the library or upload several at once */
 function paintGallery() {
   const g = cur.gallery || [], el = $("galgrid"); if (!el) return;
-  el.innerHTML = \`<div class="gal">\${g.map((src, i) => \`<figure class="\${i ? "" : "cover"}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
-      <button type="button" title="Move earlier" onclick="galMove(\${i},-1)" \${i ? "" : "disabled"}>←</button>\${i ? \`<button type="button" title="Make it the cover" onclick="galCover(\${i})">★</button>\` : ""}<button type="button" title="Take out of the gallery" onclick="galDrop(\${i})">✕</button>
+  if (!g.includes(cur.cover)) cur.cover = g[0] || null;       // the cover is one of the gallery's photos
+  el.innerHTML = \`<div class="gal">\${g.map((src, i) => \`<figure class="\${src === cur.cover ? "cover" : ""}"><img src="\${esc(pic(src))}" alt="" loading="lazy"><div class="gb">
+      <button type="button" title="Move earlier" onclick="galMove(\${i},-1)" \${i ? "" : "disabled"}>←</button>\${src !== cur.cover ? \`<button type="button" title="Make it the cover" onclick="galCover(\${i})">★</button>\` : ""}<button type="button" title="Take out of the gallery" onclick="galDrop(\${i})">✕</button>
       <button type="button" title="Move later" onclick="galMove(\${i},1)" \${i < g.length - 1 ? "" : "disabled"}>→</button></div></figure>\`).join("")}
     <button type="button" class="gadd" title="Add photos" onclick="galAddMenu(this)">+</button></div>\`;
-  $("coverwrap").innerHTML = g.length ? \`<img src="\${esc(pic(g[0]))}" alt=""><div class="hint">The first gallery photo. Click ★ on another photo to make it the cover.</div>\`
+  $("coverwrap").innerHTML = g.length ? \`<img src="\${esc(pic(cur.cover))}" alt=""><div class="hint">Shown on the story's tile and in link previews. Click ★ on another gallery photo to change it.</div>\`
     : '<div class="coverph">The first photo you add to the gallery becomes the cover.</div>';
 }
 function galMove(i, d) { const g = cur.gallery, j = i + d; if (j < 0 || j >= g.length) return; [g[i], g[j]] = [g[j], g[i]]; paintGallery(); touch(); }
-function galCover(i) { const g = cur.gallery; g.unshift(g.splice(i, 1)[0]); paintGallery(); touch(); say("", "New cover. Save to keep it."); }
+function galCover(i) { cur.cover = cur.gallery[i]; paintGallery(); touch(); say("", "New cover. Save to keep it."); }
 function galDrop(i) { cur.gallery.splice(i, 1); paintGallery(); touch(); }
 async function galFromLibrary() {
   const r = await choosePhoto("Add a photo to the gallery");
@@ -889,7 +891,7 @@ function applyLocal(d) {
   $("title").value = f.title || ""; $("dek").value = f.dek || ""; $("topic").value = f.topic || (STRUCT.topics[0] || {}).id || "";
   if (f.kind && [...$("kind").options].some((o) => o.value === f.kind)) { $("kind").value = f.kind; paintKind(); }
   if ($("dur") && f.dur != null) $("dur").value = f.dur;
-  if (Array.isArray(f.photos)) { cur.gallery = f.photos.slice(); paintGallery(); }
+  if (Array.isArray(f.photos)) { cur.gallery = f.photos.slice(); if (f.cover) cur.cover = f.cover; paintGallery(); }
   $("author").value = f.author || ""; if (f.at) $("at").value = f.at;
   document.querySelectorAll("#cities button").forEach((b) => b.classList.toggle("on", (f.cities || []).includes(b.dataset.id)));
   document.querySelectorAll("#events button").forEach((b) => b.classList.toggle("on", (f.events || []).includes(b.dataset.id)));
@@ -902,7 +904,7 @@ function applyLocal(d) {
 function say(kind, text) { const m = $("msg"); if (m) { m.className = "msg " + kind; m.textContent = text; } }
 function fields() {
   return { title: $("title").value, dek: $("dek").value, body: ed ? TT.toMd(ed.getJSON()) : "", kind: $("kind").value, topic: $("topic").value,
-    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, photos: fmtOf($("kind").value) === "gallery" ? (cur.gallery || []).slice() : undefined,
+    author: $("author").value, at: $("at").value, dur: $("dur") ? $("dur").value.trim() : undefined, photos: fmtOf($("kind").value) === "gallery" ? (cur.gallery || []).slice() : undefined, cover: fmtOf($("kind").value) === "gallery" ? cur.cover || undefined : undefined,
     cities: [...document.querySelectorAll("#cities button.on")].map((b) => b.dataset.id), players: cur.players || [],
     events: [...document.querySelectorAll("#events button.on")].map((b) => b.dataset.id),
     ...(cur.mainChanged ? { photo: cur.photo, photo_w: cur.photo_w, photo_h: cur.photo_h } : {}),

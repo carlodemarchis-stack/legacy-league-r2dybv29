@@ -878,9 +878,12 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
       const lib = format === "gallery" && gallery ? (await readJson(env, LIBRARY)).data || [] : [];
       const setGallery = (s) => {
         s.photos = [...new Set(gallery)]; s.count = s.photos.length;
-        if (s.photo !== s.photos[0]) {
-          const e = lib.find((x) => x.src === s.photos[0]) || {};
-          s.photo = s.photos[0]; delete s.photo_auto;
+        // the cover: the one chosen (f.cover), else the current one if it is still in the gallery, else the first.
+        // It is the story's photo on tiles and in link previews; the gallery keeps its own order.
+        const cover = s.photos.includes(f.cover) ? f.cover : s.photos.includes(s.photo) ? s.photo : s.photos[0];
+        if (s.photo !== cover) {
+          const e = lib.find((x) => x.src === cover) || {};
+          s.photo = cover; delete s.photo_auto;
           if (e.w && e.h) { s.photo_w = e.w; s.photo_h = e.h; } else { delete s.photo_w; delete s.photo_h; }
           if (e.credit) s.photo_credit = e.credit; else delete s.photo_credit;
         }
