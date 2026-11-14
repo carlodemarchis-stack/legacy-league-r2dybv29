@@ -14,3 +14,7 @@ app/android/app/build/
 .site/
 .wrangler/
 .store-sent.json
+
+# iCloud Drive duplicates ("name 2.ext", "folder 3") inside the app project
+app/**/* [2-9]
+app/**/* [2-9].*

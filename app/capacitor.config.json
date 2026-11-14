@@ -1,0 +1,19 @@
+{
+  "appId": "com.legacyleaguegolf.app",
+  "appName": "Legacy League",
+  "webDir": "www",
+  "backgroundColor": "#0b0f14",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#0b0f14"
+  },
+  "android": {
+    "backgroundColor": "#0b0f14",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#0b0f14", "showSpinner": false },
+    "StatusBar": { "style": "DARK", "overlaysWebView": true }
+  }
+}
