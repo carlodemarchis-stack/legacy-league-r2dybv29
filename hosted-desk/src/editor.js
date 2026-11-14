@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.28.1";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live) · 0.28.1: links to a player, city or event page from the Link dialog
+export const STUDIO_VERSION = "0.29";                       // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first · 0.21: a gallery's photos across the top of the story, the cover on the right · 0.22: roles (super admin, coder, producer, editor), People and Structure pages, kinds and topics from the structure, EXIF/XMP/GPS tags on library photos · 0.23: People under an Admin menu; the structure is changed in Claude Code only · 0.23.1: ★ makes a gallery photo the cover · 0.24: the cover is any gallery photo, the order stays · 0.25: embeds (YouTube, Vimeo, X, TikTok, Instagram, Spotify) in the article · 0.25.1: Save only once something has changed · 0.26: photos in the size they are shown at (the site makes them) · 0.27: Preview (desktop, tablet, phone; story or feed) and scheduled publishing · 0.28: leaderboards in the article (frozen or live) · 0.28.1: links to a player, city or event page from the Link dialog · 0.29: Alerts: push alerts to the app (compose, target followers, send or schedule, no duplicates, daily cap, history) and automatic alerts from the scoring feed
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -204,6 +204,17 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 .adm td.act button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:4px 8px;cursor:pointer;font:inherit;font-size:12px;margin-left:3px}
 .adm td.act button:disabled{opacity:.3;cursor:default}.adm .roles label{display:inline-flex;gap:4px;align-items:center;margin-right:10px;white-space:nowrap;font-size:12px}
 .adm .msg{margin-left:6px}
+.alform{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:1080px}.alcol{display:flex;flex-direction:column;gap:6px}
+.alcol>label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:8px;display:flex;justify-content:space-between}.alcol>label em{font-style:normal;text-transform:none;letter-spacing:0}
+.alform textarea,.alform input[type=datetime-local]{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;resize:vertical}
+.alrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}.alrow select{flex:1;min-width:180px}.alseg{align-self:flex-start;flex:none}
+.alform .events{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.alform .events small{opacity:.7;margin-left:3px}
+.alphone{margin-top:12px;padding:14px;border-radius:14px;background:linear-gradient(135deg,#2a3a44,#141a1d)}
+.alnote{display:flex;gap:10px;align-items:flex-start;background:rgba(240,240,240,.88);color:#111;border-radius:13px;padding:10px 12px;font-size:13px;line-height:1.3}
+.alnote i{flex:none;width:30px;height:30px;border-radius:7px;background:#0b0f14;color:#d9ad4e;display:grid;place-items:center;font:700 11px/1 -apple-system,sans-serif;font-style:normal}
+.alnote div{flex:1;min-width:0}.alnote b{display:block}.alnote span{display:block;overflow-wrap:anywhere}.alnote small{color:#666;font-size:11px}
+.alauto{display:flex;flex-direction:column;gap:6px;font-size:13px}.alreplay{margin:10px 0 4px}.alreplay small{color:var(--dim);margin-right:8px}
+@media(max-width:860px){.alform{grid-template-columns:1fr}}
 .soon h2{color:var(--ink);font-size:20px;margin:0 0 8px}.soon p{max-width:520px;line-height:1.55;margin:0 auto}
 :is(.lib,.libmodal) .libbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line)}
 :is(.lib,.libmodal) .libbar h1{margin:0 8px 0 0;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
@@ -249,7 +260,7 @@ label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase
 @media(max-width:860px){.wrap{grid-template-columns:1fr;height:auto}aside{max-height:45dvh;border-right:0;border-bottom:1px solid var(--line)}.form{grid-template-columns:1fr}main{padding:16px}}
 </style></head><body>
 <header><h1>Legacy League Golf <span>· Content Studio</span></h1><span class="ver" title="Content Studio version">v${STUDIO_VERSION}</span>
-  <nav class="snav" id="snav"><button data-v="stories" class="on">Stories</button><button data-v="photos">Photos</button><button data-v="videos">Videos</button><button data-v="shorts">Shorts</button><button data-v="people" hidden>People</button></nav>
+  <nav class="snav" id="snav"><button data-v="stories" class="on">Stories</button><button data-v="photos">Photos</button><button data-v="videos">Videos</button><button data-v="shorts">Shorts</button><button data-v="alerts">Alerts</button><button data-v="people" hidden>People</button></nav>
   <span class="hright"><button class="btn" id="adminbtn" onclick="adminMenu(this)" hidden title="Administration">⚙︎ Admin</button><button class="btn" id="usagebtn" onclick="openUsage()">AI usage</button><button class="btn" id="whobtn" onclick="askName()" title="Your name, on the changes you make and the AI you use"></button>
   <a href="${site}" target="_blank" rel="noopener">Open the site ↗</a></span></header>
 <div class="wrap">
@@ -1334,6 +1345,128 @@ async function personRemove(i) {
     admSay(j.access && !j.access.ok ? "err" : "ok", j.access && !j.access.ok ? j.access.note : "Removed " + x.email + ".");
   } catch (e) { admSay("err", e.message); }
 }
+/* ------------------------------------------------ push alerts: compose and send or schedule, automatic alerts, history */
+let AL = null, alTo = [];
+async function alertsPage() {
+  adminBox("Alerts");
+  try { AL = await call("alerts"); paintAlerts(); }
+  catch (e) { $("adm").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
+}
+const alName = (id) => CITY[id] ? CITY[id].name : PLAYER[id] ? PLAYER[id].name : id;
+const alLink = (l) => !l ? "The app" : l === "live" ? "Live scores" : l.replace(/^story:/, "Story: ").replace(/^city:(.*)$/, (m, id) => "City: " + alName(id)).replace(/^player:(.*)$/, (m, id) => "Player: " + alName(id));
+const alTarget = (t) => { try { t = JSON.parse(t); } catch (e) { return ""; } return t.all ? "Everyone" : "Following " + t.follows.slice(0, 3).map(alName).join(", ") + (t.follows.length > 3 ? " +" + (t.follows.length - 3) : ""); };
+function paintAlerts() {
+  const A = AL, D = A.devices;
+  const opts = (o, sel) => Object.entries(o).map(([k, v]) => \`<option value="\${k}" \${k === sel ? "selected" : ""}>\${esc(v)}</option>\`).join("");
+  const live = stories.filter((s) => (s.status || "published") === "published" || s.status === "scheduled").slice(0, 80);
+  const fol = (id) => D.follows[id] ? \` <small>\${D.follows[id]}</small>\` : "";
+  $("adm").innerHTML = \`
+    <p class="hint">\${D.active} \${D.active === 1 ? "device" : "devices"} with alerts on (\${D.ios} iPhone, \${D.android} Android). No accounts: a device is its app install and what it follows.
+      Each fan gets at most \${A.daily_cap} alerts a day, and never the same story twice. \${A.firebase ? "" : '<b style="color:var(--bad)">Firebase is not connected yet: nothing can be sent.</b>'}</p>
+    <h2>New alert</h2>
+    <div class="alform">
+      <div class="alcol">
+        <label>Title <em id="al-tn">0/65</em></label><input type="text" id="al-title" maxlength="65" placeholder="e.g. Austin lead after 9 holes" oninput="alCount()">
+        <label>Text <em id="al-bn">0/178</em></label><textarea id="al-body" maxlength="178" rows="3" placeholder="One or two short sentences" oninput="alCount()"></textarea>
+        <label>Kind</label><select id="al-type">\${opts(A.types, "news")}</select>
+        <p class="hint">Fans choose which kinds they get in the app's Notifications screen.</p>
+        <label>Opens</label>
+        <div class="alrow"><select id="al-lk" onchange="alLinkKind()"><option value="">The app</option><option value="story">A story</option><option value="city">A city</option><option value="player">A player</option><option value="live">Live scores</option></select>
+          <select id="al-lid" hidden></select></div>
+      </div>
+      <div class="alcol">
+        <label>Send to</label>
+        <div class="seg alseg" id="al-who"><button type="button" class="on" data-w="all">Everyone</button><button type="button" data-w="some">Followers of…</button></div>
+        <div id="al-pick" hidden>
+          <div class="events" id="al-cities">\${ref.cities.map((c) => \`<button type="button" data-id="\${c.id}">\${esc(c.name)}\${fol(c.id)}</button>\`).join("")}</div>
+          <div class="alrow"><select id="al-player"><option value="">+ a player…</option>\${ref.players.slice().sort((a, b) => a.name < b.name ? -1 : 1).map((p) => \`<option value="\${p.id}">\${esc(p.name)}\${D.follows[p.id] ? " (" + D.follows[p.id] + ")" : ""}</option>\`).join("")}</select></div>
+          <div class="events" id="al-players"></div>
+          <p class="hint">A fan gets it if they follow any one of these. The numbers are devices following each.</p>
+        </div>
+        <label>When</label>
+        <div class="seg alseg" id="al-when"><button type="button" class="on" data-w="now">Now</button><button type="button" data-w="later">Later</button></div>
+        <input type="datetime-local" id="al-at" hidden>
+        <div class="alphone"><div class="alnote"><i>LL</i><div><b id="al-pt">Legacy League</b><span id="al-pb">Your alert, as it shows on a phone.</span></div><small>now</small></div></div>
+        <div class="alrow"><button class="btn pri" id="al-send" onclick="alSend()">Send now</button><span class="msg" id="al-msg"></span></div>
+      </div>
+    </div>
+    \${A.may_rules ? \`<h2>Automatic alerts from the scoring feed</h2>
+    <div class="alauto">\${Object.entries(A.auto_rules).map(([k, v]) => \`<label><input type="checkbox" data-rule="\${k}" \${A.rules[k] ? "checked" : ""} onchange="alRule(this)"> \${esc(v)}</label>\`).join("")}</div>
+    <p class="hint">Each goes only to the fans who follow that city or player, once. In the demo, Round 2 at Mayakoba is replayed here: step the course clock or let it run (it moves every 5 minutes), and the alerts go out as things happen.</p>
+    <div class="alrow alreplay"><b>Course clock \${esc(A.replay.clock)}</b> <small>Round 2, \${esc(A.replay.start)} to \${esc(A.replay.end)}\${A.replay.running ? " · running, +" + A.replay.step + " min every 5 minutes" : ""}</small>
+      <button class="btn" onclick="alReplay('step', 10)">+10 min</button><button class="btn" onclick="alReplay('step', 30)">+30 min</button><button class="btn" onclick="alReplay('step', 120)">+2 h</button>
+      <button class="btn" onclick="alReplay('\${A.replay.running ? "pause" : "run"}')">\${A.replay.running ? "Pause" : "Run by itself"}</button>
+      <button class="btn" onclick="alReplay('reset')">Back to the first tee</button><span class="msg" id="al-rmsg"></span></div>\` : ""}
+    <h2>Sent and scheduled</h2>
+    \${A.alerts.length ? \`<table><tr><th>When</th><th>Alert</th><th>Opens</th><th>To</th><th class="n">Sent</th><th class="n">Skipped</th><th></th></tr>
+    \${A.alerts.map((a) => \`<tr><td><small>\${esc(when(a.sent_at || a.send_at || a.created_at))}</small><br><small>\${a.status === "scheduled" ? "<b>scheduled</b>" : esc(a.status)}</small></td>
+      <td><b>\${esc(a.title)}</b><br><small>\${esc(a.body)}</small><br><small>\${esc(A.types[a.type] || a.type)} · \${esc(a.source === "auto" ? a.created_by : "by " + a.created_by)}</small>\${a.note ? \`<br><small style="color:var(--bad)">\${esc(a.note)}</small>\` : ""}</td>
+      <td><small>\${esc(alLink(a.link))}</small></td><td><small>\${esc(alTarget(a.target))}</small></td>
+      <td class="n">\${a.status === "sent" ? a.sent + (a.failed ? \` <small style="color:var(--bad)">(\${a.failed} failed)</small>\` : "") : ""}</td>
+      <td class="n"><small>\${a.status === "sent" && (a.dup || a.capped) ? [a.dup ? a.dup + " had it" : "", a.capped ? a.capped + " at the daily cap" : ""].filter(Boolean).join(", ") : ""}</small></td>
+      <td class="act">\${a.status === "scheduled" ? \`<button type="button" onclick="alCancel('\${a.id}')">Cancel</button>\` : ""}</td></tr>\`).join("")}</table>\` : '<p class="hint">No alerts yet.</p>'}\`;
+  const seg = (id, fn) => $(id).onclick = (e) => { const b = e.target.closest("button"); if (!b) return; $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); fn(b.dataset.w); };
+  seg("al-who", (w) => { $("al-pick").hidden = w !== "some"; });
+  seg("al-when", (w) => { $("al-at").hidden = w !== "later"; $("al-send").textContent = w === "later" ? "Schedule" : "Send now"; });
+  $("al-cities").onclick = (e) => { const b = e.target.closest("button"); if (b) b.classList.toggle("on"); };
+  $("al-player").onchange = (e) => { const id = e.target.value; e.target.value = ""; if (id && !alTo.includes(id)) { alTo.push(id); alPlayers(); } };
+  alTo = []; alPlayers();
+  $("al-lid").dataset.stories = JSON.stringify(live.map((s) => [s.id, s.title + (s.status === "scheduled" ? " (scheduled)" : "")]));
+}
+function alPlayers() {
+  $("al-players").innerHTML = alTo.map((id) => \`<button type="button" class="on" data-id="\${id}" title="Remove">\${esc(alName(id))} ×</button>\`).join("");
+  $("al-players").onclick = (e) => { const b = e.target.closest("button"); if (b) { alTo = alTo.filter((x) => x !== b.dataset.id); alPlayers(); } };
+}
+function alCount() {
+  const t = $("al-title").value, b = $("al-body").value;
+  $("al-tn").textContent = t.length + "/65"; $("al-bn").textContent = b.length + "/178";
+  $("al-pt").textContent = t || "Legacy League"; $("al-pb").textContent = b || "Your alert, as it shows on a phone.";
+}
+function alLinkKind() {
+  const k = $("al-lk").value, s = $("al-lid");
+  const list = k === "story" ? JSON.parse(s.dataset.stories || "[]") : k === "city" ? ref.cities.map((c) => [c.id, c.name]) : k === "player" ? ref.players.map((p) => [p.id, p.name]).sort((a, b) => a[1] < b[1] ? -1 : 1) : [];
+  s.hidden = !list.length;
+  s.innerHTML = list.map(([id, name]) => \`<option value="\${id}">\${esc(name)}</option>\`).join("");
+  s.onchange = () => { if (k === "story") { const st = stories.find((x) => x.id === s.value); if (st && !$("al-title").value.trim()) { $("al-title").value = st.title.slice(0, 65); alCount(); } } };
+}
+async function alSend(again) {
+  const say = (k, t) => { const m = $("al-msg"); m.className = "msg " + k; m.textContent = t; };
+  const later = !$("al-at").hidden, k = $("al-lk").value;
+  const some = !$("al-pick").hidden, follows = some ? [...$("al-cities").querySelectorAll("button.on")].map((b) => b.dataset.id).concat(alTo) : [];
+  if (some && !follows.length) return say("err", "Pick at least one city or player, or send to everyone.");
+  if (later && !$("al-at").value) return say("err", "Pick when it goes out.");
+  const body = { title: $("al-title").value.trim(), body: $("al-body").value.trim(), type: $("al-type").value,
+    link: k ? { kind: k, id: $("al-lid").value } : null, target: some ? { follows } : { all: true },
+    at: later ? new Date($("al-at").value).toISOString().slice(0, 16) : null, again: !!again };
+  if (!later && !again && !(await confirmModal("Send this alert now?", \`"\${body.title}" goes to \${some ? "the fans following " + follows.map(alName).join(", ") : "everyone with the app"} right away. It cannot be taken back.\`, "Send now"))) return;
+  say("", later ? "Scheduling…" : "Sending…"); $("al-send").disabled = true;
+  try {
+    const j = await call("alerts", body);
+    if (j.duplicate) {
+      $("al-send").disabled = false;
+      if (await confirmModal("This story was already alerted", \`\${j.duplicate} \${j.duplicate === 1 ? "device has" : "devices have"} had an alert for it. Send to the others only? Those devices are skipped.\`, "Send to the others")) return alSend(true);
+      return say("", "Not sent.");
+    }
+    AL = await call("alerts"); paintAlerts();
+    const a = j.alert;
+    say("ok", a.status === "scheduled" ? "Scheduled for " + when(a.send_at) + "." : \`Sent to \${a.sent} \${a.sent === 1 ? "device" : "devices"}\` + (a.dup || a.capped ? \` (\${[a.dup ? a.dup + " already had it" : "", a.capped ? a.capped + " at the daily cap" : ""].filter(Boolean).join(", ")})\` : "") + (a.failed ? \`, \${a.failed} failed\` : "") + ".");
+  } catch (e) { say("err", e.message); $("al-send").disabled = false; }
+}
+async function alCancel(id) {
+  if (!(await confirmModal("Cancel this alert?", "It will not go out.", "Cancel the alert", true))) return;
+  try { await call("alerts", { action: "cancel", id }); AL = await call("alerts"); paintAlerts(); } catch (e) { admSay("err", e.message); }
+}
+async function alRule(box) {
+  try { const j = await call("alertrules", { [box.dataset.rule]: box.checked }); AL.rules = j.rules; admSay("ok", "Saved."); } catch (e) { box.checked = !box.checked; admSay("err", e.message); }
+}
+async function alReplay(action, minutes) {
+  try {
+    const j = await call("replay", { action, minutes });
+    AL = await call("alerts"); paintAlerts();
+    const f = j.fired || [], m = $("al-rmsg");
+    if (m && action === "step") { m.className = "msg ok"; m.textContent = f.length ? f.map((x) => \`\${x.title} → \${x.error ? "failed: " + x.error : x.sent + " sent"}\`).join(" · ") : "Nothing alert-worthy in those minutes."; }
+  } catch (e) { admSay("err", e.message); }
+}
 function closeSoon() { const x = $("soon"); if (x) x.parentNode.removeChild(x); }
 const SOON = {
   videos: ["Videos", "Highlights, documentaries and series, hosted with captions. To be decided: where the files live (Cloudflare Stream is in the plan), what a video entry holds (title, description, poster, captions, length, cities, players, events), and who uploads them."],
@@ -1345,6 +1478,7 @@ function setView(v) {
   closeLibrary(); closeSoon(); closeAI(); closeHistory(); closeUsage(); closeAdmin();
   if (v === "photos") libraryPage();
   else if (v === "people") peoplePage();
+  else if (v === "alerts") alertsPage();
   else if (SOON[v]) {
     const box = document.createElement("div"); box.className = "lib"; box.id = "soon";
     box.innerHTML = \`<div class="soon"><div><h2>\${esc(SOON[v][0])}: coming</h2><p>\${esc(SOON[v][1])}</p></div></div>\`;
@@ -1602,7 +1736,7 @@ addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.ret
     const h = location.hash, m = h.match(/^#story\\/([a-z]\\d+)$/);
     if (m && stories.find((s) => s.id === m[1])) show(m[1]);
     else if (h === "#new" && readLocal(null)) { cur = blank(); dirty = false; renderList(); renderForm(); offerLocal(null); }
-    else if (/^#(photos|videos|shorts)$/.test(h) || (h === "#people" && ME.can && ME.can.people)) setView(h.slice(1));
+    else if (/^#(photos|videos|shorts|alerts)$/.test(h) || (h === "#people" && ME.can && ME.can.people)) setView(h.slice(1));
   } catch (e) { $("main").innerHTML = '<div class="empty">' + esc(e.message) + "</div>"; }
 })();
 </script></body></html>`;

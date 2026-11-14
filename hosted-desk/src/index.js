@@ -24,6 +24,7 @@ import { draftWithAI, describePhoto, aiError } from "./ai.js";                  
 import { FORMATS, SIZES, TOPIC_STYLES, clean as cleanStructure, kindOf, formatOf, topicOf, editorKinds } from "./structure.js";
 import { embedOf, oembedUrl, EMBED_NAMES } from "./embeds.js";
 import { parseBoard, boardLine } from "./boards.js";
+import { pushRoute, alertsApi, alertsDue } from "./push.js";
 import { ROLES, ROLE_NAMES, can, grantable, mayManage, cleanEmail, validEmail, rolesOf, startingPeople } from "./people.js";
 const SITE_ROOT = "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev";
 const SITE = SITE_ROOT + "/#3";
@@ -798,10 +799,15 @@ async function editorApi(request, env, path, signedIn, roles = ["editor"]) {
   // who is working: the checked Cloudflare Access email when the Studio has sign-in, until then the name the editor gave
   const who = (signedIn || header(request, "x-editor", 60) || "editor").trim();
   if (request.method === "GET" && path === "me") return json({ email: signedIn || null, signout: signedIn ? "/cdn-cgi/access/logout" : null,
-    roles, role_names: ROLE_NAMES, can: { people: can.people(roles) }, grantable: grantable(roles) });
+    roles, role_names: ROLE_NAMES, can: { people: can.people(roles), alerts: can.content(roles), alert_rules: can.alertRules(roles) }, grantable: grantable(roles) });
   const refuse = (what) => json({ error: `Your role does not allow ${what}.` }, 403);
   if (!can.content(roles)) return refuse("using the Studio");
 
+  // push alerts: compose, schedule, history; automatic alerts and the demo replay for admins (src/push.js)
+  if (path === "alerts" || path === "alertrules" || path === "replay") {
+    try { return json(await alertsApi(request, env, path, who, pushDeps(env, can.alertRules(roles)))); }
+    catch (e) { return json({ error: String(e.message || e) }, 400); }
+  }
   // the structure (kinds and topics), for the Studio's menus. Read-only: it is changed in the repo, not here.
   if (request.method === "GET" && path === "structure") return json({ structure: (await readStructure(env)).structure });
   // a leaderboard for the article editor's card: its rows now (a frozen one is fixed when the story is saved)
@@ -1327,11 +1333,17 @@ async function syncAccess(env, people) {
   return r && r.ok && j.success ? { ok: true } : { ok: false, note: "The list is saved, but Cloudflare's sign-in rule could not be updated" + (j.errors && j.errors[0] ? ` (${j.errors[0].message})` : "") + ". Update it in Zero Trust → Access → Policies." };
 }
 
+/* what the push alerts need from the Desk: the story records and the scoring of the event in play */
+const pushDeps = (env, mayRules) => ({ mayRules, stories: async () => (await readJson(env, RECORDS)).data || [], scores: () => scores(env) });
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const handshake = signIn(request, url);
     if (handshake) return handshake;
+    // the app registers its device for push alerts here: no key, no account (src/push.js)
+    const pushPath = url.pathname.match(/^\/push\/(register|unregister)$/);
+    if (pushPath) return pushRoute(request, env, pushPath[1], SITE_ROOT);
     const [, key, rest] = url.pathname.match(/^\/([^/]+)(\/mcp.*|\/photo\/[^/]+|\/editor(?:\/api\/[a-z]+|\/app\.js)?)$/) || [];
     if (!env.DESK_KEY || !key || key.length !== env.DESK_KEY.length || !rest) return new Response("Not found", { status: 404 });
     let diff = 0;                                              // compare the whole key every time, whatever was sent
@@ -1359,5 +1371,6 @@ export default {
     return createMcpHandler(() => createServer(env, door))(new Request(url, request), env, ctx);
   },
   // every 5 minutes: scheduled stories whose time has come go out
-  async scheduled(event, env, ctx) { ctx.waitUntil(publishDue(env)); },
+  // and scheduled push alerts, and the demo's scoring replay while it runs
+  async scheduled(event, env, ctx) { ctx.waitUntil(publishDue(env)); ctx.waitUntil(alertsDue(env, pushDeps(env, false))); },
 };

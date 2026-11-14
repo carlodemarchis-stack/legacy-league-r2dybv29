@@ -13,7 +13,21 @@
     "allowMixedContent": false
   },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#0b0f14", "showSpinner": false },
-    "StatusBar": { "style": "DARK", "overlaysWebView": true }
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#0b0f14",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    },
+    "FirebaseMessaging": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    }
   }
 }

@@ -1921,6 +1921,7 @@ function openCity(id) { if (state.sel !== id) selectCity(id); }
 function selectCity(id) { state.sel = state.sel === id ? null : id; PREF.set("sel", state.sel); refresh(); }
 function setRound(r) { state.round = r; PREF.set("round", r); refresh(); }
 function toggleFollow(id) { state.follow.has(id) ? state.follow.delete(id) : state.follow.add(id); PREF.set("follow", [...state.follow]); refresh();
+  dispatchEvent(new CustomEvent("ll:follow", { detail: [...state.follow] }));   // the app registers for push alerts (its native bridge script)
   if (state.follow.has(id)) toast(`${t("Following")} ${CITY[id] ? CITY[id].name : PLAYER[id].name}`, t("You will get round leaders, final results and tee times. Stored on this device; no account."), t("city follow")); }
 function goCity(id) { go(CARDS.findIndex(c => c.k === "city" && c.id === id)); }
 function goPlayer(id) { go(CARDS.findIndex(c => c.k === "player" && c.id === id)); }

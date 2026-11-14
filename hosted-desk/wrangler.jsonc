@@ -10,7 +10,10 @@
   // the editor's article field (Tiptap), bundled by npm run build:editor and served as /<key>/editor/app.js
   "rules": [{ "type": "Text", "globs": ["**/*.bundle.txt"], "fallthrough": true }],
   "r2_buckets": [{ "binding": "CONTENT", "bucket_name": "legacy-league-content" }],
-  // scheduled stories go out on time (publishDue in src/index.js)
+  // push alerts: the app's devices, the alerts and who got which (src/push.js). Firebase signs in with the Worker
+  // secret FCM_SERVICE_ACCOUNT (the service account's JSON): npx wrangler secret put FCM_SERVICE_ACCOUNT < file.json
+  "d1_databases": [{ "binding": "PUSH", "database_name": "legacy-league-push", "database_id": "3d859904-4661-4cd1-a9f3-41c8136d84bd" }],
+  // scheduled stories and alerts go out on time (publishDue and alertsDue in src/index.js)
   "triggers": { "crons": ["*/5 * * * *"] },
   // sign-in for the Studio and the photo pages (see ACCESS_SETUP.md): the Cloudflare Access team and the
   // Application Audience tag of its "Content Studio" application. Not secrets. Remove both to turn the check off.

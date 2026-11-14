@@ -17,6 +17,7 @@ const has = (roles, ...any) => any.some((r) => (roles || []).includes(r));
 export const can = {
   content: (roles) => has(roles, "superadmin", "coder", "producer", "editor"),
   people: (roles) => has(roles, "superadmin", "producer"),
+  alertRules: (roles) => has(roles, "superadmin", "producer"),    // switching automatic push alerts on and off
 };
 /* the roles a person may give: a super admin any, a producer only producer and editor */
 export const grantable = (roles) => has(roles, "superadmin") ? ROLES.slice() : has(roles, "producer") ? ["producer", "editor"] : [];
