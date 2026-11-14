@@ -356,6 +356,9 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 .res span{font-size:12.5px;color:var(--dim);line-height:1.4}
 
 /* ------------------------------------------------------------- chrome */
+#offpill{position:fixed;z-index:45;left:50%;transform:translateX(-50%);padding:6px 13px;border-radius:999px;font-size:12px;font-weight:600;
+  letter-spacing:.04em;background:rgba(20,24,28,.92);color:#f2c94c;border:1px solid rgba(242,201,76,.45);box-shadow:0 6px 20px rgba(0,0,0,.35);white-space:nowrap;pointer-events:none}
+#offpill[hidden]{display:none}
 #topbar{position:fixed;left:0;right:0;top:0;z-index:40;display:flex;align-items:center;gap:14px;
   padding:11px clamp(18px,3.2vw,54px);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2);
   background:linear-gradient(180deg,rgba(var(--bg-rgb),.9),rgba(var(--bg-rgb),0));pointer-events:none}
@@ -778,6 +781,22 @@ const PREF = {
   get(k, d) { try { const v = localStorage.getItem("ll." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("ll." + k, JSON.stringify(v)); } catch (e) {} },
 };
+/* Offline, in the app. What the app saw the last time it was online is kept on the phone, so with no connection
+   it shows that instead of what it was installed with: the store's story list, the structure and the newest
+   stories' article texts (localStorage, ll.off.*), and those stories' photos (IndexedDB). A pill under the top bar
+   says the app is offline and how old what it shows is. The website does not keep any of this. */
+const IN_APP = location.protocol === "capacitor:" || !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+/* a picture that cannot load (offline) is taken from the phone's copy, kept in IndexedDB by keepForOffline */
+function useKeptPhoto(im) {
+  if (im.dataset.off) return;
+  im.dataset.off = "1";
+  PHOTOS.get(im.currentSrc || im.src).then(b => { if (b) im.src = URL.createObjectURL(b); });
+}
+if (IN_APP) document.addEventListener("error", e => { if (e.target instanceof HTMLImageElement) useKeptPhoto(e.target); }, true);
+const OFF = {
+  get(k) { if (!IN_APP) return null; try { return JSON.parse(localStorage.getItem("ll.off." + k) || "null"); } catch (e) { return null; } },
+  set(k, v) { if (!IN_APP) return; try { localStorage.setItem("ll.off." + k, JSON.stringify(v)); } catch (e) {} },
+};
 /* The website and the apps are in English only. */
 const LANG = "en";
 document.documentElement.lang = LANG;
@@ -1054,6 +1073,7 @@ function shapeStories(list) {
   (list || []).forEach(s => { if (!s.kindId) s.kindId = s.kind; const k = KIND(s.kindId); s.kind = !k ? s.kindId : k.format === "text" ? "article" : k.format; });
   return list;
 }
+{ const kept = OFF.get("structure"); if (kept && Array.isArray(kept.kinds) && Array.isArray(kept.topics)) STRUCT = kept; }
 shapeStories(LEAGUE.stories);
 const filters = () => [["all", "All stories"], ["following", "Following"],
   ...STRUCT.kinds.filter(k => k.filter).map(k => [k.id, k.filter_label || k.label]), ...STRUCT.topics.filter(x => x.filter && !KIND(x.id)).map(x => [x.id, x.label])];
@@ -1062,7 +1082,7 @@ const topicStyle = s => (TOPIC(s.topic) || {}).style || "";
 function loadStructure() {
   fetch(STORE_AT + "content/site/structure.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => {
     if (!j || !Array.isArray(j.kinds) || !Array.isArray(j.topics) || JSON.stringify(j) === JSON.stringify(STRUCT)) return;
-    STRUCT = j; shapeStories(LEAGUE.stories);
+    STRUCT = j; OFF.set("structure", j); shapeStories(LEAGUE.stories);
     if (!filters().some(([k]) => k === state.filter)) state.filter = "all";
     renderFeed(); document.getElementById("hnrow").innerHTML = newsTiles();
   }).catch(() => {});
@@ -1143,10 +1163,20 @@ let rList = [], rIdx = -1;
 const fill = (txt, s) => String(txt || "").replace(/\{p0\}/g, s.players && s.players[0] && PLAYER[s.players[0]] ? PLAYER[s.players[0]].name : "the captain")
   .replace(/\{c0\}/g, s.cities && s.cities[0] ? CITY[s.cities[0]].name : "the league").replace(/\{author\}/g, "Legacy League Golf");
 /* Article bodies are not in the page. Each lives in its own small file and is fetched when the story is opened. */
+const bodyName = ref => String(ref || "").split("/").pop();
+function keepBody(ref, b) {
+  if (!IN_APP || !ref) return;
+  const kept = OFF.get("bodies") || {}, live = new Set(LEAGUE.stories.map(x => bodyName(x.body_ref)));
+  kept[bodyName(ref)] = b;
+  for (const k of Object.keys(kept)) if (!live.has(k)) delete kept[k];   // only stories still on the list
+  OFF.set("bodies", kept);
+}
 function loadBody(s) {
   if (!s || !s.body_ref || s.body || s._loading) return;
+  const kept = (OFF.get("bodies") || {})[bodyName(s.body_ref)];
+  if (kept) { Object.assign(s, kept); return; }
   s._loading = fetch(s.body_ref).then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(b => Object.assign(s, b))
+    .then(b => { keepBody(s.body_ref, b); Object.assign(s, b); })
     .catch(() => { s.body = []; })                        // offline or blocked: the summary stands in for the body
     .finally(() => { if (rList[rIdx] === s) paintBody(s); });
 }
@@ -1191,6 +1221,7 @@ const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Cap
   ? "https://legacy-league-7awe9upn.legacy-league-demo.workers.dev/" : "";
 const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
 let storeRev = null;
+{ const kept = OFF.get("stories"); if (kept && kept.ix && Array.isArray(kept.ix.stories)) useStoreIndex(kept.ix); }
 /* Every story has an address of its own, built from its headline. Where the site can answer such an address
    (the store-backed site) it is a real path, /stories/<name>; anywhere else it is kept after the #.
    Opening a story puts its address in the address bar; closing it puts the card's address back. */
@@ -1959,20 +1990,76 @@ if (LEAGUE.more_stories) (window.requestIdleCallback || setTimeout)(() =>
 /* Where the site is served with a content store behind it, the stories come from there: the page asks for the
    store's list when it opens and each time the reader comes back to it, so a story published in the store shows
    without a new page. Anywhere else the request finds nothing and the stories in the page stand. */
+function useStoreIndex(ix) {
+  const name = ref => (ref || "").split("/").pop();           // an article text already fetched is kept
+  const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
+  ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
+    const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; } });
+  storeRev = ix.rev; LEAGUE.stories = shapeStories(ix.stories); LEAGUE.story_count = ix.stories.length;
+}
 function loadStore() {
   fetch(STORE_AT + "content/stories/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(ix => {
-    if (!ix || !Array.isArray(ix.stories) || ix.rev === storeRev) return;
-    const name = ref => (ref || "").split("/").pop();           // an article text already fetched is kept
-    const had = Object.fromEntries(LEAGUE.stories.filter(s => s.body).map(s => [s.id, s]));
-    ix.stories.forEach(s => { s.body_ref = fromStore(s.body_ref); s.photo = fromStore(s.photo); if (s.photos) s.photos = s.photos.map(fromStore);
-      const o = had[s.id]; if (o && name(o.body_ref) === name(s.body_ref)) { s.body = o.body; } });
-    storeRev = ix.rev; LEAGUE.stories = shapeStories(ix.stories); LEAGUE.story_count = ix.stories.length;
+    setOffline(false);
+    if (!ix || !Array.isArray(ix.stories)) return;
+    OFF.set("stories", { at: Date.now(), ix });                // as it came, before the addresses are filled in
+    (window.requestIdleCallback || setTimeout)(keepForOffline);
+    if (ix.rev === storeRev) return;
+    useStoreIndex(ix);
     renderFeed();
     document.getElementById("hnrow").innerHTML = newsTiles();
     if (wantStory) openStoryByKey(wantStory);                  // the story asked for by address has arrived
     else if (document.getElementById("smodal").classList.contains("on") && rList[rIdx]) showStoryAddress(rList[rIdx]);
-  }).catch(() => {});
+  }).catch(e => { if (e instanceof TypeError) setOffline(true); });   // no answer at all: offline
 }
+/* When online: the newest stories' article texts and photos, so they are on the phone for later */
+const OFFLINE_STORIES = 20;
+async function keepForOffline() {
+  if (!IN_APP) return;
+  const newest = LEAGUE.stories.filter(s => s.kind !== "result").slice().sort((a, b) => (b.at || "") > (a.at || "") ? 1 : -1).slice(0, OFFLINE_STORIES);
+  for (const s of newest.slice(0, 12)) {
+    if (!s.body_ref || (OFF.get("bodies") || {})[bodyName(s.body_ref)]) continue;
+    try { const r = await fetch(s.body_ref); if (r.ok) keepBody(s.body_ref, await r.json()); } catch (e) { return; }
+  }
+  const want = new Set(newest.flatMap(s => [s.photo, ...(s.photos || [])]).filter(u => /^https?:/.test(u || "")));
+  const have = new Set(await PHOTOS.keys());
+  for (const u of want) if (!have.has(u)) {
+    try { const r = await fetch(u, { mode: "cors" }); if (r.ok) await PHOTOS.put(u, await r.blob()); } catch (e) { return; }
+  }
+  for (const u of have) if (!want.has(u)) PHOTOS.del(u);
+}
+/* the photos, in IndexedDB: a picture that cannot load (offline) is taken from there */
+const PHOTOS = {
+  db: null,
+  open() {
+    if (!this.db) this.db = new Promise((ok, no) => { const q = indexedDB.open("ll-offline", 1);
+      q.onupgradeneeded = () => q.result.createObjectStore("photos"); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); });
+    return this.db;
+  },
+  async run(mode, fn) { const db = await this.open(); return new Promise((ok, no) => { const tx = db.transaction("photos", mode), r = fn(tx.objectStore("photos")); tx.oncomplete = () => ok(r && r.result); tx.onerror = () => no(tx.error); }); },
+  get(u) { return this.run("readonly", st => st.get(u)).catch(() => null); },
+  put(u, b) { return this.run("readwrite", st => st.put(b, u)).catch(() => null); },
+  del(u) { return this.run("readwrite", st => st.delete(u)).catch(() => null); },
+  keys() { return this.run("readonly", st => st.getAllKeys()).then(k => k || []).catch(() => []); },
+};
+/* every store picture that failed while offline: from the phone instead (also those that failed before this ran) */
+function rescueImages() {
+  document.querySelectorAll("img").forEach(im => { if (im.complete && !im.naturalWidth && /^https?:/.test(im.src)) useKeptPhoto(im); });
+}
+/* the pill: offline, and since when what is shown dates */
+function setOffline(off) {
+  if (!IN_APP) return;
+  let el = document.getElementById("offpill");
+  if (!off) { if (el) el.hidden = true; return; }
+  if (!el) { el = document.createElement("div"); el.id = "offpill"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  const kept = OFF.get("stories");
+  el.textContent = kept && kept.at ? `${t("Offline")} · ${t("updated")} ${new Date(kept.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}` : t("Offline");
+  const bar = document.getElementById("topbar");
+  el.style.top = Math.round((bar ? bar.getBoundingClientRect().bottom : 0) + 8) + "px";
+  el.hidden = false;
+  rescueImages();
+}
+addEventListener("offline", () => setOffline(true));
+addEventListener("online", () => { setOffline(false); loadStructure(); loadStore(); loadSite(false); });
 /* The same for everything that is not a story. The store says which package is current; when it is not the one
    this page is showing, the package is fetched and kept on this device. Cards are built once from that content,
    so it is applied by loading the page again: at once when the page has just opened, otherwise on the next visit. */
