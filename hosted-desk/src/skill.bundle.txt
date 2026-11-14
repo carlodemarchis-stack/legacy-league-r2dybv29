@@ -39,14 +39,18 @@ The players are real former professional athletes and the stories go out under t
 
 ## Kinds of story
 
-| Kind | Use it for | Needs |
+The league's producers decide which kinds and topics exist, so read the current lists from `league_reference` (`kinds`, `topics`) instead of assuming them. Never invent one. Each kind is built on a **format**, and the format decides what the story needs:
+
+| Format | Use it for | Needs |
 |---|---|---|
-| `article` | News, recaps, announcements, explainers | Nothing extra |
+| `text` (e.g. the kind `article`, shown as News) | News, recaps, announcements, explainers | Nothing extra |
 | `video` | A tile for a video the league supplies | Duration, such as `2:14` |
-| `gallery` | A set of photos | The number of photos |
+| `gallery` | A set of photos | The number of photos. The editor picks the photos, their order and the cover in the Content Studio |
 | `quote` | One strong line from a player or captain | The quote as the title, in curly quotation marks. The summary gives the context |
 
-Topic is `league` by default. Use `city` when the story belongs to one city and tag that city. Use `mission` for charity, community and mental-health stories.
+Topic is `league` by default. Use `city` when the story belongs to one city and tag that city. Use `mission` for charity, community and mental-health stories. If `league_reference` lists other topics, use them as their names suggest.
+
+If an editor asks for a kind or topic that does not exist, say so and offer the closest one. Adding one is a producer's job, not something to do from a story.
 
 Tag every city and player the story is really about, and no others. Tags decide which fans see the story in their city hub and which followers are told about it, so a stray tag sends it to the wrong people.
 
