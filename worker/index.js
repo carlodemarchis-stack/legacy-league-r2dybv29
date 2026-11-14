@@ -87,7 +87,8 @@ async function cardMeta(env, url, parts) {
    result is kept in the bucket under derived/ and served from there afterwards (workers.dev has no edge cache).
    Only a few widths exist, so nobody can make it produce thousands. Anything that goes wrong: the original. */
 const WIDTHS = [320, 640, 1024, 1600];
-async function sized(request, env, key, want) {
+/* source: the original as { body, type } or null (a store photo from the bucket, a page image from the assets) */
+async function sized(request, env, key, want, source) {
   const width = WIDTHS.find((x) => x >= want) || WIDTHS[WIDTHS.length - 1];
   const accept = request.headers.get("accept") || "";
   const fmt = /image\/avif/.test(accept) ? "avif" : /image\/webp/.test(accept) ? "webp" : "jpeg";
@@ -96,7 +97,7 @@ async function sized(request, env, key, want) {
   const kept = `derived/${width}/${fmt}/${key}`;
   const hit = await env.CONTENT.get(kept);
   if (hit) return new Response(request.method === "HEAD" ? null : hit.body, { headers: head(hit.httpMetadata?.contentType || "image/" + fmt) });
-  const orig = await env.CONTENT.get(key);
+  const orig = await source();
   if (!orig) return new Response("Not found", { status: 404 });
   try {
     const out = await env.IMAGES.input(orig.body).transform({ width, fit: "scale-down" }).output({ format: "image/" + fmt, quality: 76 });
@@ -104,8 +105,8 @@ async function sized(request, env, key, want) {
     await env.CONTENT.put(kept, bytes, { httpMetadata: { contentType: type } });
     return new Response(request.method === "HEAD" ? null : bytes, { headers: head(type) });
   } catch (e) {
-    const again = await env.CONTENT.get(key);                 // the original, as it is
-    return new Response(request.method === "HEAD" ? null : again.body, { headers: head(again.httpMetadata?.contentType || "image/jpeg") });
+    const again = await source();                             // the original, as it is
+    return new Response(request.method === "HEAD" ? null : again.body, { headers: head(again.type || "image/jpeg") });
   }
 }
 
@@ -121,13 +122,21 @@ export default {
       if (!meta) return Response.redirect(url.origin + "/" + ({ stories: "stories", events: "season" }[parts[0]] || ""), 302);
       return page(request, env, url, meta);
     }
+    // the page's own pictures (img/…) in the size asked for, the same way as the store's photos (kept under derived/img/)
+    const wantImg = parseInt(url.searchParams.get("w") || "", 10);
+    if (wantImg > 0 && env.IMAGES && /^\/img\/[\w\/.-]+\.(jpe?g|png|webp)$/i.test(url.pathname) && !url.pathname.includes(".."))
+      return sized(request, env, url.pathname.slice(1), wantImg, async () => {
+        const r = await env.ASSETS.fetch(new Request(url.origin + url.pathname));
+        return r.ok ? { body: r.body, type: r.headers.get("content-type") } : null;
+      });
     if (!url.pathname.startsWith("/content/")) return env.ASSETS.fetch(request);
     if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
     const key = decodeURIComponent(url.pathname.slice("/content/".length));
     // only what the page and the app read is public; the desk's own files (desk/, ai/, scores/) never leave the bucket
     if (!/^(site|stories|photos)\/[^]+$/.test(key) || key.split("/").includes("..")) return new Response("Not found", { status: 404 });
     const want = parseInt(url.searchParams.get("w") || "", 10);
-    if (want > 0 && key.startsWith("photos/") && env.IMAGES) return sized(request, env, key, want);
+    if (want > 0 && key.startsWith("photos/") && env.IMAGES)
+      return sized(request, env, key, want, async () => { const o = await env.CONTENT.get(key); return o && { body: o.body, type: o.httpMetadata?.contentType }; });
     const obj = await env.CONTENT.get(key);
     if (!obj) return new Response("Not found", { status: 404 });
     const h = new Headers();

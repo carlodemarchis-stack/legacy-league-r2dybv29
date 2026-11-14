@@ -1289,7 +1289,7 @@ const STORE_AT = (location.protocol === "capacitor:" || (window.Capacitor && Cap
 const fromStore = p => typeof p === "string" && p.startsWith("content/") ? STORE_AT + p : p;
 /* A store photo in the size it is shown at: the site's worker makes it (320, 640, 1024 or 1600 wide, AVIF or WebP).
    Pictures that are not the store's (the page's own img/, a blob kept offline) are left as they are. */
-const sz = (p, w) => typeof p === "string" && /(^|\/)content\/photos\//.test(p) && !/[?&]w=/.test(p) ? `${p}${p.includes("?") ? "&" : "?"}w=${w}` : p;
+const sz = (p, w) => typeof p === "string" && /(^|\/)(content\/photos|img)\/[^?#]+\.(jpe?g|png|webp)$/i.test(p) ? `${p}?w=${w}` : p;
 const srcs = (p, w1, w2) => sz(p, w1) === p ? `src="${p}"` : `src="${sz(p, w1)}" srcset="${sz(p, w1)} ${w1}w, ${sz(p, w2)} ${w2}w"`;
 let storeRev = null;
 { const kept = OFF.get("stories"); if (kept && kept.ix && Array.isArray(kept.ix.stories)) useStoreIndex(kept.ix); }
@@ -1503,7 +1503,7 @@ function cityStories(c) {
       <em>${s.kind === "video" ? `▶ ${s.dur || ""}` : s.kind === "gallery" ? `${s.count} ${t("photos")}` : kindLabel(s.kindId)}</em><b>${esc(sTitle(s))}</b></button>`; }).join("");
 }
 function cityCard(c, i) {
-  return `<div class="card" data-k="city" data-id="${c.id}" style="--c:${c.color}"><img class="bg" src="${c.photos[0]}" alt="" loading="lazy"><div class="inner">
+  return `<div class="card" data-k="city" data-id="${c.id}" style="--c:${c.color}"><img class="bg" ${srcs(c.photos[0], 1024, 1600)} sizes="100vw" alt="" loading="lazy"><div class="inner">
     <div class="col l">
       <div class="cityhero"><div class="code">${c.short}</div>
         <div class="meta"><div class="kicker">${t("City hub")} · ${ord(i + 1)} ${t("in the league")}</div><div class="nm">${esc(c.name)}</div><div class="teams">${c.teams.join(" · ")}</div>
@@ -1710,7 +1710,7 @@ function hubBox(c) {
   }
   const roster = LEAGUE.players.filter(p => p.city === c.id).sort((a, b) => b.captain - a.captain || a.handicap - b.handicap);
   return `<div class="legend">${sw}<span>${roster.length} ${t("players")} · ${t("Tap a player")}</span></div>
-        <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="rtile" onclick="goPlayer('${p.id}')"><span class="ava"><img src="${p.face}" alt="" loading="lazy"></span>
+        <div class="roster" data-roster="${c.id}">${roster.map(p => `<button class="rtile" onclick="goPlayer('${p.id}')"><span class="ava"><img src="${sz(p.face, 320)}" alt="" loading="lazy"></span>
           <span class="t"><b>${esc(p.name)}${p.captain ? '<span class="cap">C</span>' : ""}</b><small>${p.team ? `${p.sport} · ${esc(c.name)} ${esc(p.team)} · ${p.years}` : esc(L(p, "role"))}</small></span>
           <span class="sc" data-plive="${p.id}"></span></button>`).join("")}</div>`;
 }
