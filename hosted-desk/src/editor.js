@@ -10,7 +10,7 @@
    0.12 AI-suggested photo descriptions, accepted or edited by the editor ·
    0.13 top menu (Stories, Photos, Videos, Shorts), photos picked in a dialog ·
    0.14 a photo's own data (XMP, EXIF) fills its description, caption, credit and date · 0.14.1 descriptions on Haiku */
-export const STUDIO_VERSION = "0.20.1";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one)
+export const STUDIO_VERSION = "0.20.2";                     // 0.14.2: a licence in a photo's data is not taken for its credit · 0.15: all of a photo's data kept and shown · 0.15.1: photo dialogs side by side on a wide screen · 0.16: photos tagged with events, cities and players · 0.16.1: the file's own description proposed for description and caption, Windows author as credit · 0.16.2: a reload stays where you were · 0.17: unsaved work kept in the browser and offered back after a reload · 0.18: a weekly AI allowance per editor · 0.18.1: and one for the whole league · 0.19: sign-in with Cloudflare Access (your email instead of a typed name) · 0.20: gallery photos chosen and ordered here, a new story's time is now, Desk times in your time zone · 0.20.1: a new story starts at the league's time (the demo clock while there is one) · 0.20.2: the list puts the stories last worked on first
 
 /* The Studio's tab icon: the site's ring and green dot, inverted onto gold, so the two tabs are told apart at a glance. */
 const ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#d9ad4e"/>' +
@@ -323,9 +323,13 @@ function renderList() {
   }
   const rows = stories.filter((s) => (filter === "all" || statusOf(s) === filter) &&
     (!q || [s.title, s.dek, s.author, ...(s.cities || []).map((c) => CITY[c] && CITY[c].name), ...(s.players || []).map((p) => PLAYER[p] && PLAYER[p].name)].join(" ").toLowerCase().includes(q)));
+  // the stories last worked on in the Desk come first (made or changed, newest first), then the rest by story time
+  const touched = (s) => s.updated_at || s.published_at || s.created_at || "";
+  rows.sort((a, b) => (touched(b) > touched(a) ? 1 : touched(b) < touched(a) ? -1 : (b.at || "") > (a.at || "") ? 1 : (b.at || "") < (a.at || "") ? -1 : 0));
   $("list").innerHTML = rows.map((s) => \`<button class="row \${cur && cur.id === s.id ? "on" : ""}" onclick="pick('\${s.id}')"><img src="\${esc(pic(s.photo))}" alt="" loading="lazy">
     <span><b>\${esc(shown(s, s.title))}</b><small><span class="st \${statusOf(s)}">\${statusOf(s)}</span>\${esc(s.kind)} · \${esc(when(s.at))}</small></span></button>\`).join("") ||
     '<div class="empty">No story matches.</div>';
+  const on = $("list").querySelector(".row.on"); if (on) on.scrollIntoView({ block: "nearest" });
 }
 async function pick(id) {
   if (!(await leaveUnsaved())) return;
