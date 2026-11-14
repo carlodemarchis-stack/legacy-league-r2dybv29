@@ -35,6 +35,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:300;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select{font:inherit;color:inherit}
+/* no double-tap zoom (iOS zooms the whole page on two quick taps and leaves it cropped); pinch-to-zoom still works */
+html,body{touch-action:manipulation}
 /* iOS zooms into a text field under 16px when it gets the keyboard, and leaves the page zoomed and shifted after.
    On touch screens every field is 16px, so it never zooms. */
 @media (pointer:coarse){input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important}}
@@ -362,6 +364,15 @@ button.pill:hover{color:var(--acc-ink);border-color:rgba(217,173,78,.5)}
 /* a quote in an article: a pull quote, in the site's style */
 blockquote.pq{margin:28px 0;padding:4px 0 4px 22px;border-left:3px solid var(--acc);font-size:clamp(19px,1.6vw,23px);line-height:1.4;font-weight:600;letter-spacing:-.005em}
 blockquote.pq p{margin:0 0 8px}blockquote.pq cite{display:block;margin-top:10px;font-size:13px;font-style:normal;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+/* the individual leaderboard on the Live card */
+.pboard{max-height:min(560px,58vh);overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:4px}
+.pbr{display:grid;grid-template-columns:34px minmax(0,1fr) 52px 40px 56px;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;
+  font-size:13px;font-variant-numeric:tabular-nums;text-align:right;cursor:pointer;border:1px solid transparent}
+.pbr.h{cursor:default;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2);padding-bottom:4px}
+.pbr:not(.h):hover{background:rgba(var(--veil),.04);border-color:var(--line)}
+.pbr .pos,.pbr span:nth-child(2){text-align:left}.pbr .pos{font-weight:700;color:var(--dim)}
+.pbr .nm{display:flex;align-items:center;gap:7px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.pbr .nm em{font-style:normal;font-size:10px;color:var(--dim2);letter-spacing:.06em}.pbr .cap{font-size:9px;color:var(--acc);border:1px solid currentColor;border-radius:4px;padding:0 3px}
 /* leaderboards in an article */
 .lbrd{margin:24px 0;padding:14px 14px 10px;border:1px solid var(--line);border-radius:16px;background:rgba(var(--veil),.03)}
 .lbrd-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 4px 8px}
@@ -885,6 +896,22 @@ function posted(rid, pid, h) {
 function playerHoles(rid, pid) {
   return SCORE[rid][pid].map((s, h) => posted(rid, pid, h) ? s : null);
 }
+/* The individual leaderboard: every player by total to par over both rounds, from the same hole scores as the team
+   board, so the two cannot disagree. Ties share a place. */
+function playerBoard() {
+  const toPar = holes => holes.reduce((a, sc, h) => (sc == null ? a : a + sc - PAR[h]), 0);
+  const list = LEAGUE.players.filter(p => SCORE.r1 && SCORE.r1[p.id]).map(p => {
+    const r1 = playerHoles("r1", p.id), r2 = SCORE.r2 && SCORE.r2[p.id] ? playerHoles("r2", p.id) : [];
+    const thru = r2.filter(x => x != null).length, today = toPar(r2);
+    return { p, today, thru, total: toPar(r1) + today };
+  }).sort((a, b) => a.total - b.total || a.p.name.localeCompare(b.p.name));
+  for (let i = 0; i < list.length;) {
+    let j = i; while (j + 1 < list.length && list[j + 1].total === list[i].total) j++;
+    for (let k = i; k <= j; k++) { list[k].pos = i + 1; list[k].tied = j > i; }
+    i = j + 1;
+  }
+  return list;
+}
 function teamRound(cid, rid) {
   const ids = LEAGUE.players.filter(p => p.city === cid).map(p => p.id);
   const rows = ids.map(pid => ({ pid, holes: playerHoles(rid, pid) }));
@@ -1209,7 +1236,7 @@ function keepBody(ref, b) {
 function loadBody(s) {
   if (!s || !s.body_ref || s.body || s._loading) return;
   const kept = (OFF.get("bodies") || {})[bodyName(s.body_ref)];
-  if (kept) { Object.assign(s, kept); return; }
+  if (kept) { Object.assign(s, kept); if (rList[rIdx] === s) paintBody(s); return; }   // the text kept on this phone: draw it now
   s._loading = fetch(s.body_ref).then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(b => { keepBody(s.body_ref, b); Object.assign(s, b); })
     .catch(() => { s.body = []; })                        // offline or blocked: the summary stands in for the body
@@ -1795,7 +1822,18 @@ function teamGrid(cid) {
 function redraw(el, html) { const x = el.querySelector(".scwrap")?.scrollLeft || 0; el.innerHTML = html; const w = el.querySelector(".scwrap"); if (w && x) w.scrollLeft = x; }
 function detail() {
   const el = document.getElementById("lv-detail");
-  if (!state.sel) { el.innerHTML = `<div class="legend">${t("Hole by hole")}</div><p class="lead" style="font-size:13px">${t("Select a city on the board. You get every player's card for the round, the two balls that count on each hole ringed in gold, and the team line underneath. Holes where part of the team is still on course are marked provisional.")}</p>`; return; }
+  if (!state.sel) {                                            // no city picked: every player, the individual leaderboard
+    const pb = playerBoard();
+    redraw(el, `<div class="legend"><span>${t("Players")} · ${t("individual leaderboard")}</span><span>${pb.length} ${t("players")}</span></div>
+      <div class="pbr h"><span>${t("Pos")}</span><span>${t("Player")}</span><span>${t("Today")}</span><span>${t("Thru")}</span><span>${t("Total")}</span></div>
+      <div class="pboard">${pb.map(x => { const c = CITY[x.p.city] || {};
+        return `<div class="pbr" onclick="selectCity('${x.p.city}')" title="${esc(c.name || "")}: ${t("hole by hole")}"><span class="pos">${x.tied ? "T" : ""}${x.pos}</span>
+          <span class="nm"><i class="sw" style="--c:${c.color || "#888"}"></i><span class="cn">${esc(x.p.name)}</span> <em>${c.short || ""}</em>${x.p.captain ? ` <b class="cap">C</b>` : ""}</span>
+          <span class="${x.thru ? cls(x.today) : "e"}">${x.thru ? sgn(x.today) : "–"}</span><span class="thru">${x.thru === 18 ? "F" : x.thru || "·"}</span>
+          <span class="${cls(x.total)}">${sgn(x.total)}</span></div>`; }).join("")}</div>
+      <p class="lead" style="font-size:12px;margin-top:8px">${t("Tap a player, or a city on the board, for its hole by hole: every player's card, the two balls that count ringed in gold, the team line underneath.")}</p>`);
+    return;
+  }
   const c = CITY[state.sel], g = teamGrid(c.id);
   redraw(el, `<div class="legend"><span><i class="sw" style="--c:${c.color}"></i>${esc(c.name)} · ${g.status}</span>${g.rounds}</div>${g.table}`);
 }
